@@ -15,8 +15,8 @@ export const selfDeterminationNodes: DebateNode[] = [
     ],
     references: [
       'League of Nations Mandate for Palestine (1922)',
-      'UN General Assembly Resolution 181 — Partition Plan (1947)',
-      'Peel Commission Report (1937)'
+      'Peel Royal Commission Report (1937)',
+      'UNGA Resolution 181 — Non-Binding Partition Recommendation (Nov 1947)'
     ],
     tags: ['History', 'International Law', 'Demographics'],
     era: '1880s–1949'
@@ -32,13 +32,13 @@ export const selfDeterminationNodes: DebateNode[] = [
       'The Jewish people constitute an indigenous nation originating in the Land of Israel with a legitimate historical, legal, and moral right to sovereign self-determination in part or all of their ancestral homeland.',
     details: [
       'Grounded in over three millennia of Jewish ethnogenesis, language (Hebrew), archaeology, religious liturgy, and continuous—though minority—Jewish communities in cities like Jerusalem, Safed, Tiberias, and Hebron.',
-      'Reinforced by explicit international legal recognition in the 1922 League of Nations Mandate and 1947 UN Partition Resolution 181.',
+      'Reinforced by binding international legal recognition in the 1922 League of Nations Mandate (San Remo Resolution) alongside the 1947 UNGA Partition vote.',
       'Framed as national liberation and refuge for a stateless, persecuted people rather than foreign imperial colonization.'
     ],
     references: [
       'Israeli Declaration of Independence (May 14, 1948)',
-      'League of Nations Palestine Mandate Preamble & Art. 2 (1922)',
-      'UNGA Resolution 181 (Nov 29, 1947)'
+      'San Remo Resolution (1920) & League of Nations Palestine Mandate Art. 2 & 6 (1922)',
+      'UNGA Resolution 181 — Partition Recommendation (Nov 29, 1947)'
     ],
     tags: ['History', 'International Law', 'Religion & Culture'],
     era: '1897–1948',

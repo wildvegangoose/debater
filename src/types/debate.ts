@@ -5,6 +5,8 @@ export type DebateTag =
   | 'International Law'
   | 'Security'
   | 'Human Rights'
+  | 'Economics'
+  | 'Media & Education'
   | 'Demographics'
   | 'Diplomacy'
   | 'Religion & Culture'

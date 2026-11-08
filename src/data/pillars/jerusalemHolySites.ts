@@ -132,7 +132,7 @@ export const jerusalemHolySitesNodes: DebateNode[] = [
     ],
     references: [
       'Intelligence Squared U.S.: "The U.N. Should Admit Palestine as a Full Member State" (Oct 2011)',
-      'UNGA Resolution 67/19 (2012) & ES-10/23 (May 2024)',
+      'UNGA Res. 67/19 (2012) & ES-10/23 (May 2024) — Non-Binding General Assembly Votes',
       'US Presidential Proclamation Recognizing Jerusalem as Israel’s Capital (Dec 6, 2017)'
     ],
     tags: ['Diplomacy', 'International Law'],

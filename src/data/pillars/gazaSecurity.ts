@@ -31,13 +31,13 @@ export const gazaSecurityNodes: DebateNode[] = [
       'Following years of indiscriminate rocket fire and the October 7, 2023 atrocities, Israel has an inherent right and sovereign duty to dismantle Hamas’s military and governing capacity, rescue hostages, and prevent weapons entry into Gaza.',
     details: [
       'On October 7, 2023, Hamas-led militants breached the border, murdered ~1,200 people (mostly civilians in border kibbutzim, towns, and the Nova music festival), committed widespread atrocities, and abducted 251 hostages into Gaza.',
-      'Hamas’s 1988 Charter rejects Israel’s existence in any borders, and senior Hamas officials publicly pledged on television (e.g., Ghazi Hamad, Oct 24, 2023) to repeat October 7 "again and again."',
+      'Hamas’s 1988 Charter rejects Israel’s existence in any borders, and senior Hamas officials publicly pledged on Arabic television (e.g., Ghazi Hamad on LBC TV, Oct 24, 2023, translated by MEMRI) to repeat October 7 "again and again."',
       'No sovereign state can leave a heavily armed force committed to its destruction governing an adjacent territory minutes from civilian towns.'
     ],
     references: [
       'UN Charter Art. 51 — Inherent Right of Self-Defense',
-      'UN SRSG Pramila Patten Report on Conflict-Related Sexual Violence (March 2024)',
-      'Hamas Covenant (1988) & 2017 Policy Document'
+      'Hamas Covenant (1988) & MEMRI TV Clip #10585 — Ghazi Hamad LBC TV Interview (Oct 24, 2023)',
+      'UN SRSG Pramila Patten Report on Conflict-Related Sexual Violence (March 2024)'
     ],
     tags: ['Security', 'International Law'],
     era: '2007–Present',
@@ -160,7 +160,7 @@ export const gazaSecurityNodes: DebateNode[] = [
       'World Bank & UNCTAD Economic Costs of the Gaza Closure Reports',
       'Israeli State Critique of Pre-Oct 7 "Conceptzia" (Containment Doctrine)'
     ],
-    tags: ['Human Rights', 'Governance', 'Security'],
+    tags: ['Human Rights', 'Governance', 'Security', 'Economics'],
     era: '2007–Present'
   },
   {
@@ -169,14 +169,14 @@ export const gazaSecurityNodes: DebateNode[] = [
     kind: 'con',
     title: '2018–2019 "Great March of Return": Lethal Force Against Mass Border Protests',
     summary:
-      'Debated prominently on Lex Fridman #418 (Finkelstein & Rabbani vs. Morris & Destiny), critics cite the UN Commission of Inquiry finding that IDF snipers killed ~189+ Palestinians and wounded thousands with live ammunition during weekly demonstrations against the blockade.',
+      'Debated prominently on Lex Fridman #418 (Finkelstein & Rabbani vs. Morris & Destiny), critics cite human-rights and UNHRC inquiry findings that IDF snipers killed ~189+ Palestinians and wounded thousands with live ammunition during weekly demonstrations against the blockade.',
     details: [
       'Cited repeatedly to challenge the claim "Why don’t Palestinians use non-violent protest?": human rights investigators documented medics, journalists, and unarmed youths shot hundreds of meters inside the Gaza fence.',
-      'The 2019 UN Independent Commission found reasonable grounds that Israeli rules of engagement violated international human rights policing standards.'
+      'The 2019 UNHRC Commission of Inquiry (whose mandate Israel and the U.S. rejected as structurally biased under UNHRC practices) alleged Israeli rules of engagement violated international policing standards.'
     ],
     references: [
-      'UN Independent International Commission of Inquiry on the 2018 Gaza Protests (March 2019)',
-      'Lex Fridman Podcast #418 Debate — Finkelstein & Rabbani vs. Morris & Bonnell (March 2024)'
+      'Lex Fridman Podcast #418 Debate — Finkelstein & Rabbani vs. Morris & Bonnell (March 2024)',
+      'UNHRC Commission of Inquiry Report on the 2018 Protests (March 2019 — Contested UNHRC Mandate)'
     ],
     tags: ['Human Rights', 'International Law'],
     era: '2018–2019'

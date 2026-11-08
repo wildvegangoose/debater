@@ -22,6 +22,8 @@ const ALL_TAGS: DebateTag[] = [
   'International Law',
   'Security',
   'Human Rights',
+  'Economics',
+  'Media & Education',
   'Demographics',
   'Diplomacy',
   'Religion & Culture',
@@ -33,10 +35,12 @@ const SHORT_PILLAR_LABELS: Record<string, string> = {
   'pillar-borders-settlements': '2. 1967 & Settlements',
   'pillar-gaza-security': '3. Gaza, Oct 7 & ICJ',
   'pillar-regional-geopolitics': '4. Iran, Accords & U.S.',
-  'pillar-refugees-return': '5. Refugees & Equality',
-  'pillar-jerusalem': '6. Jerusalem & UN',
-  'pillar-global-discourse': '7. Antisemitism, BDS & Law',
-  'pillar-endgames': '8. Peace Endgames',
+  'pillar-education-media-un': '5. UNRWA, Media & UN Bias',
+  'pillar-refugees-return': '6. Refugees & Equality',
+  'pillar-jerusalem': '7. Jerusalem & Recognition',
+  'pillar-global-discourse': '8. Antisemitism, BDS & Law',
+  'pillar-economic-policies': '9. Economic Policies',
+  'pillar-endgames': '10. Peace Endgames',
 };
 
 interface TopBarProps {
@@ -171,7 +175,7 @@ export function TopBar({
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 180)}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search claims, UN res, dates... (/)"
+              placeholder="Search claims, watchdogs, economics, dates... (/)"
               className={clsx(
                 'w-full pl-8 pr-7 py-1.5 rounded-lg text-xs border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 isDark

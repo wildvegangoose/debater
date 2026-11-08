@@ -14,9 +14,9 @@ export const bordersSettlementsNodes: DebateNode[] = [
       'pits Fourth Geneva Convention prohibitions and ICJ rulings against Israeli arguments of disputed sovereignty, UNSC Resolution 242 phrasing, historical ties, and strategic depth.'
     ],
     references: [
+      '1949 Israel–Jordan General Armistice Agreement & Oslo II Interim Agreement (1995)',
       'UN Security Council Resolution 242 (Nov 22, 1967)',
-      'Oslo II Interim Agreement — Areas A, B, C (1995)',
-      'ICJ Advisory Opinions (2004 & July 2024)'
+      'ICJ Non-Binding Advisory Opinions on UNGA Referrals (2004 & July 2024)'
     ],
     tags: ['International Law', 'Security', 'Human Rights'],
     era: '1967–Present'
@@ -31,14 +31,14 @@ export const bordersSettlementsNodes: DebateNode[] = [
     summary:
       'Israel’s 57+ year military occupation of the West Bank and state-backed expansion of civilian settlements violate international humanitarian law, fragment Palestinian territory, and create unequal dual legal regimes.',
     details: [
-      'Overwhelming international consensus—including the ICJ (2004, 2024), UN Security Council (Res. 446, 2334), ICRC, EU, and UK—classifies Israeli settlements in occupied territory as unlawful.',
+      'Broad international legal opinion—including the ICRC, EU, UK, UNSC Res. 2334, and ICJ advisory opinions (2004, 2024, though contested by Israel as non-binding UNGA-referred opinions)—classifies Israeli settlements in occupied territory as unlawful.',
       'Area C (60% of the West Bank) remains under full Israeli military and civil control, where Palestinian building permits are approved in <2% of cases while settlement infrastructure expands.',
       'Checkpoints, bypass roads, the Separation Barrier (85% routed inside the West Bank rather than on the Green Line), and settler violence restrict Palestinian freedom of movement and economic life.'
     ],
     references: [
       'Fourth Geneva Convention Art. 49(6) (1949)',
-      'UNSC Resolution 2334 (Dec 23, 2016)',
-      'ICJ Advisory Opinion on Legal Consequences of Policies in the OPT (July 19, 2024)'
+      'UNSC Resolution 2334 (Dec 23, 2016 — Chapter VI)',
+      'ICJ Advisory Opinion on Legal Consequences of Policies in the OPT (July 19, 2024 — Non-Binding)'
     ],
     tags: ['International Law', 'Human Rights', 'Governance'],
     era: '1967–Present',
@@ -218,7 +218,7 @@ export const bordersSettlementsNodes: DebateNode[] = [
       'Paris Protocol on Economic Relations (1994)',
       'World Bank Area C Economic Assessment (2013)'
     ],
-    tags: ['Governance', 'Diplomacy'],
+    tags: ['Governance', 'Diplomacy', 'Economics'],
     era: '1994–Present'
   },
   {

@@ -8,6 +8,8 @@ const ALL_TAGS: DebateTag[] = [
   'International Law',
   'Security',
   'Human Rights',
+  'Economics',
+  'Media & Education',
   'Demographics',
   'Diplomacy',
   'Religion & Culture',
@@ -278,13 +280,13 @@ export function NodeEditorModal({
           {/* References */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
-              Primary Sources / Citations (one per line)
+              Cited Sources / Evidentiary Basis (one per line)
             </label>
             <textarea
               rows={2}
               value={refsText}
               onChange={(e) => setRefsText(e.target.value)}
-              placeholder={'UNSC Resolution 242 (1967)\nAuthor, Title (Year)'}
+              placeholder={'Bilateral Treaty / Watchdog Audit / Scholarly Work (Year)'}
               className={clsx(
                 'w-full px-3 py-2 rounded-lg text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 isDark

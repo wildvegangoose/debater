@@ -64,7 +64,7 @@ export function MethodologyModal({ isOpen, isDark, onClose }: MethodologyModalPr
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-sky-400 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-sky-400">Debate Pillars (Blue)</div>
-                <p className="mt-0.5 opacity-80">Eight core thematic dimensions structuring the overall conflict.</p>
+                <p className="mt-0.5 opacity-80">Ten symmetrical thematic dimensions structuring the overall conflict.</p>
               </div>
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-amber-400 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-amber-400">Contested Theses (Amber)</div>
@@ -81,6 +81,18 @@ export function MethodologyModal({ isOpen, isDark, onClose }: MethodologyModalPr
                 </p>
               </div>
             </div>
+          </div>
+
+          <div
+            className={clsx(
+              'p-4 rounded-xl border',
+              isDark ? 'bg-amber-950/20 border-amber-500/30' : 'bg-amber-50/70 border-amber-200'
+            )}
+          >
+            <p className="font-semibold text-amber-400 mb-1">Source Epistemology: Contested Institutions &amp; Watchdogs</p>
+            <p className={isDark ? 'text-slate-300 text-xs leading-relaxed' : 'text-slate-700 text-xs leading-relaxed'}>
+              Citations on cards document <strong>the evidentiary record invoked by each camp</strong>, not unchallengeable neutral truth. UN General Assembly resolutions (e.g., Res. 181, 194) are non-binding political bloc votes rather than codified law, and UN bodies (such as the UNHRC under permanent Agenda Item 7 or UNRWA) are themselves subjects of dedicated debate branches on this map alongside watchdog monitors (UN Watch, IMPACT-se, MEMRI, PMW), human-rights NGOs (B’Tselem, HRW, Amnesty), bilateral treaties, and economic institutions (World Bank, Bank of Israel).
+            </p>
           </div>
 
           <div className="space-y-2">

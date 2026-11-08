@@ -13,9 +13,9 @@ export const refugeesReturnNodes: DebateNode[] = [
       'Pits individual human rights to return and property restitution against Israel’s demographic survival as a Jewish-majority state and comparative 20th-century refugee precedents.'
     ],
     references: [
-      'UN General Assembly Resolution 194(III), Para. 11 (Dec 11, 1948)',
+      'UNGA Resolution 194(III), Para. 11 (Dec 1948 — Non-Binding General Assembly Recommendation)',
       'Universal Declaration of Human Rights Art. 13(2) (1948)',
-      'Taba Summit Non-Paper on Refugees (Jan 2001)'
+      'Taba Summit Non-Paper on Refugees & Clinton Parameters (2000–2001)'
     ],
     tags: ['Human Rights', 'International Law', 'Demographics'],
     era: '1948–Present'
@@ -30,12 +30,12 @@ export const refugeesReturnNodes: DebateNode[] = [
     summary:
       'Palestinian refugees displaced in 1948 and 1967—and their descendants—possess an individual legal and moral right under international law to choose return to their original homes inside Israel alongside full property restitution and compensation.',
     details: [
-      'Anchored in UNGA Resolution 194 (reaffirmed over 130 times by the General Assembly), UDHR Art. 13(2), ICCPR Art. 12(4), and customary law on state succession and private property.',
+      'Proponents anchor this claim in UNGA Resolution 194 (a non-binding General Assembly recommendation reaffirmed annually by UNGA majorities, which advocates argue reflects customary law alongside UDHR Art. 13(2) and ICCPR Art. 12(4)).',
       'Highlights a sharp asymmetry: Israel’s 1950 Law of Return grants automatic citizenship to any Jew worldwide based on ancestral origin two millennia ago while barring Palestinians born in Jaffa, Acre, or Galilee—or their children—from returning.',
       'For millions of stateless Palestinians in camps in Lebanon, Syria, Gaza, and the West Bank, the right of return is the central pillar of historical justice and national identity.'
     ],
     references: [
-      'UNGA Resolution 194(III) Para. 11 (1948)',
+      'UNGA Resolution 194(III) Para. 11 (1948 — Non-Binding UNGA Recommendation)',
       'International Covenant on Civil and Political Rights Art. 12(4) (1966)',
       'Susan Akram & Lex Takkenberg, Palestinian Refugees in International Law (2020)'
     ],
@@ -92,15 +92,15 @@ export const refugeesReturnNodes: DebateNode[] = [
       'Critics argue UNRWA uniquely transmits patrilineal refugee status indefinitely across 4th and 5th generations—expanding ~700,000 original 1948 refugees (~30,000 still living) to 5.9 million registrants, including over 2 million who already hold full Jordanian citizenship.',
     details: [
       'Whereas UNHCR’s global mandate actively pursues local integration or third-country resettlement when return is blocked, Arab host states (notably Lebanon and Syria) barred Palestinians from citizenship and dozens of professions to keep the conflict open.',
-      'Critics also allege UNRWA governance failures in Gaza, citing textbook incitement disputes and findings regarding staff neutrality/Hamas infiltration.',
+      'Critics also point to watchdog findings (UN Watch, IMPACT-se) documenting textbook incitement, UNRWA teachers celebrating Oct 7, and Hamas tunnel infrastructure beneath UNRWA facilities.',
       'Pragmatic peace plans (Clinton Parameters, Geneva Initiative, Olmert 2008 offer) proposed fulfilling "return" primarily into the sovereign State of Palestine, backed by a $30B+ international compensation fund and symbolic humanitarian admission (~5,000–25,000 over several years) into Israel.'
     ],
     references: [
-      'Clinton Parameters on Refugees (Dec 23, 2000)',
-      'Olmert–Abbas Refugee Proposal (Sept 2008)',
+      'Clinton Parameters on Refugees (Dec 23, 2000) & Olmert–Abbas Proposal (Sept 2008)',
+      'IMPACT-se & UN Watch Audits of UNRWA Neutrality & Curriculum (2023–2024)',
       'Colonna Independent Review of UNRWA Neutrality (April 2024)'
     ],
-    tags: ['Governance', 'Diplomacy', 'Demographics'],
+    tags: ['Governance', 'Diplomacy', 'Demographics', 'Media & Education'],
     era: '1950–Present'
   },
   {

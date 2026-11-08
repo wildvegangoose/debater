@@ -280,18 +280,23 @@ export function NodeInspectorDrawer({
           </div>
         )}
 
-        {/* Primary Documents & Scholarly References */}
+        {/* Cited Evidentiary Basis & Contested Sources */}
         {selectedNode.references && selectedNode.references.length > 0 && (
           <div className="space-y-2">
-            <h3
-              className={clsx(
-                'text-xs font-bold uppercase tracking-wider flex items-center gap-1.5',
-                isDark ? 'text-slate-400' : 'text-slate-500'
-              )}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-              Cited Documents, Resolutions & Scholarship
-            </h3>
+            <div>
+              <h3
+                className={clsx(
+                  'text-xs font-bold uppercase tracking-wider flex items-center gap-1.5',
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                )}
+              >
+                <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                Cited Evidentiary Basis &amp; Contested Sources
+              </h3>
+              <p className={clsx('text-[11px] mt-0.5 leading-snug', isDark ? 'text-slate-500' : 'text-slate-500')}>
+                Treaties, watchdog audits (UN Watch, IMPACT-se, MEMRI), NGO reports, economic data, and UN votes are cited as the evidentiary record invoked by each argument—not as uncontested neutral arbiters.
+              </p>
+            </div>
             <div className="space-y-1.5">
               {selectedNode.references.map((ref, idx) => (
                 <div
