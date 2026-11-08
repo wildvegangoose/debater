@@ -13,7 +13,7 @@ import {
 import clsx from 'clsx';
 import { fetchDataset, getCachedDatasetSync, resolveTopicFromUrl, TOPIC_OPTIONS } from './data/datasets';
 import { curatedIsraelPalestineDataset } from './data/israelPalestineGraph';
-import { DebateGraphDataset, DebateNode, DebateNodeKind, DebateTag, DebateTopicId, LayoutDirection } from './types/debate';
+import { DebateGraphDataset, DebateNode, DebateNodeKind, DebateTag, DebateTopicId, DebateViewMode, LayoutDirection } from './types/debate';
 import {
   buildFlowGraph,
   computeGraphStats,
@@ -26,6 +26,8 @@ import { DebateCardNode } from './components/DebateCardNode';
 import { TopBar } from './components/TopBar';
 import { CanvasToolbar } from './components/CanvasToolbar';
 import { NodeInspectorDrawer } from './components/NodeInspectorDrawer';
+import { MobileOutlineView } from './components/MobileOutlineView';
+import { FlashcardQuizView } from './components/FlashcardQuizView';
 import { Loader2 } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { MethodologyModal } from './components/MethodologyModal';
@@ -176,6 +178,29 @@ function DebateGraphWorkspace() {
   const [direction, setDirection] = useState<LayoutDirection>('SPLIT');
   const [showCrossLinks, setShowCrossLinks] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  // View Mode: Graph (Visual Canvas) | Outline (Mobile-first Feed) | Flashcards (Quiz)
+  const [viewMode, setViewMode] = useState<DebateViewMode>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('view')?.toLowerCase();
+      if (v === 'outline' || v === 'feed') return 'outline';
+      if (v === 'flashcards' || v === 'quiz') return 'flashcards';
+      if (window.innerWidth < 640) return 'outline';
+    }
+    return 'graph';
+  });
+
+  const handleViewModeChange = useCallback((mode: DebateViewMode) => {
+    setViewMode(mode);
+    const url = new URL(window.location.href);
+    if (mode === 'graph') {
+      url.searchParams.delete('view');
+    } else {
+      url.searchParams.set('view', mode);
+    }
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
 
   useEffect(() => {
     document.title = `${activeDataset.title} — Dialectica`;
@@ -766,6 +791,8 @@ function DebateGraphWorkspace() {
           dataset={activeDataset}
           topicOptions={TOPIC_OPTIONS}
           onSwitchTopic={handleSwitchTopic}
+          viewMode={viewMode}
+          onChangeViewMode={handleViewModeChange}
           nodes={nodes}
           stats={stats}
           searchQuery={searchQuery}
@@ -787,79 +814,115 @@ function DebateGraphWorkspace() {
           onOpenGuide={() => setIsGuideOpen(true)}
         />
 
-        {/* Main Workspace: Infinite Zoomable Canvas + Right Inspector Drawer */}
-        <div className="flex-1 flex min-h-0 relative">
-          <div className="flex-1 h-full relative">
-            {isLoadingTopic && (
-              <div className="absolute inset-0 z-40 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-3 text-slate-100 animate-in fade-in duration-150">
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-                <p className="text-sm font-semibold tracking-wide">Loading Landmark Debate...</p>
-                <p className="text-xs text-slate-400">Fetching curated nodes &amp; primary evidence dossiers</p>
-              </div>
-            )}
-            <ReactFlow<DebateFlowNode>
-              nodes={rfNodes}
-              edges={flowEdges}
-              onNodesChange={handleNodesChange}
-              nodeTypes={nodeTypes}
-              minZoom={0.09}
-              maxZoom={2.0}
-              zoomOnScroll
-              zoomOnPinch
-              panOnDrag
-              zoomOnDoubleClick={false}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              elementsSelectable
-              onPaneClick={() => handleSelectNode(null)}
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background
-                variant={BackgroundVariant.Dots}
-                gap={24}
-                size={1.35}
-                color={isDark ? '#334155' : '#cbd5e1'}
-              />
+        {/* Main Workspace: Infinite Zoomable Canvas / Mobile Outline Feed / Flashcard Quiz */}
+        <div className="flex-1 flex min-h-0 relative overflow-hidden">
+          {viewMode === 'graph' && (
+            <div className="flex-1 h-full relative">
+              {isLoadingTopic && (
+                <div className="absolute inset-0 z-40 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-3 text-slate-100 animate-in fade-in duration-150">
+                  <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                  <p className="text-sm font-semibold tracking-wide">Loading Landmark Debate...</p>
+                  <p className="text-xs text-slate-400">Fetching curated nodes &amp; primary evidence dossiers</p>
+                </div>
+              )}
+              <ReactFlow<DebateFlowNode>
+                nodes={rfNodes}
+                edges={flowEdges}
+                onNodesChange={handleNodesChange}
+                nodeTypes={nodeTypes}
+                minZoom={0.09}
+                maxZoom={2.0}
+                zoomOnScroll
+                zoomOnPinch
+                panOnDrag
+                zoomOnDoubleClick={false}
+                nodesDraggable={false}
+                nodesConnectable={false}
+                elementsSelectable
+                onPaneClick={() => handleSelectNode(null)}
+                proOptions={{ hideAttribution: true }}
+              >
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  gap={24}
+                  size={1.35}
+                  color={isDark ? '#334155' : '#cbd5e1'}
+                />
 
-              <MiniMap
-                pannable
-                zoomable
-                position="bottom-right"
-                style={{
-                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.92)',
-                  border: isDark ? '1px solid rgba(51, 65, 85, 0.8)' : '1px solid rgba(203, 213, 225, 0.9)',
-                }}
-                maskColor={isDark ? 'rgba(2, 6, 23, 0.62)' : 'rgba(241, 245, 249, 0.65)'}
-                nodeColor={(n) => {
-                  const kind = (n.data as DebateFlowNode['data'])?.node?.kind;
-                  if (kind === 'root') return '#6366f1';
-                  if (kind === 'pillar') return '#38bdf8';
-                  if (kind === 'thesis') return '#f59e0b';
-                  if (kind === 'pro') return '#10b981';
-                  if (kind === 'con') return '#f43f5e';
-                  return '#94a3b8';
-                }}
-              />
+                <MiniMap
+                  pannable
+                  zoomable
+                  position="bottom-right"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.92)',
+                    border: isDark ? '1px solid rgba(51, 65, 85, 0.8)' : '1px solid rgba(203, 213, 225, 0.9)',
+                  }}
+                  maskColor={isDark ? 'rgba(2, 6, 23, 0.62)' : 'rgba(241, 245, 249, 0.65)'}
+                  nodeColor={(n) => {
+                    const kind = (n.data as DebateFlowNode['data'])?.node?.kind;
+                    if (kind === 'root') return '#6366f1';
+                    if (kind === 'pillar') return '#38bdf8';
+                    if (kind === 'thesis') return '#f59e0b';
+                    if (kind === 'pro') return '#10b981';
+                    if (kind === 'con') return '#f43f5e';
+                    return '#94a3b8';
+                  }}
+                />
 
-              <CanvasToolbar
-                direction={direction}
-                onCycleDirection={() => {
-                  setDirection((prev) =>
-                    prev === 'SPLIT' ? 'LR' : prev === 'LR' ? 'TB' : 'SPLIT'
-                  );
-                  setPendingCamera({
-                    nodeIds: computedFlowNodes.map((n) => n.id),
-                    maxZoom: 0.75,
-                    padding: 0.1,
-                  });
-                }}
-                showCrossLinks={showCrossLinks}
-                onToggleCrossLinks={() => setShowCrossLinks((v) => !v)}
-                onApplyDepthPreset={handleApplyDepthPreset}
-                isDark={isDark}
-              />
-            </ReactFlow>
-          </div>
+                <CanvasToolbar
+                  direction={direction}
+                  onCycleDirection={() => {
+                    setDirection((prev) =>
+                      prev === 'SPLIT' ? 'LR' : prev === 'LR' ? 'TB' : 'SPLIT'
+                    );
+                    setPendingCamera({
+                      nodeIds: computedFlowNodes.map((n) => n.id),
+                      maxZoom: 0.75,
+                      padding: 0.1,
+                    });
+                  }}
+                  showCrossLinks={showCrossLinks}
+                  onToggleCrossLinks={() => setShowCrossLinks((v) => !v)}
+                  onApplyDepthPreset={handleApplyDepthPreset}
+                  isDark={isDark}
+                />
+              </ReactFlow>
+            </div>
+          )}
+
+          {viewMode === 'outline' && (
+            <MobileOutlineView
+              dataset={activeDataset}
+              nodes={nodes}
+              activePillarId={activePillarId}
+              onSelectPillar={handleJumpToPillar}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              activeTag={activeTag}
+              onSelectTag={setActiveTag}
+              onInspectNode={handleSelectNode}
+              onSwitchToGraph={(nodeId) => {
+                handleViewModeChange('graph');
+                if (nodeId) handleSelectAndZoom(nodeId, true);
+              }}
+              isDark={isDark}
+            />
+          )}
+
+          {viewMode === 'flashcards' && (
+            <FlashcardQuizView
+              dataset={activeDataset}
+              nodes={nodes}
+              activePillarId={activePillarId}
+              onSelectPillar={handleJumpToPillar}
+              onInspectNode={handleSelectNode}
+              onSwitchToGraph={(nodeId) => {
+                handleViewModeChange('graph');
+                if (nodeId) handleSelectAndZoom(nodeId, true);
+              }}
+              isDark={isDark}
+            />
+          )}
 
           <NodeInspectorDrawer
             topicId={activeDataset.id}

@@ -120,6 +120,8 @@ export interface DebateNode {
 
 export type LayoutDirection = 'SPLIT' | 'LR' | 'TB';
 
+export type DebateViewMode = 'graph' | 'outline' | 'flashcards';
+
 export type ZoomLOD = 'macro' | 'standard' | 'detailed';
 
 export interface DebateGraphDataset {

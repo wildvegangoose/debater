@@ -16,9 +16,10 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { DebateGraphDataset, DebateNode, DebateTag, DebateTopicId } from '../types/debate';
+import { DebateGraphDataset, DebateNode, DebateTag, DebateTopicId, DebateViewMode } from '../types/debate';
 import { GraphStats } from '../utils/graphLayout';
 import { TopicPickerModal } from './TopicPickerModal';
+import { ViewModeSwitcher } from './ViewModeSwitcher';
 
 interface TopicOption {
   id: DebateTopicId;
@@ -29,6 +30,8 @@ interface TopBarProps {
   dataset: DebateGraphDataset;
   topicOptions: TopicOption[];
   onSwitchTopic: (topicId: DebateTopicId) => void;
+  viewMode: DebateViewMode;
+  onChangeViewMode: (mode: DebateViewMode) => void;
   nodes: DebateNode[];
   stats: GraphStats;
   searchQuery: string;
@@ -51,6 +54,8 @@ export function TopBar({
   dataset,
   topicOptions: _topicOptions,
   onSwitchTopic,
+  viewMode,
+  onChangeViewMode,
   nodes,
   stats,
   searchQuery,
@@ -194,6 +199,15 @@ export function TopBar({
               <ChevronDown className="w-3.5 h-3.5 opacity-60" />
             </button>
           </div>
+        </div>
+
+        {/* View Mode Switcher: Graph | Outline | Quiz */}
+        <div className="flex items-center justify-center">
+          <ViewModeSwitcher
+            viewMode={viewMode}
+            onChangeViewMode={onChangeViewMode}
+            isDark={isDark}
+          />
         </div>
 
         {/* Search + Filter + Actions */}
@@ -423,56 +437,58 @@ export function TopBar({
         </div>
       </div>
 
-      {/* Pillar Quick-Jump Navigation Strip */}
-      <div
-        className={clsx(
-          'px-4 py-1.5 border-t flex items-center gap-1.5 overflow-x-auto no-scrollbar',
-          isDark ? 'border-slate-800/70 bg-slate-900/40' : 'border-slate-100 bg-slate-50/70'
-        )}
-      >
-        <span
+      {/* Pillar Quick-Jump Navigation Strip (Canvas Mode Only) */}
+      {viewMode === 'graph' && (
+        <div
           className={clsx(
-            'inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider mr-1 shrink-0',
-            isDark ? 'text-slate-400' : 'text-slate-500'
+            'px-4 py-1.5 border-t flex items-center gap-1.5 overflow-x-auto no-scrollbar',
+            isDark ? 'border-slate-800/70 bg-slate-900/40' : 'border-slate-100 bg-slate-50/70'
           )}
         >
-          <Compass className="w-3.5 h-3.5 text-indigo-400" />
-          Jump &amp; Zoom:
-        </span>
+          <span
+            className={clsx(
+              'inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider mr-1 shrink-0',
+              isDark ? 'text-slate-400' : 'text-slate-500'
+            )}
+          >
+            <Compass className="w-3.5 h-3.5 text-indigo-400" />
+            Jump &amp; Zoom:
+          </span>
 
-        <button
-          type="button"
-          onClick={() => onJumpToPillar(null)}
-          className={clsx(
-            'px-2.5 py-1 rounded-md text-xs font-medium shrink-0 transition-colors',
-            activePillarId === null
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : isDark
-                ? 'text-slate-300 hover:bg-slate-800'
-                : 'text-slate-600 hover:bg-slate-200/70'
-          )}
-        >
-          Full Map Overview
-        </button>
-
-        {pillars.map((pillar) => (
           <button
-            key={pillar.id}
             type="button"
-            onClick={() => onJumpToPillar(pillar.id)}
+            onClick={() => onJumpToPillar(null)}
             className={clsx(
               'px-2.5 py-1 rounded-md text-xs font-medium shrink-0 transition-colors',
-              activePillarId === pillar.id
-                ? 'bg-sky-500/25 text-sky-300 border border-sky-400/40'
+              activePillarId === null
+                ? 'bg-indigo-600 text-white shadow-xs'
                 : isDark
                   ? 'text-slate-300 hover:bg-slate-800'
                   : 'text-slate-600 hover:bg-slate-200/70'
             )}
           >
-            {dataset.shortPillarLabels[pillar.id] ?? pillar.title}
+            Full Map Overview
           </button>
-        ))}
-      </div>
+
+          {pillars.map((pillar) => (
+            <button
+              key={pillar.id}
+              type="button"
+              onClick={() => onJumpToPillar(pillar.id)}
+              className={clsx(
+                'px-2.5 py-1 rounded-md text-xs font-medium shrink-0 transition-colors',
+                activePillarId === pillar.id
+                  ? 'bg-sky-500/25 text-sky-300 border border-sky-400/40'
+                  : isDark
+                    ? 'text-slate-300 hover:bg-slate-800'
+                    : 'text-slate-600 hover:bg-slate-200/70'
+              )}
+            >
+              {dataset.shortPillarLabels[pillar.id] ?? pillar.title}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 22-Topic Deep-Dive Selector Modal */}
       <TopicPickerModal

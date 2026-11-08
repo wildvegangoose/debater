@@ -203,9 +203,9 @@ export function NodeInspectorDrawer({
   return (
     <aside
       className={clsx(
-        'w-full h-full border-l flex flex-col z-30 shrink-0 shadow-2xl transition-all duration-200',
+        'fixed inset-0 z-50 sm:relative sm:inset-auto sm:z-30 w-full h-full border-l flex flex-col shrink-0 shadow-2xl transition-all duration-200',
         isExpandedWidth ? 'sm:w-[640px] lg:w-[740px]' : 'sm:w-[490px] lg:w-[550px]',
-        isDark ? 'bg-slate-900/98 border-slate-800 text-slate-100' : 'bg-white/98 border-slate-200 text-slate-900'
+        isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
       )}
     >
       {/* Top Bar */}
