@@ -1,42 +1,32 @@
-# Dialectica — Israeli–Palestinian Conflict Debate Graph
+# Dialectica — Interactive Dialectical Debate Graphs
 
-An interactive, infinitely zoomable dialectical argument map exploring the primary historical, legal, security, humanitarian, and diplomatic claims and counter-arguments of the Israeli–Palestinian conflict.
+An interactive, infinitely zoomable argument-mapping platform covering two comprehensive deep-dive datasets—the **Israeli–Palestinian Conflict** and **Economic Policies & Market Systems**—complete with multi-section background dossiers and direct links to original treaties, watchdog audits, empirical studies, and broadcasts.
+
+## Live Deep-Dive Datasets
+
+1. **Israeli–Palestinian Conflict (`?topic=israel-palestine` — 10 Symmetrical Pillars, 124 Nodes):**
+   - Covers historical roots & 1948, 1967 borders & settlements, Gaza/Oct 7/ICJ law, regional geopolitics (Abraham Accords, Iran, U.S. aid), **UNRWA schools/textbooks, Arabic media & UN institutional bias** (UN Watch, IMPACT-se, MEMRI, PMW), refugees & equality, Jerusalem, global discourse (BDS, IHRA/JDA, apartheid law), conflict economic policies (Paris Protocol, *Maqasa*, labor permits), and constitutional endgames.
+2. **Economic Policies & Market Systems (`?topic=economic-policies` — 8 Symmetrical Pillars, 90+ Nodes):**
+   - Covers fiscal stimulus, sovereign debt & central bank independence; progressive wealth taxes vs. supply-side & Georgist land-value taxes; free trade vs. tariffs & industrial policy (CHIPS/IRA); minimum wage, unions & AI/UBI; YIMBY zoning reform vs. rent control; Neo-Brandeisian antitrust vs. consumer welfare & deregulation; single-payer healthcare, school vouchers & pensions; and carbon pricing vs. nuclear abundance & green growth.
 
 ## Key Features
 
+- **Rich Node Dossiers & Original Source Links:**
+  - Clicking any card opens an expandable side dossier featuring an executive summary, multi-paragraph background & empirical analysis (`**bold**` key concepts, metrics, and mechanisms), scannable takeaways, and clickable external cards linking directly to original primary documents (Yale Avalon Project, NBER, World Bank, CBO, UN Watch, IMPACT-se, MEMRI, ICJ, ICRC, etc.).
 - **3-Tier Semantic Zoom (Level-of-Detail Rendering):**
-  - **Macro Overview (`< 36%`):** High-contrast poster headlines and Pro/Con branch counts readable from 30,000 feet.
-  - **Standard Exploration (`36% – 90%`):** Full summaries, historical eras, thematic lens tags, and expand/collapse branch controls.
-  - **Deep Citations (`>= 90%`):** Reveals evidentiary context bullets and contested source citations directly on cards.
-- **3 Tree Layout Modes:**
-  - **Bilateral Mindmap (`SPLIT`):** Centered root inquiry with 5 pillars branching left and 5 pillars branching right for widescreen symmetry.
-  - **Left → Right (`LR`)** and **Top → Bottom (`TB`)** hierarchical trees.
-- **Ten Curated Thematic Pillars (120+ Steelmanned Nodes):**
-  1. Historical Roots, Indigeneity & Self-Determination (1880s–1949)
-  2. 1967 Borders, West Bank Occupation & Settlements
-  3. Gaza, Blockade, October 7, IHL & ICJ Genocide Convention Threshold
-  4. Regional Geopolitics, Abraham Accords, Iran’s "Axis of Resistance" & U.S. Military Aid
-  5. UNRWA Schools, Textbooks, Arabic Media (UN Watch, IMPACT-se, MEMRI, PMW) & UN Institutional Bias
-  6. Refugees, Right of Return, Mizrahi Dispossession & Civic Equality
-  7. Status of Jerusalem, Sacred Sites & Unilateral Diplomatic Recognition
-  8. Global Discourse: Anti-Zionism vs. Antisemitism (IHRA/JDA), BDS & "Apartheid" Legal Framework
-  9. Economic Policies: 1994 Paris Protocol, Clearance Revenues, Labor Permits, "Economic Peace" & Gaza/Israel Wartime Economy
-  10. Competing Endgames: Two-State Solution, One Democratic State, or Confederation
+  - **Macro Overview (`< 36%`):** High-contrast poster headlines and Pro/Con branch counts.
+  - **Standard Exploration (`36% – 90%`):** Summaries, eras, thematic lens tags, and expand/collapse controls.
+  - **Deep Citations (`>= 90%`):** Inline evidence previews and clickable primary source links right on canvas cards.
+- **Multi-Topic Switcher & Live Deep-Linking:**
+  - Switch seamlessly via the header toggle or share direct URLs (`?topic=israel-palestine#node=...` and `?topic=economic-policies#node=...`).
 - **Interactive Local Sandbox:**
-  - Add supporting (`+`) or challenging (`−`) arguments to any node, edit existing claims, import/export JSON, copy deep-links (`#node=<id>`), or reset to the curated baseline.
+  - Add supporting (`+`) or challenging (`−`) arguments, edit rich markdown dossiers and source links, import/export JSON, or reset to the curated baseline.
 
-## Local Development
+## Local Development & Deployment
 
 ```bash
 npm install
-npm run dev
+npm run dev      # Local server at http://localhost:5173/
+npm run build    # Production bundle
+npm run deploy   # Deploy to GitHub Pages
 ```
-
-## Production Build & GitHub Pages Deployment
-
-```bash
-npm run build
-npm run deploy
-```
-
-A GitHub Actions workflow (`.github/workflows/deploy.yml`) is also included for automatic deployment to GitHub Pages on pushes to `main`.

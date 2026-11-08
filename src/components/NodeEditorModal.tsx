@@ -1,24 +1,12 @@
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { X } from 'lucide-react';
-import { DebateNode, DebateNodeKind, DebateTag } from '../types/debate';
-
-const ALL_TAGS: DebateTag[] = [
-  'History',
-  'International Law',
-  'Security',
-  'Human Rights',
-  'Economics',
-  'Media & Education',
-  'Demographics',
-  'Diplomacy',
-  'Religion & Culture',
-  'Governance',
-];
+import { DebateContentSection, DebateNode, DebateNodeKind, DebateSourceLink, DebateTag } from '../types/debate';
 
 interface NodeEditorModalProps {
   isOpen: boolean;
   mode: 'add' | 'edit';
+  availableTags: DebateTag[];
   parentNode: DebateNode | null;
   initialNode: DebateNode | null;
   defaultKind: DebateNodeKind;
@@ -30,6 +18,7 @@ interface NodeEditorModalProps {
 export function NodeEditorModal({
   isOpen,
   mode,
+  availableTags,
   parentNode,
   initialNode,
   defaultKind,
@@ -41,9 +30,10 @@ export function NodeEditorModal({
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [era, setEra] = useState('');
+  const [analysisText, setAnalysisText] = useState('');
   const [detailsText, setDetailsText] = useState('');
-  const [refsText, setRefsText] = useState('');
-  const [selectedTags, setSelectedTags] = useState<DebateTag[]>(['Diplomacy']);
+  const [sourcesText, setSourcesText] = useState('');
+  const [selectedTags, setSelectedTags] = useState<DebateTag[]>([availableTags[0] ?? 'Governance']);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,19 +42,32 @@ export function NodeEditorModal({
       setTitle(initialNode.title);
       setSummary(initialNode.summary);
       setEra(initialNode.era ?? '');
+      const existingAnalysis = (initialNode.sections ?? [])
+        .map((s) => `## ${s.heading}\n${s.paragraphs.join('\n\n')}`)
+        .join('\n\n');
+      setAnalysisText(existingAnalysis);
       setDetailsText(initialNode.details.join('\n'));
-      setRefsText((initialNode.references ?? []).join('\n'));
-      setSelectedTags(initialNode.tags.length > 0 ? initialNode.tags : ['History']);
+      if (initialNode.sources && initialNode.sources.length > 0) {
+        setSourcesText(
+          initialNode.sources
+            .map((s) => `${s.title} | ${s.url}${s.publisher ? ` | ${s.publisher}` : ''}`)
+            .join('\n')
+        );
+      } else {
+        setSourcesText((initialNode.references ?? []).join('\n'));
+      }
+      setSelectedTags(initialNode.tags.length > 0 ? initialNode.tags : [availableTags[0] ?? 'Governance']);
     } else {
       setKind(defaultKind);
       setTitle('');
       setSummary('');
       setEra('');
+      setAnalysisText('');
       setDetailsText('');
-      setRefsText('');
-      setSelectedTags(parentNode?.tags.slice(0, 2) ?? ['Diplomacy']);
+      setSourcesText('');
+      setSelectedTags(parentNode?.tags.slice(0, 2) ?? [availableTags[0] ?? 'Governance']);
     }
-  }, [isOpen, mode, initialNode, defaultKind, parentNode]);
+  }, [isOpen, mode, initialNode, defaultKind, parentNode, availableTags]);
 
   if (!isOpen) return null;
 
@@ -82,19 +85,62 @@ export function NodeEditorModal({
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
-    const references = refsText
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean);
+
+    // Parse "## Heading\nParagraphs..." into DebateContentSection[]
+    const sections: DebateContentSection[] = [];
+    const trimmedAnalysis = analysisText.trim();
+    if (trimmedAnalysis) {
+      const rawBlocks = trimmedAnalysis.split(/^##\s+/m).filter(Boolean);
+      for (const block of rawBlocks) {
+        const lines = block.split('\n');
+        if (trimmedAnalysis.startsWith('## ')) {
+          const heading = lines[0].trim() || 'In-Depth Context';
+          const paragraphs = lines
+            .slice(1)
+            .join('\n')
+            .split(/\n\s*\n/)
+            .map((p) => p.trim())
+            .filter(Boolean);
+          if (paragraphs.length > 0) {
+            sections.push({ heading, paragraphs });
+          }
+        } else {
+          const paragraphs = block
+            .split(/\n\s*\n/)
+            .map((p) => p.trim())
+            .filter(Boolean);
+          if (paragraphs.length > 0) {
+            sections.push({ heading: 'Background & Analysis', paragraphs });
+          }
+        }
+      }
+    }
+
+    const sources: DebateSourceLink[] = [];
+    const references: string[] = [];
+    for (const line of sourcesText.split('\n').map((s) => s.trim()).filter(Boolean)) {
+      const parts = line.split('|').map((p) => p.trim());
+      if (parts.length >= 2 && /^https?:\/\//i.test(parts[1])) {
+        sources.push({
+          title: parts[0],
+          url: parts[1],
+          publisher: parts[2] || undefined,
+        });
+      } else {
+        references.push(line);
+      }
+    }
 
     onSave({
       id: mode === 'edit' && initialNode ? initialNode.id : undefined,
-      parentId: mode === 'edit' && initialNode ? initialNode.parentId : parentNode?.id ?? 'root-ip',
+      parentId: mode === 'edit' && initialNode ? initialNode.parentId : parentNode?.id ?? null,
       kind,
       title: title.trim(),
       summary: summary.trim(),
       era: era.trim() || undefined,
+      sections: sections.length > 0 ? sections : undefined,
       details,
+      sources: sources.length > 0 ? sources : undefined,
       references: references.length > 0 ? references : undefined,
       tags: selectedTags,
       relatedIds: mode === 'edit' && initialNode ? initialNode.relatedIds : undefined,
@@ -107,7 +153,7 @@ export function NodeEditorModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
       <div
         className={clsx(
-          'w-full max-w-xl rounded-2xl border shadow-2xl overflow-hidden',
+          'w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden',
           isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
         )}
       >
@@ -182,7 +228,7 @@ export function NodeEditorModal({
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Concise, steelmanned headline (e.g., International Monitoring Along Jordan Valley)"
+              placeholder="Concise, steelmanned headline"
               className={clsx(
                 'w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 isDark
@@ -195,16 +241,35 @@ export function NodeEditorModal({
           {/* Summary */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
-              Core Argument Summary *
+              Executive Summary (Card Preview) *
             </label>
             <textarea
               required
-              rows={3}
+              rows={2}
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="2–3 sentences articulating the logic, legal basis, or historical rationale..."
+              placeholder="2–3 sentences articulating the core logic or empirical claim..."
               className={clsx(
                 'w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                isDark
+                  ? 'bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500'
+                  : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
+              )}
+            />
+          </div>
+
+          {/* Rich In-Depth Analysis */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+              In-Depth Background &amp; Analysis (Supports `## Section Heading` and `**bold**`)
+            </label>
+            <textarea
+              rows={4}
+              value={analysisText}
+              onChange={(e) => setAnalysisText(e.target.value)}
+              placeholder={'## Historical & Empirical Context\nDetailed multi-paragraph elaboration...'}
+              className={clsx(
+                'w-full px-3 py-2 rounded-lg text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 isDark
                   ? 'bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500'
                   : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
@@ -216,13 +281,13 @@ export function NodeEditorModal({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
-                Period / Era
+                Period / Scope
               </label>
               <input
                 type="text"
                 value={era}
                 onChange={(e) => setEra(e.target.value)}
-                placeholder="e.g., 1967–Present"
+                placeholder="e.g., 1994–Present"
                 className={clsx(
                   'w-full px-3 py-2 rounded-lg text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                   isDark ? 'bg-slate-950 border-slate-700 text-slate-100' : 'bg-white border-slate-300 text-slate-900'
@@ -234,7 +299,7 @@ export function NodeEditorModal({
                 Thematic Lenses
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {ALL_TAGS.map((tag) => {
+                {availableTags.map((tag) => {
                   const active = selectedTags.includes(tag);
                   return (
                     <button
@@ -261,13 +326,13 @@ export function NodeEditorModal({
           {/* Detailed Evidence Bullets */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
-              Supporting Evidence / Context Bullets (one per line)
+              Key Takeaways / Evidence Bullets (one per line)
             </label>
             <textarea
               rows={3}
               value={detailsText}
               onChange={(e) => setDetailsText(e.target.value)}
-              placeholder={'First historical or legal detail...\nSecond supporting point...'}
+              placeholder={'First empirical or historical point...\nSecond supporting point...'}
               className={clsx(
                 'w-full px-3 py-2 rounded-lg text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 isDark
@@ -277,16 +342,16 @@ export function NodeEditorModal({
             />
           </div>
 
-          {/* References */}
+          {/* Clickable Sources */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
-              Cited Sources / Evidentiary Basis (one per line)
+              Original Sources &amp; Links (`Title | https://url | Publisher`, one per line)
             </label>
             <textarea
               rows={2}
-              value={refsText}
-              onChange={(e) => setRefsText(e.target.value)}
-              placeholder={'Bilateral Treaty / Watchdog Audit / Scholarly Work (Year)'}
+              value={sourcesText}
+              onChange={(e) => setSourcesText(e.target.value)}
+              placeholder={'Report or Paper Title | https://example.org/original-source | Publisher'}
               className={clsx(
                 'w-full px-3 py-2 rounded-lg text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 isDark

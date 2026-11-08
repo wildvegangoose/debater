@@ -1,13 +1,15 @@
 import clsx from 'clsx';
 import { Scale, X } from 'lucide-react';
+import { DebateGraphDataset } from '../types/debate';
 
 interface MethodologyModalProps {
+  dataset: DebateGraphDataset;
   isOpen: boolean;
   isDark: boolean;
   onClose: () => void;
 }
 
-export function MethodologyModal({ isOpen, isDark, onClose }: MethodologyModalProps) {
+export function MethodologyModal({ dataset, isOpen, isDark, onClose }: MethodologyModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -27,7 +29,7 @@ export function MethodologyModal({ isOpen, isDark, onClose }: MethodologyModalPr
           <div className="flex items-center gap-2.5">
             <Scale className="w-5 h-5 text-indigo-400" />
             <h2 className="font-editorial text-lg font-semibold">
-              How to Read This Debate Graph & Editorial Methodology
+              How to Read This Debate Graph &amp; Source Methodology
             </h2>
           </div>
           <button
@@ -49,30 +51,30 @@ export function MethodologyModal({ isOpen, isDark, onClose }: MethodologyModalPr
               isDark ? 'bg-indigo-950/25 border-indigo-500/30' : 'bg-indigo-50/70 border-indigo-200'
             )}
           >
-            <p className="font-semibold text-indigo-400 mb-1">Dialectical Neutrality & "Steelmanning"</p>
+            <p className="font-semibold text-indigo-400 mb-1">Dialectical Neutrality &amp; "Steelmanning"</p>
             <p className={isDark ? 'text-slate-300 text-xs leading-relaxed' : 'text-slate-700 text-xs leading-relaxed'}>
-              This map does not endorse any single narrative or political outcome. Instead, it presents the strongest,
-              most articulate historical, legal, strategic, and humanitarian formulations ("steelmanned" arguments)
-              advanced across Israeli, Palestinian, international legal, and diplomatic scholarship.
+              This platform does not endorse any single ideological camp or policy outcome. Every card presents the strongest,
+              most articulate empirical, legal, historical, or theoretical formulation ("steelmanned" argument) advanced by leading
+              proponents, paired directly with its sharpest counter-arguments and clickable links to original documents and studies.
             </p>
           </div>
 
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider opacity-75">
-              Understanding Colors & Recursive Stances
+              Understanding Colors &amp; Recursive Stances
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-sky-400 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-sky-400">Debate Pillars (Blue)</div>
-                <p className="mt-0.5 opacity-80">Ten symmetrical thematic dimensions structuring the overall conflict.</p>
+                <p className="mt-0.5 opacity-80">Symmetrical core thematic dimensions structuring the overall topic.</p>
               </div>
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-amber-400 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-amber-400">Contested Theses (Amber)</div>
-                <p className="mt-0.5 opacity-80">Specific, sharply stated claims or peace models open to Pro/Con debate.</p>
+                <p className="mt-0.5 opacity-80">Specific, sharply stated claims or policy models open to Pro/Con debate.</p>
               </div>
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-emerald-500 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-emerald-400">+ Supports Parent (Green)</div>
-                <p className="mt-0.5 opacity-80">Logically reinforces or provides evidence for the claim directly above/left of it.</p>
+                <p className="mt-0.5 opacity-80">Logically reinforces or provides empirical evidence for its immediate parent claim.</p>
               </div>
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-rose-500 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-rose-400">− Challenges Parent (Red)</div>
@@ -89,25 +91,27 @@ export function MethodologyModal({ isOpen, isDark, onClose }: MethodologyModalPr
               isDark ? 'bg-amber-950/20 border-amber-500/30' : 'bg-amber-50/70 border-amber-200'
             )}
           >
-            <p className="font-semibold text-amber-400 mb-1">Source Epistemology: Contested Institutions &amp; Watchdogs</p>
+            <p className="font-semibold text-amber-400 mb-1">
+              Source Epistemology ({dataset.shortTitle})
+            </p>
             <p className={isDark ? 'text-slate-300 text-xs leading-relaxed' : 'text-slate-700 text-xs leading-relaxed'}>
-              Citations on cards document <strong>the evidentiary record invoked by each camp</strong>, not unchallengeable neutral truth. UN General Assembly resolutions (e.g., Res. 181, 194) are non-binding political bloc votes rather than codified law, and UN bodies (such as the UNHRC under permanent Agenda Item 7 or UNRWA) are themselves subjects of dedicated debate branches on this map alongside watchdog monitors (UN Watch, IMPACT-se, MEMRI, PMW), human-rights NGOs (B’Tselem, HRW, Amnesty), bilateral treaties, and economic institutions (World Bank, Bank of Israel).
+              {dataset.epistemologyNote}
             </p>
           </div>
 
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider opacity-75">
-              Semantic Zoom & Navigation Shortcuts
+              Navigation, Rich Dossiers &amp; Topic Switching
             </h3>
             <ul className="text-xs space-y-1.5 list-disc pl-5 opacity-90">
               <li>
-                <strong>3-Level Semantic Zoom:</strong> Pinch or scroll to zoom smoothly. Zoomed out (&lt;44%) shows high-contrast poster headlines; mid-zoom shows summaries; zooming in (&gt;92%) reveals primary citations right on cards.
+                <strong>Switch Deep-Dive Topics:</strong> Use the top header switcher (or <code>?topic=israel-palestine</code> and <code>?topic=economic-policies</code> URLs) to jump between standalone debate graphs.
               </li>
               <li>
-                <strong>Click vs. Double-Click:</strong> Single-click any card to open its full citations & lineage in the right Inspector; <strong>double-click</strong> any card (or press its 🎯 icon) to smoothly fly and frame its branch.
+                <strong>In-Depth Node Dossiers &amp; Original Links:</strong> Click any card to open its full multi-section background essay, key takeaways, and clickable links to original treaties, NBER/World Bank studies, watchdog audits, and broadcast archives. Use the expand icon in the drawer header for wide reading mode.
               </li>
               <li>
-                <strong>Local Sandbox:</strong> Add your own supporting/counter arguments, edit existing cards, and export/import JSON. Custom changes save automatically in your browser.
+                <strong>3-Level Semantic Zoom:</strong> Zoomed out (&lt;36%) shows high-contrast poster headlines; mid-zoom shows summaries; zooming in (&ge;90%) reveals evidence previews and direct source links right on cards.
               </li>
               <li>
                 <strong>Keyboard Shortcuts:</strong> Press <kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-200 font-mono-code">/</kbd> or <kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-200 font-mono-code">⌘K</kbd> to search, <kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-200 font-mono-code">F</kbd> to fit view, and <kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-200 font-mono-code">Esc</kbd> to close inspector.

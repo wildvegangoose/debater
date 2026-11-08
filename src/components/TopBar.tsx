@@ -5,6 +5,7 @@ import {
   Download,
   Filter,
   HelpCircle,
+  Landmark,
   Moon,
   RotateCcw,
   Scale,
@@ -14,36 +15,18 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { DebateNode, DebateTag } from '../types/debate';
+import { DebateGraphDataset, DebateNode, DebateTag, DebateTopicId } from '../types/debate';
 import { GraphStats } from '../utils/graphLayout';
 
-const ALL_TAGS: DebateTag[] = [
-  'History',
-  'International Law',
-  'Security',
-  'Human Rights',
-  'Economics',
-  'Media & Education',
-  'Demographics',
-  'Diplomacy',
-  'Religion & Culture',
-  'Governance',
-];
-
-const SHORT_PILLAR_LABELS: Record<string, string> = {
-  'pillar-self-determination': '1. Origins & 1948',
-  'pillar-borders-settlements': '2. 1967 & Settlements',
-  'pillar-gaza-security': '3. Gaza, Oct 7 & ICJ',
-  'pillar-regional-geopolitics': '4. Iran, Accords & U.S.',
-  'pillar-education-media-un': '5. UNRWA, Media & UN Bias',
-  'pillar-refugees-return': '6. Refugees & Equality',
-  'pillar-jerusalem': '7. Jerusalem & Recognition',
-  'pillar-global-discourse': '8. Antisemitism, BDS & Law',
-  'pillar-economic-policies': '9. Economic Policies',
-  'pillar-endgames': '10. Peace Endgames',
-};
+interface TopicOption {
+  id: DebateTopicId;
+  shortTitle: string;
+}
 
 interface TopBarProps {
+  dataset: DebateGraphDataset;
+  topicOptions: TopicOption[];
+  onSwitchTopic: (topicId: DebateTopicId) => void;
   nodes: DebateNode[];
   stats: GraphStats;
   searchQuery: string;
@@ -63,6 +46,9 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  dataset,
+  topicOptions,
+  onSwitchTopic,
   nodes,
   stats,
   searchQuery,
@@ -114,6 +100,16 @@ export function TopBar({
               n.title.toLowerCase().includes(trimmedQuery) ||
               n.summary.toLowerCase().includes(trimmedQuery) ||
               n.details.some((d) => d.toLowerCase().includes(trimmedQuery)) ||
+              (n.sections ?? []).some(
+                (s) =>
+                  s.heading.toLowerCase().includes(trimmedQuery) ||
+                  s.paragraphs.some((p) => p.toLowerCase().includes(trimmedQuery))
+              ) ||
+              (n.sources ?? []).some(
+                (src) =>
+                  src.title.toLowerCase().includes(trimmedQuery) ||
+                  (src.publisher ?? '').toLowerCase().includes(trimmedQuery)
+              ) ||
               (n.references ?? []).some((r) => r.toLowerCase().includes(trimmedQuery))
           )
           .slice(0, 8)
@@ -128,45 +124,80 @@ export function TopBar({
     >
       {/* Main Row */}
       <div className="px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-        {/* Brand & Stats */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0">
-            <Scale className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="font-editorial text-lg font-semibold tracking-tight truncate">
-                Israeli–Palestinian Conflict Debate Graph
-              </h1>
-              <span
-                className={clsx(
-                  'hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
-                  isDark
-                    ? 'bg-slate-900 border-slate-800 text-slate-300'
-                    : 'bg-slate-100 border-slate-200 text-slate-600'
-                )}
-              >
-                <span>{stats.totalNodes} nodes</span>
-                <span className="text-emerald-400">+{stats.proCount}</span>
-                <span className="text-rose-400">−{stats.conCount}</span>
-              </span>
-              {hasSandboxChanges && (
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/20 text-violet-300 border border-violet-400/30">
-                  <Sparkles className="w-3 h-3" />
-                  Sandbox Active
-                </span>
+        {/* Brand, Topic Switcher & Stats */}
+        <div className="flex items-center gap-3 min-w-0 flex-wrap">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0">
+              {dataset.id === 'economic-policies' ? (
+                <Landmark className="w-5 h-5" />
+              ) : (
+                <Scale className="w-5 h-5" />
               )}
             </div>
-            <p className={clsx('text-[11.5px] hidden sm:block truncate', isDark ? 'text-slate-400' : 'text-slate-500')}>
-              Zoom out for macro structure • Zoom in or click cards for legal & historical citations • Double-click to fly to branch
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="font-editorial text-lg font-semibold tracking-tight truncate">
+                  {dataset.title}
+                </h1>
+                <span
+                  className={clsx(
+                    'hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
+                    isDark
+                      ? 'bg-slate-900 border-slate-800 text-slate-300'
+                      : 'bg-slate-100 border-slate-200 text-slate-600'
+                  )}
+                >
+                  <span>{stats.totalNodes} nodes</span>
+                  <span className="text-emerald-400">+{stats.proCount}</span>
+                  <span className="text-rose-400">−{stats.conCount}</span>
+                </span>
+                {hasSandboxChanges && (
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/20 text-violet-300 border border-violet-400/30">
+                    <Sparkles className="w-3 h-3" />
+                    Sandbox
+                  </span>
+                )}
+              </div>
+              <p className={clsx('text-[11.5px] hidden md:block truncate', isDark ? 'text-slate-400' : 'text-slate-500')}>
+                {dataset.subtitle}
+              </p>
+            </div>
+          </div>
+
+          {/* Multi-Topic Deep-Dive Switcher */}
+          <div
+            className={clsx(
+              'inline-flex items-center p-0.5 rounded-xl border shrink-0',
+              isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'
+            )}
+          >
+            {topicOptions.map((opt) => {
+              const active = opt.id === dataset.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => onSwitchTopic(opt.id)}
+                  className={clsx(
+                    'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+                    active
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : isDark
+                        ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                  )}
+                >
+                  {opt.shortTitle}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Search + Filter + Actions */}
         <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
           {/* Instant Search Input */}
-          <div className="relative w-full sm:w-64 md:w-76">
+          <div className="relative w-full sm:w-60 md:w-72">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               ref={searchInputRef}
@@ -175,7 +206,7 @@ export function TopBar({
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 180)}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search claims, watchdogs, economics, dates... (/)"
+              placeholder={dataset.searchPlaceholder}
               className={clsx(
                 'w-full pl-8 pr-7 py-1.5 rounded-lg text-xs border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 isDark
@@ -258,7 +289,7 @@ export function TopBar({
             {showTagMenu && (
               <div
                 className={clsx(
-                  'absolute right-0 mt-1.5 w-48 rounded-xl border shadow-xl p-1.5 z-50',
+                  'absolute right-0 mt-1.5 w-52 rounded-xl border shadow-xl p-1.5 z-50 max-h-96 overflow-y-auto',
                   isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
                 )}
               >
@@ -279,7 +310,7 @@ export function TopBar({
                 >
                   All Lenses
                 </button>
-                {ALL_TAGS.map((tag) => (
+                {dataset.availableTags.map((tag) => (
                   <button
                     key={tag}
                     type="button"
@@ -316,7 +347,7 @@ export function TopBar({
             )}
           >
             <Download className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Export</span>
+            <span className="hidden 2xl:inline">Export</span>
           </button>
 
           <input
@@ -342,7 +373,7 @@ export function TopBar({
             )}
           >
             <Upload className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Import</span>
+            <span className="hidden 2xl:inline">Import</span>
           </button>
 
           {hasSandboxChanges && (
@@ -361,7 +392,7 @@ export function TopBar({
           <button
             type="button"
             onClick={onOpenGuide}
-            title="How to Read & Neutrality Methodology"
+            title="How to Read & Source Methodology"
             className={clsx(
               'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
               isDark
@@ -404,7 +435,7 @@ export function TopBar({
           )}
         >
           <Compass className="w-3.5 h-3.5 text-indigo-400" />
-          Jump & Zoom:
+          Jump &amp; Zoom:
         </span>
 
         <button
@@ -436,7 +467,7 @@ export function TopBar({
                   : 'text-slate-600 hover:bg-slate-200/70'
             )}
           >
-            {SHORT_PILLAR_LABELS[pillar.id] ?? pillar.title}
+            {dataset.shortPillarLabels[pillar.id] ?? pillar.title}
           </button>
         ))}
       </div>

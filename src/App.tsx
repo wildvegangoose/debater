@@ -11,8 +11,8 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import clsx from 'clsx';
-import { curatedIsraelPalestineDataset } from './data/israelPalestineGraph';
-import { DebateNode, DebateNodeKind, DebateTag, LayoutDirection } from './types/debate';
+import { DEBATE_DATASETS, resolveTopicFromUrl, TOPIC_OPTIONS } from './data/datasets';
+import { DebateGraphDataset, DebateNode, DebateNodeKind, DebateTag, DebateTopicId, LayoutDirection } from './types/debate';
 import {
   buildFlowGraph,
   computeGraphStats,
@@ -28,14 +28,43 @@ import { NodeInspectorDrawer } from './components/NodeInspectorDrawer';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { MethodologyModal } from './components/MethodologyModal';
 
-const STORAGE_KEY = 'dialectica-ip-debate-sandbox-v1';
+const STORAGE_PREFIX = 'dialectica-debate-sandbox-';
 const THEME_KEY = 'dialectica-theme-v1';
 
 const nodeTypes = {
   debateCard: DebateCardNode,
 };
 
-function getInitialCollapsedIds(nodes: DebateNode[]): Set<string> {
+function storageKeyForTopic(topicId: DebateTopicId): string {
+  return `${STORAGE_PREFIX}${topicId}`;
+}
+
+function loadNodesForDataset(dataset: DebateGraphDataset): { nodes: DebateNode[]; hasCustom: boolean } {
+  try {
+    const raw = localStorage.getItem(storageKeyForTopic(dataset.id));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed?.nodes) && parsed.nodes.length > 0) {
+        if (parsed.version === dataset.version) {
+          return { nodes: parsed.nodes, hasCustom: true };
+        }
+        const baselineIds = new Set(dataset.nodes.map((n) => n.id));
+        const customAdditions = (parsed.nodes as DebateNode[]).filter(
+          (n) => n.isCustom && !baselineIds.has(n.id)
+        );
+        return {
+          nodes: [...dataset.nodes, ...customAdditions],
+          hasCustom: customAdditions.length > 0,
+        };
+      }
+    }
+  } catch {
+    // Ignore malformed storage
+  }
+  return { nodes: dataset.nodes, hasCustom: false };
+}
+
+function getInitialCollapsedIds(nodes: DebateNode[], targetNodeId?: string | null): Set<string> {
   const collapsed = new Set<string>();
   const childrenParentIds = new Set(nodes.map((n) => n.parentId).filter(Boolean));
   for (const n of nodes) {
@@ -43,7 +72,45 @@ function getInitialCollapsedIds(nodes: DebateNode[]): Set<string> {
       collapsed.add(n.id);
     }
   }
+
+  if (targetNodeId) {
+    const map = new Map(nodes.map((n) => [n.id, n]));
+    const target = map.get(targetNodeId);
+    if (target) {
+      for (const anc of getAncestorIds(targetNodeId, map)) {
+        collapsed.delete(anc);
+      }
+      collapsed.delete(targetNodeId);
+      // If deep-linking to a Pillar, unfold its subtree so all its theses & arguments are visible!
+      if (target.kind === 'pillar') {
+        for (const desc of getDescendantIds(targetNodeId, nodes)) {
+          collapsed.delete(desc);
+        }
+      }
+    }
+  }
   return collapsed;
+}
+
+function findOwningPillarId(nodeId: string | null, nodes: DebateNode[]): string | null {
+  if (!nodeId) return null;
+  const map = new Map(nodes.map((n) => [n.id, n]));
+  let cur = map.get(nodeId);
+  const visited = new Set<string>();
+  while (cur && !visited.has(cur.id)) {
+    visited.add(cur.id);
+    if (cur.kind === 'pillar') return cur.id;
+    cur = cur.parentId ? map.get(cur.parentId) : undefined;
+  }
+  return null;
+}
+
+function parseHashNodeId(): string | null {
+  const hash = window.location.hash;
+  if (hash.startsWith('#node=')) {
+    return decodeURIComponent(hash.slice('#node='.length));
+  }
+  return null;
 }
 
 interface PendingCameraRequest {
@@ -68,88 +135,57 @@ function DebateGraphWorkspace() {
     localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  // Sandbox / Graph Nodes state (migrates baseline automatically when dataset version increments)
-  const [nodes, setNodes] = useState<DebateNode[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed?.nodes) && parsed.nodes.length > 0) {
-          if (parsed.version === curatedIsraelPalestineDataset.version) {
-            return parsed.nodes;
-          }
-          // Merge any custom user-added nodes on top of the new curated v2.0.0 baseline
-          const baselineIds = new Set(curatedIsraelPalestineDataset.nodes.map((n) => n.id));
-          const customAdditions = (parsed.nodes as DebateNode[]).filter(
-            (n) => n.isCustom && !baselineIds.has(n.id)
-          );
-          return [...curatedIsraelPalestineDataset.nodes, ...customAdditions];
-        }
-      }
-    } catch {
-      // Ignore malformed storage
-    }
-    return curatedIsraelPalestineDataset.nodes;
-  });
+  // Active Topic & Dataset state
+  const [topicId, setTopicId] = useState<DebateTopicId>(() => resolveTopicFromUrl());
+  const activeDataset = DEBATE_DATASETS[topicId];
 
-  const [hasSandboxChanges, setHasSandboxChanges] = useState<boolean>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
-      return parsed?.version === curatedIsraelPalestineDataset.version;
-    } catch {
-      return false;
-    }
-  });
-
-  const persistSandboxNodes = useCallback((updatedNodes: DebateNode[]) => {
-    setNodes(updatedNodes);
-    setHasSandboxChanges(true);
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          version: curatedIsraelPalestineDataset.version,
-          savedAt: new Date().toISOString(),
-          nodes: updatedNodes,
-        })
-      );
-    } catch {
-      // Ignore storage quota errors
-    }
-  }, []);
+  const [nodes, setNodes] = useState<DebateNode[]>(() => loadNodesForDataset(DEBATE_DATASETS[resolveTopicFromUrl()]).nodes);
+  const [hasSandboxChanges, setHasSandboxChanges] = useState<boolean>(
+    () => loadNodesForDataset(DEBATE_DATASETS[resolveTopicFromUrl()]).hasCustom
+  );
 
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => {
-    const initial = getInitialCollapsedIds(curatedIsraelPalestineDataset.nodes);
-    const hash = window.location.hash;
-    if (hash.startsWith('#node=')) {
-      const targetId = decodeURIComponent(hash.slice('#node='.length));
-      const map = new Map(curatedIsraelPalestineDataset.nodes.map((n) => [n.id, n]));
-      if (map.has(targetId)) {
-        for (const anc of getAncestorIds(targetId, map)) {
-          initial.delete(anc);
-        }
-        initial.delete(targetId);
-      }
-    }
-    return initial;
+    const initialTopic = resolveTopicFromUrl();
+    const initialNodes = loadNodesForDataset(DEBATE_DATASETS[initialTopic]).nodes;
+    return getInitialCollapsedIds(initialNodes, parseHashNodeId());
   });
 
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(() => {
-    const hash = window.location.hash;
-    if (hash.startsWith('#node=')) {
-      return decodeURIComponent(hash.slice('#node='.length));
-    }
-    return null;
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(() => parseHashNodeId());
+  const [activePillarId, setActivePillarId] = useState<string | null>(() => {
+    const initialTopic = resolveTopicFromUrl();
+    const initialNodes = loadNodesForDataset(DEBATE_DATASETS[initialTopic]).nodes;
+    return findOwningPillarId(parseHashNodeId(), initialNodes);
   });
 
-  const [activePillarId, setActivePillarId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<DebateTag | null>(null);
   const [direction, setDirection] = useState<LayoutDirection>('SPLIT');
   const [showCrossLinks, setShowCrossLinks] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  useEffect(() => {
+    document.title = `${activeDataset.title} — Dialectica`;
+  }, [activeDataset.title]);
+
+  const persistSandboxNodes = useCallback(
+    (updatedNodes: DebateNode[]) => {
+      setNodes(updatedNodes);
+      setHasSandboxChanges(true);
+      try {
+        localStorage.setItem(
+          storageKeyForTopic(activeDataset.id),
+          JSON.stringify({
+            version: activeDataset.version,
+            savedAt: new Date().toISOString(),
+            nodes: updatedNodes,
+          })
+        );
+      } catch {
+        // Ignore storage quota errors
+      }
+    },
+    [activeDataset]
+  );
 
   // Add / Edit Modal state
   const [editorState, setEditorState] = useState<{
@@ -173,6 +209,106 @@ function DebateGraphWorkspace() {
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
   const stats = useMemo(() => computeGraphStats(nodes), [nodes]);
 
+  // Switch between Debate Graph Topics (e.g., Israel–Palestine <-> Economic Policies)
+  const applyTopicAndTarget = useCallback(
+    (nextTopicId: DebateTopicId, targetNodeId: string | null, updateHistory = true) => {
+      const nextDataset = DEBATE_DATASETS[nextTopicId];
+      const loaded = loadNodesForDataset(nextDataset);
+      setTopicId(nextTopicId);
+      setNodes(loaded.nodes);
+      setHasSandboxChanges(loaded.hasCustom);
+      setSearchQuery('');
+      setActiveTag(null);
+      setCollapsedIds(getInitialCollapsedIds(loaded.nodes, targetNodeId));
+      setSelectedNodeId(targetNodeId && loaded.nodes.some((n) => n.id === targetNodeId) ? targetNodeId : null);
+      setActivePillarId(findOwningPillarId(targetNodeId, loaded.nodes));
+
+      if (updateHistory) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('topic', nextTopicId);
+        url.hash = targetNodeId ? `node=${encodeURIComponent(targetNodeId)}` : '';
+        window.history.pushState(null, '', `${url.pathname}${url.search}${url.hash}`);
+      }
+
+      if (targetNodeId && loaded.nodes.some((n) => n.id === targetNodeId)) {
+        const targetObj = loaded.nodes.find((n) => n.id === targetNodeId)!;
+        const focusIds =
+          targetObj.kind === 'pillar'
+            ? [targetNodeId, ...getDescendantIds(targetNodeId, loaded.nodes)]
+            : [targetNodeId, ...loaded.nodes.filter((n) => n.parentId === targetNodeId).map((n) => n.id)];
+        setPendingCamera({
+          nodeIds: focusIds,
+          maxZoom: targetObj.kind === 'pillar' ? 0.78 : 0.92,
+          padding: 0.2,
+          duration: 500,
+        });
+      } else {
+        setPendingCamera({
+          nodeIds: loaded.nodes.map((n) => n.id),
+          maxZoom: 0.75,
+          padding: 0.1,
+          duration: 450,
+        });
+      }
+    },
+    []
+  );
+
+  const handleSwitchTopic = useCallback(
+    (nextTopicId: DebateTopicId) => {
+      if (nextTopicId === topicId) return;
+      applyTopicAndTarget(nextTopicId, null, true);
+    },
+    [topicId, applyTopicAndTarget]
+  );
+
+  // Live URL listener for `#node=...` hash changes and browser Back/Forward (`popstate`)!
+  useEffect(() => {
+    const syncFromLocation = () => {
+      const urlTopic = resolveTopicFromUrl();
+      const targetId = parseHashNodeId();
+      if (urlTopic !== topicId) {
+        applyTopicAndTarget(urlTopic, targetId, false);
+        return;
+      }
+      if (targetId && nodeMap.has(targetId)) {
+        const target = nodeMap.get(targetId)!;
+        const ancestors = getAncestorIds(targetId, nodeMap);
+        const unfoldIds =
+          target.kind === 'pillar'
+            ? [targetId, ...getDescendantIds(targetId, nodes)]
+            : [...ancestors, targetId];
+        setCollapsedIds((prev) => {
+          const next = new Set(prev);
+          for (const id of unfoldIds) next.delete(id);
+          return next;
+        });
+        setSelectedNodeId(targetId);
+        setActivePillarId(findOwningPillarId(targetId, nodes));
+        const cameraIds =
+          target.kind === 'pillar'
+            ? [targetId, ...getDescendantIds(targetId, nodes)]
+            : [targetId, ...nodes.filter((n) => n.parentId === targetId).map((n) => n.id)];
+        setPendingCamera({
+          nodeIds: cameraIds,
+          maxZoom: target.kind === 'pillar' ? 0.78 : 0.92,
+          padding: 0.22,
+          duration: 500,
+        });
+      } else if (!targetId) {
+        setSelectedNodeId(null);
+        setActivePillarId(null);
+      }
+    };
+
+    window.addEventListener('hashchange', syncFromLocation);
+    window.addEventListener('popstate', syncFromLocation);
+    return () => {
+      window.removeEventListener('hashchange', syncFromLocation);
+      window.removeEventListener('popstate', syncFromLocation);
+    };
+  }, [topicId, nodeMap, nodes, applyTopicAndTarget]);
+
   // Search + Lens Filter matching set
   const matchingNodeIds = useMemo<Set<string> | null>(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -186,6 +322,16 @@ function DebateGraphWorkspace() {
         n.title.toLowerCase().includes(q) ||
         n.summary.toLowerCase().includes(q) ||
         n.details.some((d) => d.toLowerCase().includes(q)) ||
+        (n.sections ?? []).some(
+          (s) =>
+            s.heading.toLowerCase().includes(q) ||
+            s.paragraphs.some((p) => p.toLowerCase().includes(q))
+        ) ||
+        (n.sources ?? []).some(
+          (src) =>
+            src.title.toLowerCase().includes(q) ||
+            (src.publisher ?? '').toLowerCase().includes(q)
+        ) ||
         (n.references ?? []).some((r) => r.toLowerCase().includes(q));
 
       if (tagOk && queryOk) {
@@ -232,19 +378,20 @@ function DebateGraphWorkspace() {
     if (!nodesInitialized || didInitialViewportFit.current) return;
     didInitialViewportFit.current = true;
 
-    const hash = window.location.hash;
-    if (hash.startsWith('#node=')) {
-      const targetId = decodeURIComponent(hash.slice('#node='.length));
-      if (nodeMap.has(targetId)) {
-        const directKids = nodes.filter((n) => n.parentId === targetId).map((n) => n.id);
-        fitView({
-          nodes: [targetId, ...directKids].map((id) => ({ id })),
-          duration: 400,
-          padding: 0.24,
-          maxZoom: 0.92,
-        });
-        return;
-      }
+    const targetId = parseHashNodeId();
+    if (targetId && nodeMap.has(targetId)) {
+      const target = nodeMap.get(targetId)!;
+      const focusIds =
+        target.kind === 'pillar'
+          ? [targetId, ...getDescendantIds(targetId, nodes)]
+          : [targetId, ...nodes.filter((n) => n.parentId === targetId).map((n) => n.id)];
+      fitView({
+        nodes: focusIds.map((id) => ({ id })),
+        duration: 380,
+        padding: 0.22,
+        maxZoom: target.kind === 'pillar' ? 0.78 : 0.92,
+      });
+      return;
     }
 
     fitView({ duration: 0, padding: 0.08, maxZoom: 0.8 });
@@ -286,6 +433,16 @@ function DebateGraphWorkspace() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [fitView, isGuideOpen, editorState.isOpen]);
+
+  const syncUrlHash = useCallback(
+    (nodeId: string | null) => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('topic', topicId);
+      url.hash = nodeId ? `node=${encodeURIComponent(nodeId)}` : '';
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    },
+    [topicId]
+  );
 
   // Toggle expand/collapse on a node
   const handleToggleCollapse = useCallback(
@@ -334,12 +491,21 @@ function DebateGraphWorkspace() {
     [nodeMap, nodes]
   );
 
+  const handleSelectNode = useCallback(
+    (nodeId: string | null) => {
+      setSelectedNodeId(nodeId);
+      setActivePillarId(findOwningPillarId(nodeId, nodes));
+      syncUrlHash(nodeId);
+    },
+    [nodes, syncUrlHash]
+  );
+
   const handleSelectAndZoom = useCallback(
     (nodeId: string, frameChildren = false) => {
-      setSelectedNodeId(nodeId);
+      handleSelectNode(nodeId);
       handleFocusNode(nodeId, frameChildren);
     },
-    [handleFocusNode]
+    [handleSelectNode, handleFocusNode]
   );
 
   // Jump to Pillar from TopBar
@@ -347,6 +513,8 @@ function DebateGraphWorkspace() {
     (pillarId: string | null) => {
       setActivePillarId(pillarId);
       if (pillarId === null) {
+        setSelectedNodeId(null);
+        syncUrlHash(null);
         setPendingCamera({
           nodeIds: computedFlowNodes.map((n) => n.id),
           maxZoom: 0.75,
@@ -355,11 +523,11 @@ function DebateGraphWorkspace() {
         return;
       }
 
-      // Unfold the chosen pillar and its entire subtree, then frame it!
+      const rootId = nodes.find((n) => n.parentId === null)?.id;
       const subtreeIds = getDescendantIds(pillarId, nodes);
       setCollapsedIds((prev) => {
         const next = new Set(prev);
-        next.delete('root-ip');
+        if (rootId) next.delete(rootId);
         next.delete(pillarId);
         for (const id of subtreeIds) {
           next.delete(id);
@@ -367,13 +535,14 @@ function DebateGraphWorkspace() {
         return next;
       });
       setSelectedNodeId(pillarId);
+      syncUrlHash(pillarId);
       setPendingCamera({
         nodeIds: [pillarId, ...subtreeIds],
         maxZoom: 0.78,
         padding: 0.18,
       });
     },
-    [computedFlowNodes, nodes]
+    [computedFlowNodes, nodes, syncUrlHash]
   );
 
   // Apply Depth Presets (1 = Pillars, 2 = Theses, 3 = Pro/Con, 'all' = Full Depth)
@@ -390,7 +559,6 @@ function DebateGraphWorkspace() {
         return;
       }
 
-      // Compute depth of each node
       const nextCollapsed = new Set<string>();
       for (const n of nodes) {
         const depth = getAncestorIds(n.id, nodeMap).length;
@@ -434,16 +602,16 @@ function DebateGraphWorkspace() {
 
   const handleSaveNode = useCallback(
     (data: Omit<DebateNode, 'id'> & { id?: string }) => {
+      const rootId = nodes.find((n) => n.parentId === null)?.id ?? null;
       if (data.id) {
-        // Edit existing
         const updated = nodes.map((n) => (n.id === data.id ? { ...n, ...data, id: data.id, isCustom: true } : n));
         persistSandboxNodes(updated);
-        setSelectedNodeId(data.id);
+        handleSelectNode(data.id);
       } else {
-        // Add new
         const newId = `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
         const newNode: DebateNode = {
           ...data,
+          parentId: data.parentId ?? rootId,
           id: newId,
           isCustom: true,
         };
@@ -456,7 +624,7 @@ function DebateGraphWorkspace() {
             return next;
           });
         }
-        setSelectedNodeId(newId);
+        handleSelectNode(newId);
         setPendingCamera({
           nodeIds: newNode.parentId ? [newNode.parentId, newId] : [newId],
           maxZoom: 0.95,
@@ -464,7 +632,7 @@ function DebateGraphWorkspace() {
         });
       }
     },
-    [nodes, persistSandboxNodes]
+    [nodes, persistSandboxNodes, handleSelectNode]
   );
 
   const handleDeleteNode = useCallback(
@@ -480,14 +648,14 @@ function DebateGraphWorkspace() {
       const toRemove = new Set([target.id, ...descendants]);
       const updated = nodes.filter((n) => !toRemove.has(n.id));
       persistSandboxNodes(updated);
-      setSelectedNodeId(target.parentId);
+      handleSelectNode(target.parentId);
     },
-    [nodes, persistSandboxNodes]
+    [nodes, persistSandboxNodes, handleSelectNode]
   );
 
   const handleExportJson = useCallback(() => {
     const payload = {
-      ...curatedIsraelPalestineDataset,
+      ...activeDataset,
       exportedAt: new Date().toISOString(),
       nodes,
     };
@@ -495,10 +663,10 @@ function DebateGraphWorkspace() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'israel-palestine-debate-graph.json';
+    a.download = `${activeDataset.id}-debate-graph.json`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [nodes]);
+  }, [activeDataset, nodes]);
 
   const handleImportJson = useCallback(
     (file: File) => {
@@ -513,7 +681,7 @@ function DebateGraphWorkspace() {
           }
           persistSandboxNodes(importedNodes);
           setCollapsedIds(getInitialCollapsedIds(importedNodes));
-          setSelectedNodeId(null);
+          handleSelectNode(null);
           setPendingCamera({ nodeIds: importedNodes.map((n) => n.id), maxZoom: 0.75, padding: 0.15 });
         } catch {
           alert('Could not parse JSON file.');
@@ -521,32 +689,32 @@ function DebateGraphWorkspace() {
       };
       reader.readAsText(file);
     },
-    [persistSandboxNodes]
+    [persistSandboxNodes, handleSelectNode]
   );
 
   const handleResetSandbox = useCallback(() => {
     if (!window.confirm('Reset local sandbox edits and restore the original curated debate graph?')) return;
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(storageKeyForTopic(activeDataset.id));
     setHasSandboxChanges(false);
-    setNodes(curatedIsraelPalestineDataset.nodes);
-    setCollapsedIds(getInitialCollapsedIds(curatedIsraelPalestineDataset.nodes));
-    setSelectedNodeId(null);
+    setNodes(activeDataset.nodes);
+    setCollapsedIds(getInitialCollapsedIds(activeDataset.nodes));
+    handleSelectNode(null);
     setPendingCamera({
-      nodeIds: curatedIsraelPalestineDataset.nodes.map((n) => n.id),
+      nodeIds: activeDataset.nodes.map((n) => n.id),
       maxZoom: 0.75,
       padding: 0.14,
     });
-  }, []);
+  }, [activeDataset, handleSelectNode]);
 
   const graphActionsValue = useMemo(
     () => ({
       isDark,
       onToggleCollapse: handleToggleCollapse,
       onFocusNode: handleFocusNode,
-      onSelectNode: setSelectedNodeId,
+      onSelectNode: handleSelectNode,
       onOpenAddModal: handleOpenAddModal,
     }),
-    [isDark, handleToggleCollapse, handleFocusNode, handleOpenAddModal]
+    [isDark, handleToggleCollapse, handleFocusNode, handleSelectNode, handleOpenAddModal]
   );
 
   const selectedNode = selectedNodeId ? nodeMap.get(selectedNodeId) ?? null : null;
@@ -560,6 +728,9 @@ function DebateGraphWorkspace() {
         )}
       >
         <TopBar
+          dataset={activeDataset}
+          topicOptions={TOPIC_OPTIONS}
+          onSwitchTopic={handleSwitchTopic}
           nodes={nodes}
           stats={stats}
           searchQuery={searchQuery}
@@ -598,7 +769,7 @@ function DebateGraphWorkspace() {
               nodesDraggable={false}
               nodesConnectable={false}
               elementsSelectable
-              onPaneClick={() => setSelectedNodeId(null)}
+              onPaneClick={() => handleSelectNode(null)}
               proOptions={{ hideAttribution: true }}
             >
               <Background
@@ -649,10 +820,12 @@ function DebateGraphWorkspace() {
           </div>
 
           <NodeInspectorDrawer
+            topicId={activeDataset.id}
+            epistemologyNote={activeDataset.epistemologyNote}
             selectedNode={selectedNode}
             allNodes={nodes}
             isDark={isDark}
-            onClose={() => setSelectedNodeId(null)}
+            onClose={() => handleSelectNode(null)}
             onSelectAndZoom={handleSelectAndZoom}
             onOpenAddChild={handleOpenAddModal}
             onOpenEdit={handleOpenEditModal}
@@ -663,6 +836,7 @@ function DebateGraphWorkspace() {
         <NodeEditorModal
           isOpen={editorState.isOpen}
           mode={editorState.mode}
+          availableTags={activeDataset.availableTags}
           parentNode={editorState.parentNode}
           initialNode={editorState.initialNode}
           defaultKind={editorState.defaultKind}
@@ -672,6 +846,7 @@ function DebateGraphWorkspace() {
         />
 
         <MethodologyModal
+          dataset={activeDataset}
           isOpen={isGuideOpen}
           isDark={isDark}
           onClose={() => setIsGuideOpen(false)}

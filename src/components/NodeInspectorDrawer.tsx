@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
 import clsx from 'clsx';
 import {
   ArrowUpRight,
@@ -7,17 +7,23 @@ import {
   ChevronRight,
   Crosshair,
   Edit3,
+  ExternalLink,
+  FileText,
   GitBranch,
   Link2,
+  Maximize2,
+  Minimize2,
   MinusCircle,
   PlusCircle,
   Trash2,
   X,
 } from 'lucide-react';
-import { DebateNode, DebateNodeKind } from '../types/debate';
+import { DebateNode, DebateNodeKind, DebateTopicId, SourceCategory } from '../types/debate';
 import { getAncestorIds } from '../utils/graphLayout';
 
 interface NodeInspectorDrawerProps {
+  topicId: DebateTopicId;
+  epistemologyNote: string;
   selectedNode: DebateNode | null;
   allNodes: DebateNode[];
   isDark: boolean;
@@ -56,7 +62,94 @@ const KIND_HEADER_BADGE: Record<DebateNodeKind, { label: string; dark: string; l
   },
 };
 
+const SOURCE_CATEGORY_COLORS: Record<SourceCategory, { dark: string; light: string }> = {
+  'Primary Text / Treaty': {
+    dark: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/30',
+    light: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  },
+  'Watchdog / NGO': {
+    dark: 'bg-amber-500/15 text-amber-300 border-amber-400/30',
+    light: 'bg-amber-50 text-amber-800 border-amber-200',
+  },
+  'Empirical / Economic Study': {
+    dark: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30',
+    light: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  },
+  'Court / Official Record': {
+    dark: 'bg-sky-500/15 text-sky-300 border-sky-400/30',
+    light: 'bg-sky-50 text-sky-700 border-sky-200',
+  },
+  'Debate / Broadcast': {
+    dark: 'bg-violet-500/15 text-violet-300 border-violet-400/30',
+    light: 'bg-violet-50 text-violet-700 border-violet-200',
+  },
+  Scholarship: {
+    dark: 'bg-slate-700/60 text-slate-200 border-slate-600',
+    light: 'bg-slate-100 text-slate-700 border-slate-300',
+  },
+};
+
+/**
+ * Lightweight inline rich-text parser supporting **bold**, *italic*, `code`, and [label](https://url)
+ */
+function renderRichText(text: string, isDark: boolean): ReactNode {
+  const tokenRegex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
+  const parts = text.split(tokenRegex);
+
+  return parts.map((part, idx) => {
+    if (!part) return null;
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={idx} className={clsx('font-semibold', isDark ? 'text-slate-50' : 'text-slate-900')}>
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return (
+        <em key={idx} className="italic">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code
+          key={idx}
+          className={clsx(
+            'font-mono-code text-[12px] px-1.5 py-0.5 rounded',
+            isDark ? 'bg-slate-800 text-indigo-300' : 'bg-slate-200/70 text-indigo-700'
+          )}
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    const linkMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={idx}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={clsx(
+            'underline underline-offset-2 font-medium inline-flex items-center gap-0.5',
+            isDark ? 'text-indigo-300 hover:text-indigo-200' : 'text-indigo-600 hover:text-indigo-800'
+          )}
+        >
+          {linkMatch[1]}
+          <ExternalLink className="w-3 h-3 inline" />
+        </a>
+      );
+    }
+    return <Fragment key={idx}>{part}</Fragment>;
+  });
+}
+
 export function NodeInspectorDrawer({
+  topicId,
+  epistemologyNote,
   selectedNode,
   allNodes,
   isDark,
@@ -67,12 +160,14 @@ export function NodeInspectorDrawer({
   onDeleteNode,
 }: NodeInspectorDrawerProps) {
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isExpandedWidth, setIsExpandedWidth] = useState(false);
 
   if (!selectedNode) return null;
 
   const nodeMap = new Map(allNodes.map((n) => [n.id, n]));
   const ancestorIds = getAncestorIds(selectedNode.id, nodeMap);
   const ancestors = ancestorIds.map((id) => nodeMap.get(id)).filter((n): n is DebateNode => Boolean(n));
+  const immediateParent = selectedNode.parentId ? nodeMap.get(selectedNode.parentId) ?? null : null;
 
   const directChildren = allNodes.filter((n) => n.parentId === selectedNode.id);
   const supportingChildren = directChildren.filter((n) => n.kind === 'pro');
@@ -94,17 +189,22 @@ export function NodeInspectorDrawer({
 
   const handleCopyDeepLink = () => {
     const url = new URL(window.location.href);
+    url.searchParams.set('topic', topicId);
     url.hash = `node=${encodeURIComponent(selectedNode.id)}`;
     navigator.clipboard.writeText(url.toString());
-    window.history.replaceState(null, '', url.hash);
+    window.history.replaceState(null, '', `${url.search}${url.hash}`);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const hasStructuredSources = Boolean(selectedNode.sources && selectedNode.sources.length > 0);
+  const plainFallbackRefs = !hasStructuredSources ? selectedNode.references ?? [] : [];
+
   return (
     <aside
       className={clsx(
-        'w-full sm:w-[430px] h-full border-l flex flex-col z-30 shrink-0 shadow-2xl transition-colors',
+        'w-full h-full border-l flex flex-col z-30 shrink-0 shadow-2xl transition-all duration-200',
+        isExpandedWidth ? 'sm:w-[640px] lg:w-[740px]' : 'sm:w-[490px] lg:w-[550px]',
         isDark ? 'bg-slate-900/98 border-slate-800 text-slate-100' : 'bg-white/98 border-slate-200 text-slate-900'
       )}
     >
@@ -139,6 +239,19 @@ export function NodeInspectorDrawer({
         <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
+            onClick={() => setIsExpandedWidth((v) => !v)}
+            title={isExpandedWidth ? 'Restore standard inspector width' : 'Expand wide reading mode'}
+            className={clsx(
+              'hidden sm:inline-flex p-1.5 rounded-lg text-xs font-medium transition-colors',
+              isDark
+                ? 'hover:bg-slate-800 text-slate-300 hover:text-indigo-300'
+                : 'hover:bg-slate-200/70 text-slate-600 hover:text-indigo-600'
+            )}
+          >
+            {isExpandedWidth ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+          <button
+            type="button"
             onClick={() => onSelectAndZoom(selectedNode.id, true)}
             title="Zoom & center branch on canvas"
             className={clsx(
@@ -153,7 +266,7 @@ export function NodeInspectorDrawer({
           <button
             type="button"
             onClick={handleCopyDeepLink}
-            title="Copy direct link to this argument"
+            title="Copy direct shareable link to this argument"
             className={clsx(
               'p-1.5 rounded-lg text-xs font-medium transition-colors',
               isDark
@@ -202,10 +315,10 @@ export function NodeInspectorDrawer({
       </div>
 
       {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+      <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
         {/* Logical Lineage Breadcrumbs */}
         {ancestors.length > 0 && (
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className={clsx('text-[11px] uppercase tracking-wider font-semibold', isDark ? 'text-slate-400' : 'text-slate-500')}>
               Dialectical Lineage
             </div>
@@ -216,7 +329,7 @@ export function NodeInspectorDrawer({
                     type="button"
                     onClick={() => onSelectAndZoom(anc.id, false)}
                     className={clsx(
-                      'px-2 py-0.5 rounded transition-colors truncate max-w-[175px] font-medium',
+                      'px-2 py-0.5 rounded transition-colors truncate max-w-[195px] font-medium',
                       isDark
                         ? 'bg-slate-800/80 text-slate-300 hover:bg-indigo-500/25 hover:text-indigo-200'
                         : 'bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
@@ -231,14 +344,49 @@ export function NodeInspectorDrawer({
           </div>
         )}
 
-        {/* Headline & Summary */}
+        {/* Headline, Executive Summary & Tags */}
         <div>
-          <h2 className="font-editorial text-[22px] font-semibold leading-snug tracking-tight">
+          <h2 className="font-editorial text-[23px] sm:text-[25px] font-semibold leading-snug tracking-tight">
             {selectedNode.title}
           </h2>
-          <p className={clsx('mt-2.5 text-sm leading-relaxed', isDark ? 'text-slate-300' : 'text-slate-700')}>
-            {selectedNode.summary}
-          </p>
+
+          {/* Direct Dialectical Relation Callout */}
+          {immediateParent && (selectedNode.kind === 'pro' || selectedNode.kind === 'con') && (
+            <button
+              type="button"
+              onClick={() => onSelectAndZoom(immediateParent.id, false)}
+              className={clsx(
+                'mt-2.5 w-full text-left px-3 py-2 rounded-lg border text-xs flex items-center justify-between gap-2 transition-colors',
+                selectedNode.kind === 'pro'
+                  ? isDark
+                    ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-200 hover:border-emerald-400/60'
+                    : 'bg-emerald-50/80 border-emerald-200 text-emerald-900 hover:border-emerald-400'
+                  : isDark
+                    ? 'bg-rose-950/25 border-rose-500/30 text-rose-200 hover:border-rose-400/60'
+                    : 'bg-rose-50/80 border-rose-200 text-rose-900 hover:border-rose-400'
+              )}
+            >
+              <span className="truncate">
+                <strong className="font-semibold">
+                  {selectedNode.kind === 'pro' ? 'Supports claim:' : 'Challenges claim:'}
+                </strong>{' '}
+                {immediateParent.title}
+              </span>
+              <ArrowUpRight className="w-3.5 h-3.5 shrink-0 opacity-75" />
+            </button>
+          )}
+
+          {/* Executive Summary */}
+          <div
+            className={clsx(
+              'mt-3 p-3.5 rounded-xl border-l-4 text-[14px] leading-relaxed',
+              isDark
+                ? 'bg-slate-800/45 border-l-indigo-400 text-slate-200'
+                : 'bg-slate-50 border-l-indigo-500 text-slate-800'
+            )}
+          >
+            {renderRichText(selectedNode.summary, isDark)}
+          </div>
 
           {/* Tags */}
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -246,7 +394,7 @@ export function NodeInspectorDrawer({
               <span
                 key={tag}
                 className={clsx(
-                  'px-2 py-0.5 rounded-full text-[11px] font-medium border',
+                  'px-2.5 py-0.5 rounded-full text-[11px] font-medium border',
                   isDark
                     ? 'bg-slate-800/90 border-slate-700 text-slate-300'
                     : 'bg-slate-100 border-slate-200 text-slate-700'
@@ -258,59 +406,184 @@ export function NodeInspectorDrawer({
           </div>
         </div>
 
-        {/* Key Analytical & Historical Points */}
+        {/* Rich Multi-Section Deep-Dive Analysis */}
+        {selectedNode.sections && selectedNode.sections.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-indigo-400" />
+              <h3 className={clsx('text-xs font-bold uppercase tracking-wider', isDark ? 'text-slate-300' : 'text-slate-600')}>
+                In-Depth Background &amp; Analysis
+              </h3>
+            </div>
+
+            <div className="space-y-3.5">
+              {selectedNode.sections.map((sec, sIdx) => (
+                <section
+                  key={sIdx}
+                  className={clsx(
+                    'p-4 rounded-xl border space-y-2.5',
+                    isDark ? 'bg-slate-950/65 border-slate-800/90' : 'bg-white border-slate-200 shadow-2xs'
+                  )}
+                >
+                  <h4
+                    className={clsx(
+                      'text-[13.5px] font-semibold tracking-tight flex items-center gap-2',
+                      isDark ? 'text-indigo-300' : 'text-indigo-700'
+                    )}
+                  >
+                    <span className="w-1.5 h-4 rounded-full bg-indigo-500 shrink-0" />
+                    {sec.heading}
+                  </h4>
+                  <div className="space-y-2.5 text-[13.5px] leading-[1.68]">
+                    {sec.paragraphs.map((para, pIdx) => (
+                      <p key={pIdx} className={isDark ? 'text-slate-300' : 'text-slate-700'}>
+                        {renderRichText(para, isDark)}
+                      </p>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Key Analytical & Empirical Takeaways */}
         {selectedNode.details.length > 0 && (
           <div
             className={clsx(
               'p-4 rounded-xl border space-y-2.5',
-              isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+              isDark ? 'bg-slate-950/45 border-slate-800' : 'bg-slate-50/90 border-slate-200/80'
             )}
           >
             <h3 className={clsx('text-xs font-bold uppercase tracking-wider', isDark ? 'text-slate-400' : 'text-slate-500')}>
-              Detailed Context & Evidence
+              Key Evidence &amp; Data Takeaways
             </h3>
             <ul className="space-y-2.5 text-[13px] leading-relaxed">
               {selectedNode.details.map((bullet, idx) => (
                 <li key={idx} className="flex gap-2.5">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
-                  <span className={isDark ? 'text-slate-200' : 'text-slate-700'}>{bullet}</span>
+                  <span className="mt-2 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+                  <span className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                    {renderRichText(bullet, isDark)}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Cited Evidentiary Basis & Contested Sources */}
-        {selectedNode.references && selectedNode.references.length > 0 && (
-          <div className="space-y-2">
+        {/* Clickable Original Content & Evidentiary Sources */}
+        {(hasStructuredSources || plainFallbackRefs.length > 0) && (
+          <div className="space-y-2.5">
             <div>
               <h3
                 className={clsx(
                   'text-xs font-bold uppercase tracking-wider flex items-center gap-1.5',
-                  isDark ? 'text-slate-400' : 'text-slate-500'
+                  isDark ? 'text-slate-300' : 'text-slate-600'
                 )}
               >
                 <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                Cited Evidentiary Basis &amp; Contested Sources
+                Original Sources, Documents &amp; Studies
               </h3>
-              <p className={clsx('text-[11px] mt-0.5 leading-snug', isDark ? 'text-slate-500' : 'text-slate-500')}>
-                Treaties, watchdog audits (UN Watch, IMPACT-se, MEMRI), NGO reports, economic data, and UN votes are cited as the evidentiary record invoked by each argument—not as uncontested neutral arbiters.
+              <p className={clsx('text-[11px] mt-0.5 leading-snug', isDark ? 'text-slate-400' : 'text-slate-500')}>
+                {epistemologyNote}
               </p>
             </div>
-            <div className="space-y-1.5">
-              {selectedNode.references.map((ref, idx) => (
-                <div
-                  key={idx}
-                  className={clsx(
-                    'px-3 py-2 rounded-lg text-xs border font-medium',
-                    isDark
-                      ? 'bg-slate-800/50 border-slate-800 text-slate-300'
-                      : 'bg-slate-50 border-slate-200/70 text-slate-700'
-                  )}
-                >
-                  {ref}
-                </div>
-              ))}
+
+            <div className="space-y-2">
+              {selectedNode.sources?.map((src, idx) => {
+                const catStyle = src.category ? SOURCE_CATEGORY_COLORS[src.category] : null;
+                return (
+                  <a
+                    key={idx}
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={clsx(
+                      'group block p-3 rounded-xl border transition-all',
+                      isDark
+                        ? 'bg-slate-800/45 border-slate-700/80 hover:border-indigo-400/70 hover:bg-slate-800/80'
+                        : 'bg-slate-50/80 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30'
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2.5">
+                      <span
+                        className={clsx(
+                          'text-xs font-semibold leading-snug group-hover:underline underline-offset-2',
+                          isDark ? 'text-slate-100 group-hover:text-indigo-200' : 'text-slate-900 group-hover:text-indigo-700'
+                        )}
+                      >
+                        {src.title}
+                      </span>
+                      <ExternalLink
+                        className={clsx(
+                          'w-3.5 h-3.5 shrink-0 mt-0.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5',
+                          isDark ? 'text-indigo-400' : 'text-indigo-600'
+                        )}
+                      />
+                    </div>
+
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10.5px]">
+                      {src.publisher && (
+                        <span className={clsx('font-medium', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                          {src.publisher}
+                          {src.year ? ` (${src.year})` : ''}
+                        </span>
+                      )}
+                      {!src.publisher && src.year && (
+                        <span className={clsx('font-medium', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                          {src.year}
+                        </span>
+                      )}
+                      {src.category && catStyle && (
+                        <span
+                          className={clsx(
+                            'px-1.5 py-0.2 rounded border text-[10px] font-medium',
+                            isDark ? catStyle.dark : catStyle.light
+                          )}
+                        >
+                          {src.category}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                );
+              })}
+
+              {plainFallbackRefs.map((ref, idx) => {
+                const urlMatch = ref.match(/https?:\/\/[^\s)]+/);
+                if (urlMatch) {
+                  return (
+                    <a
+                      key={`ref-${idx}`}
+                      href={urlMatch[0]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={clsx(
+                        'px-3 py-2 rounded-lg text-xs border font-medium flex items-center justify-between gap-2',
+                        isDark
+                          ? 'bg-slate-800/50 border-slate-800 text-indigo-300 hover:border-indigo-400'
+                          : 'bg-slate-50 border-slate-200 text-indigo-700 hover:border-indigo-400'
+                      )}
+                    >
+                      <span className="truncate">{ref}</span>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                  );
+                }
+                return (
+                  <div
+                    key={`ref-${idx}`}
+                    className={clsx(
+                      'px-3 py-2 rounded-lg text-xs border font-medium',
+                      isDark
+                        ? 'bg-slate-800/50 border-slate-800 text-slate-300'
+                        : 'bg-slate-50 border-slate-200/70 text-slate-700'
+                    )}
+                  >
+                    {ref}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -320,7 +593,7 @@ export function NodeInspectorDrawer({
           {selectedNode.kind === 'root' || selectedNode.kind === 'pillar' ? (
             <button
               type="button"
-              onClick={() => onOpenAddChild(selectedNode, selectedNode.kind === 'root' ? 'thesis' : 'thesis')}
+              onClick={() => onOpenAddChild(selectedNode, 'thesis')}
               className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -416,7 +689,7 @@ export function NodeInspectorDrawer({
         {challengingChildren.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-slate-500/20">
             <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400">
-              − Counter-Arguments & Rebuttals ({challengingChildren.length})
+              − Counter-Arguments &amp; Rebuttals ({challengingChildren.length})
             </h3>
             <div className="space-y-2">
               {challengingChildren.map((child) => (

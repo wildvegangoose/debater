@@ -304,7 +304,7 @@ function DebateCardNodeComponent({ data }: NodeProps<DebateFlowNode>) {
             {node.summary}
           </p>
 
-          {/* Extra Evidence Preview in Detailed Zoom (zoom >= 0.92) */}
+          {/* Extra Evidence & Clickable Source Preview in Detailed Zoom (zoom >= 0.90) */}
           {lod === 'detailed' && node.details.length > 0 && (
             <div
               className={clsx(
@@ -314,17 +314,34 @@ function DebateCardNodeComponent({ data }: NodeProps<DebateFlowNode>) {
                   : 'bg-slate-50 border-slate-200/80 text-slate-700'
               )}
             >
-              <p className="line-clamp-2">• {node.details[0]}</p>
-              {node.references && node.references.length > 0 && (
-                <div
+              <p className="line-clamp-2">• {node.details[0].replace(/\*\*/g, '')}</p>
+              {node.sources && node.sources.length > 0 ? (
+                <a
+                  href={node.sources[0].url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   className={clsx(
-                    'mt-1 flex items-center gap-1 text-[10px] font-medium',
-                    isDark ? 'text-indigo-300/90' : 'text-indigo-600'
+                    'mt-1 flex items-center gap-1 text-[10px] font-medium hover:underline',
+                    isDark ? 'text-indigo-300 hover:text-indigo-200' : 'text-indigo-600 hover:text-indigo-800'
                   )}
                 >
                   <BookOpen className="w-3 h-3 shrink-0" />
-                  <span className="truncate">{node.references[0]}</span>
-                </div>
+                  <span className="truncate">{node.sources[0].title} ↗</span>
+                </a>
+              ) : (
+                node.references &&
+                node.references.length > 0 && (
+                  <div
+                    className={clsx(
+                      'mt-1 flex items-center gap-1 text-[10px] font-medium',
+                      isDark ? 'text-indigo-300/90' : 'text-indigo-600'
+                    )}
+                  >
+                    <BookOpen className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{node.references[0]}</span>
+                  </div>
+                )
               )}
             </div>
           )}
