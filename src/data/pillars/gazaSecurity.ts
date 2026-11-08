@@ -163,6 +163,42 @@ export const gazaSecurityNodes: DebateNode[] = [
     tags: ['Human Rights', 'Governance', 'Security'],
     era: '2007–Present'
   },
+  {
+    id: 'con-gaza-march-of-return-2018',
+    parentId: 'pro-gaza-blockade-lawful',
+    kind: 'con',
+    title: '2018–2019 "Great March of Return": Lethal Force Against Mass Border Protests',
+    summary:
+      'Debated prominently on Lex Fridman #418 (Finkelstein & Rabbani vs. Morris & Destiny), critics cite the UN Commission of Inquiry finding that IDF snipers killed ~189+ Palestinians and wounded thousands with live ammunition during weekly demonstrations against the blockade.',
+    details: [
+      'Cited repeatedly to challenge the claim "Why don’t Palestinians use non-violent protest?": human rights investigators documented medics, journalists, and unarmed youths shot hundreds of meters inside the Gaza fence.',
+      'The 2019 UN Independent Commission found reasonable grounds that Israeli rules of engagement violated international human rights policing standards.'
+    ],
+    references: [
+      'UN Independent International Commission of Inquiry on the 2018 Gaza Protests (March 2019)',
+      'Lex Fridman Podcast #418 Debate — Finkelstein & Rabbani vs. Morris & Bonnell (March 2024)'
+    ],
+    tags: ['Human Rights', 'International Law'],
+    era: '2018–2019'
+  },
+  {
+    id: 'con-rebuttal-march-hamas-breach',
+    parentId: 'con-gaza-march-of-return-2018',
+    kind: 'con',
+    title: 'High Court & IDF: Hamas Used Fence Riots for Armed Breaches & Incendiaries',
+    summary:
+      'Israel’s Supreme Court (unanimously upholding open-fire rules in May 2018) and military historians note Hamas co-opted the marches—deploying tire-smoke screens, IEDs, grenade attacks, incendiary kites burning thousands of Israeli acres, and armed cells attempting to breach into border kibbutzim.',
+    details: [
+      'Senior Hamas official Mahmoud al-Zahar acknowledged in May 2018 that "peaceful resistance" rhetoric was bolstered by armed operatives embedded in crowds, and Hamas/PIJ claimed dozens of those killed as uniformed members.',
+      'Framed post-Oct 7 as an early rehearsal for breaching the Gaza perimeter fence to reach adjacent Israeli towns.'
+    ],
+    references: [
+      'Israel Supreme Court Ruling — Yesh Din v. IDF Chief of Staff (May 24, 2018)',
+      'Meir Amit Intelligence & Terrorism Information Center Identification of Militant Fatalities (2019)'
+    ],
+    tags: ['Security', 'International Law'],
+    era: '2018–2019'
+  },
 
   // THESIS 3B: Hostage-Ceasefire Priority & "Day After" Governance
   {
@@ -216,5 +252,65 @@ export const gazaSecurityNodes: DebateNode[] = [
     ],
     tags: ['Security'],
     era: '2011–Present'
+  },
+
+  // THESIS 3C: The ICJ "Genocide" Legal Threshold Debate (Dolus Specialis)
+  {
+    id: 'thesis-icj-genocide-threshold',
+    parentId: 'pillar-gaza-security',
+    kind: 'thesis',
+    title: 'Gaza Campaign Crosses the 1948 Genocide Convention Legal Threshold',
+    summary:
+      'Argued before the ICJ in South Africa v. Israel (2024) and debated globally (Open to Debate Sept 2024; Oxford Union Nov 2024), proponents contend the cumulative destruction of life-sustaining infrastructure paired with official rhetoric establishes genocidal intent.',
+    details: [
+      'Distinguishes war crimes / disproportionate strikes under IHL from the crime of genocide under Article II(c) of the 1948 Convention ("deliberately inflicting on the group conditions of life calculated to bring about its physical destruction in whole or in part").',
+      'Became one of the fiercest legal and moral flashpoints in international courts, parliaments, and universities between 2024 and 2026.'
+    ],
+    references: [
+      'Convention on the Prevention and Punishment of the Crime of Genocide Art. II (1948)',
+      'South Africa Application & Oral Arguments Before the ICJ (Jan & May 2024)',
+      'Open to Debate: "Were Israel’s Actions in the Gaza War Justified?" — Eylon Levy vs. Mehdi Hasan (Sept 2024)'
+    ],
+    tags: ['International Law', 'Human Rights'],
+    era: '2024–Present'
+  },
+  {
+    id: 'pro-genocide-conditions-statements',
+    parentId: 'thesis-icj-genocide-threshold',
+    kind: 'pro',
+    title: 'Cumulative Destruction of Life Systems Coupled With Incendiary Official Rhetoric',
+    summary:
+      'South Africa’s legal team (Blinne Ní Ghrálaigh, Vaughan Lowe), Amnesty International (Dec 2024), and genocide scholars cite the razing of neighborhoods, collapse of hospitals and sanitation, acute hunger, and "Amalek"/"human animals" quotes as evidence of intent.',
+    details: [
+      'Argues genocidal intent (`dolus specialis`) can coexist alongside military objectives against an insurgent group if destroying part of the protected group becomes a means or accepted outcome.',
+      'Points to repeated strikes in designated humanitarian zones and systematic demolition of agricultural land and civil registries.'
+    ],
+    references: [
+      'Blinne Ní Ghrálaigh KC Oral Argument, ICJ Peace Palace (Jan 11, 2024)',
+      'UN Special Rapporteur & Amnesty International Legal Assessments (2024)'
+    ],
+    tags: ['International Law', 'Human Rights'],
+    era: '2024–Present'
+  },
+  {
+    id: 'con-genocide-dolus-specialis-strict',
+    parentId: 'thesis-icj-genocide-threshold',
+    kind: 'con',
+    title: 'ICJ Jurisprudence Requires Dolus Specialis as the "Only Reasonable Inference"',
+    summary:
+      'Israel’s ICJ counsel (Tal Becker, Malcolm Shaw) and international-law scholars emphasize that settled ICJ precedent (Bosnia v. Serbia; Croatia v. Serbia) requires special intent to physically destroy a people as such—which must be the *only* reasonable inference from state conduct.',
+    details: [
+      'Issuing millions of advance evacuation warnings, mapping safe corridors, facilitating hundreds of thousands of tons of food/vaccines, and losing hundreds of soldiers in close-quarters combat instead of carpet-bombing unwarned cities are incompatible with intent to exterminate civilians.',
+      'High urban destruction alone—even when tragic or alleged to breach IHL proportionality (as in Mosul against ISIS or Fallujah)—legally constitutes high-intensity counter-insurgency warfare, not genocide; Hamas could have ended hostilities at any moment by releasing hostages and surrendering.',
+      'Conflating asymmetric urban war provoked by Hamas’s October 7 genocidal massacre with genocide inverts the 1948 Convention.'
+    ],
+    references: [
+      'Tal Becker & Prof. Malcolm Shaw KC Oral Arguments for Israel, ICJ (Jan 12, 2024)',
+      'ICJ Judgment, Bosnia and Herzegovina v. Serbia and Montenegro Para. 373 (2007)',
+      'Eylon Levy & Benny Morris — Rebuttals on Intent vs. Urban Counter-Insurgency (2024)'
+    ],
+    tags: ['International Law', 'Security'],
+    era: '2024–Present',
+    relatedIds: ['con-rebuttal-aid-diversion-icj']
   }
 ];

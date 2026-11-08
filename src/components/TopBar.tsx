@@ -29,12 +29,14 @@ const ALL_TAGS: DebateTag[] = [
 ];
 
 const SHORT_PILLAR_LABELS: Record<string, string> = {
-  'pillar-self-determination': '1. Self-Determination & 1948',
+  'pillar-self-determination': '1. Origins & 1948',
   'pillar-borders-settlements': '2. 1967 & Settlements',
-  'pillar-gaza-security': '3. Gaza, Oct 7 & IHL',
-  'pillar-refugees-return': '4. Refugees & Equality',
-  'pillar-jerusalem': '5. Jerusalem & Holy Sites',
-  'pillar-endgames': '6. Endgames & Peace Models',
+  'pillar-gaza-security': '3. Gaza, Oct 7 & ICJ',
+  'pillar-regional-geopolitics': '4. Iran, Accords & U.S.',
+  'pillar-refugees-return': '5. Refugees & Equality',
+  'pillar-jerusalem': '6. Jerusalem & UN',
+  'pillar-global-discourse': '7. Antisemitism, BDS & Law',
+  'pillar-endgames': '8. Peace Endgames',
 };
 
 interface TopBarProps {

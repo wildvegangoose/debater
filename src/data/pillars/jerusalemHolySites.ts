@@ -118,57 +118,60 @@ export const jerusalemHolySitesNodes: DebateNode[] = [
     era: '2000–Present'
   },
 
-  // THESIS 5B: Diplomatic Recognition Before a Final Treaty
+  // THESIS 5B: Diplomatic Recognition & UN Statehood Before a Final Treaty
   {
     id: 'thesis-diplomatic-recognition',
     parentId: 'pillar-jerusalem',
     kind: 'thesis',
-    title: 'Early Diplomatic Recognition Preserves Viability vs. Prejudges Negotiations',
+    title: 'UN Statehood & Early Recognition Preserve Parity vs. Bypass Negotiations',
     summary:
-      'Debates whether external powers should recognize Palestinian statehood (as 145+ UN members including Spain, Ireland, and Norway have done) or recognize Jerusalem as Israel’s capital (as the US did in 2017) prior to a bilateral final-status agreement.',
+      'Debated since Palestine’s 2011–2012 UN bid (IQ2 Debate: Mustafa Barghouti & Daniel Levy vs. Dore Gold & Aaron David Miller), the 2017 US Jerusalem Embassy move, and 2024 European recognitions: does unilateral recognition help or hurt peace?',
     details: [
-      'Since 2017–2024, both sides of the diplomatic ledger have shifted away from waiting purely on bilateral talks.',
-      'Tests whether external diplomatic recognition creates constructive leverage or hardens maximalist positions.'
+      'UNGA Resolution 67/19 (Nov 2012) upgraded Palestine to a "non-member observer state," unlocking Palestinian accession to international treaties and the International Criminal Court (ICC) in 2015.',
+      'By 2024–2025, over 145 UN member states (including Spain, Ireland, Norway, and Slovenia) recognized the State of Palestine, while the US recognized Jerusalem as Israel’s capital in 2017.'
     ],
     references: [
-      'US Presidential Proclamation Recognizing Jerusalem as Israel’s Capital (Dec 6, 2017)',
-      'UNGA Resolution ES-10/23 & European Statehood Recognitions (May 2024)'
+      'Intelligence Squared U.S.: "The U.N. Should Admit Palestine as a Full Member State" (Oct 2011)',
+      'UNGA Resolution 67/19 (2012) & ES-10/23 (May 2024)',
+      'US Presidential Proclamation Recognizing Jerusalem as Israel’s Capital (Dec 6, 2017)'
     ],
     tags: ['Diplomacy', 'International Law'],
-    era: '2017–Present'
+    era: '2011–Present'
   },
   {
     id: 'pro-recognition-counters-veto',
     parentId: 'thesis-diplomatic-recognition',
     kind: 'pro',
-    title: 'Recognizing Statehood Removes an Unfair Veto Over Self-Determination',
+    title: 'Removes an Indefinite Veto Over Self-Determination & Unlocks Legal Accountability',
     summary:
-      'European and Global South states recognizing Palestine argue that conditioning Palestinian statehood on Israeli cabinet consent grants an indefinite veto to a government openly opposed to two states, while West Jerusalem has factually been Israel’s seat of government since 1949.',
+      'Mustafa Barghouti, Daniel Levy, and European governments argue conditioning statehood on Israeli cabinet approval grants an indefinite veto to governments expanding settlements, while UN observer-state status gave Palestinians lawful recourse to the ICJ and ICC.',
     details: [
-      'Affirming sovereign parity keeps the two-state legal framework alive internationally while facts on the ground erode it.',
-      'Simultaneously, defenders of the 2017 US Jerusalem Embassy move noted that every other nation chooses its own capital and that the proclamation explicitly stated final Jerusalem boundaries remain subject to negotiation.'
+      'Affirming sovereign parity keeps the two-state legal baseline alive internationally while facts on the ground erode it.',
+      'Simultaneously, defenders of the 2017 US Jerusalem Embassy move noted West Jerusalem has been Israel’s factual seat of government since 1949 and final boundaries remained open to negotiation.'
     ],
     references: [
-      'Joint Statements of Spain, Ireland, Norway & Slovenia Recognizing Palestine (2024)'
+      'Mustafa Barghouti & Daniel Levy — IQ2 Pro-UN Membership Arguments (2011)',
+      'Joint Statements of Spain, Ireland, Norway & Slovenia Recognizing Palestine (May 2024)'
     ],
     tags: ['Diplomacy', 'International Law'],
-    era: '2017–2024'
+    era: '2011–2024'
   },
   {
     id: 'con-recognition-hardens-positions',
     parentId: 'thesis-diplomatic-recognition',
     kind: 'con',
-    title: 'Symbolic Unilateral Moves Alienate Parties Without Changing Ground Realities',
+    title: 'Internationalizing the Conflict Hardens Maximalism & Substitutes Lawfare for Compromise',
     summary:
-      'Veteran diplomats contend that unilateral recognition—whether moving embassies to Jerusalem without an East Jerusalem counterpart or recognizing Palestinian statehood after October 7 without negotiated security/border reforms—destroys mediator credibility and disincentivizes hard bilateral compromises.',
+      'Dore Gold, Aaron David Miller, and veteran mediators argue that unilateral UN bids, ICC "lawfare," or unreciprocated embassy moves polarize domestic politics, violate Oslo’s bilateral commitment, and create hollow paper symbols without changing reality on the ground.',
     details: [
-      'The 2017 US Jerusalem move prompted the PA to boycott US mediation efforts for years, while 2024 European recognitions of Palestine triggered Knesset resolutions overwhelmingly rejecting Palestinian statehood.',
-      'True sovereignty requires agreed borders, monopoly on force, and mutual recognition that external declarations cannot substitute.'
+      'Following 2024 European recognitions of Palestine, Israel’s Knesset voted overwhelmingly against Palestinian statehood, arguing post-Oct 7 recognition rewarded Hamas terrorism.',
+      'Similarly, the 2017 US Jerusalem move led the PA to boycott Washington’s mediation for years—illustrating how symbolic unilateralism alienates parties needed at the table.'
     ],
     references: [
-      'UNSC Resolution 478 & EU Common Position on Negotiated Final Status'
+      'Dore Gold & Aaron David Miller — IQ2 Opposition Arguments Against Unilateral UN Statehood (2011)',
+      'Oslo II Art. XXXI(7) Clause Against Unilateral Status Changes'
     ],
     tags: ['Diplomacy', 'Governance'],
-    era: '2017–2024'
+    era: '2011–2024'
   }
 ];

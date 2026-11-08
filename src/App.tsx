@@ -68,14 +68,22 @@ function DebateGraphWorkspace() {
     localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  // Sandbox / Graph Nodes state
+  // Sandbox / Graph Nodes state (migrates baseline automatically when dataset version increments)
   const [nodes, setNodes] = useState<DebateNode[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed?.nodes) && parsed.nodes.length > 0) {
-          return parsed.nodes;
+          if (parsed.version === curatedIsraelPalestineDataset.version) {
+            return parsed.nodes;
+          }
+          // Merge any custom user-added nodes on top of the new curated v2.0.0 baseline
+          const baselineIds = new Set(curatedIsraelPalestineDataset.nodes.map((n) => n.id));
+          const customAdditions = (parsed.nodes as DebateNode[]).filter(
+            (n) => n.isCustom && !baselineIds.has(n.id)
+          );
+          return [...curatedIsraelPalestineDataset.nodes, ...customAdditions];
         }
       }
     } catch {
@@ -85,7 +93,14 @@ function DebateGraphWorkspace() {
   });
 
   const [hasSandboxChanges, setHasSandboxChanges] = useState<boolean>(() => {
-    return localStorage.getItem(STORAGE_KEY) !== null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return parsed?.version === curatedIsraelPalestineDataset.version;
+    } catch {
+      return false;
+    }
   });
 
   const persistSandboxNodes = useCallback((updatedNodes: DebateNode[]) => {

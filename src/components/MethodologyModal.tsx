@@ -64,7 +64,7 @@ export function MethodologyModal({ isOpen, isDark, onClose }: MethodologyModalPr
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-sky-400 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-sky-400">Debate Pillars (Blue)</div>
-                <p className="mt-0.5 opacity-80">Six core thematic dimensions structuring the overall conflict.</p>
+                <p className="mt-0.5 opacity-80">Eight core thematic dimensions structuring the overall conflict.</p>
               </div>
               <div className={clsx('p-3 rounded-lg border-l-4 border-l-amber-400 border', isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200')}>
                 <div className="font-semibold text-amber-400">Contested Theses (Amber)</div>

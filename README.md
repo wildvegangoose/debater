@@ -9,15 +9,17 @@ An interactive, infinitely zoomable dialectical argument map exploring the prima
   - **Standard Exploration (`36% – 90%`):** Full summaries, historical eras, thematic lens tags, and expand/collapse branch controls.
   - **Deep Citations (`>= 90%`):** Reveals primary legal/historical context bullets and source citations directly on cards.
 - **3 Tree Layout Modes:**
-  - **Bilateral Mindmap (`SPLIT`):** Centered root inquiry with 3 pillars branching left and 3 pillars branching right for widescreen symmetry.
+  - **Bilateral Mindmap (`SPLIT`):** Centered root inquiry with 4 pillars branching left and 4 pillars branching right for widescreen symmetry.
   - **Left → Right (`LR`)** and **Top → Bottom (`TB`)** hierarchical trees.
-- **Six Curated Thematic Pillars (70+ Steelmanned Nodes):**
+- **Eight Curated Thematic Pillars (95+ Steelmanned Nodes, Including 2011–2026 Landmark Debates):**
   1. Historical Roots, Indigeneity & Self-Determination (1880s–1949)
   2. 1967 Borders, West Bank Occupation & Settlements
-  3. Gaza, Blockade, October 7 & Conduct of Warfare (IHL)
-  4. Refugees, Right of Return, Mizrahi Dispossession & Civic Equality
-  5. Status of Jerusalem & Sacred Sites
-  6. Competing Endgames: Two-State Solution, One Democratic State, or Confederation
+  3. Gaza, Blockade, October 7, IHL & ICJ Genocide Convention Threshold
+  4. Regional Geopolitics, Abraham Accords, Iran’s "Axis of Resistance" & U.S. Military Aid
+  5. Refugees, Right of Return, Mizrahi Dispossession & Civic Equality
+  6. Status of Jerusalem, Sacred Sites & Unilateral Diplomatic Recognition
+  7. Global Discourse: Anti-Zionism vs. Antisemitism (IHRA/JDA), BDS & "Apartheid" Legal Framework
+  8. Competing Endgames: Two-State Solution, One Democratic State, or Confederation
 - **Interactive Local Sandbox:**
   - Add supporting (`+`) or challenging (`−`) arguments to any node, edit existing claims, import/export JSON, copy deep-links (`#node=<id>`), or reset to the curated baseline.
 

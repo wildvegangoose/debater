@@ -75,10 +75,29 @@ export const endgamesSolutionsNodes: DebateNode[] = [
     ],
     references: [
       'Arab Peace Initiative (2002, Reaffirmed at Riyadh Summits 2023–2024)',
-      'Ehud Barak & Tzipi Livni — Demographic Imperative Arguments for Separation'
+      'Munk Debate: Ehud Olmert & Tzipi Livni For the Two-State Motion (Dec 2025)',
+      'CFR / Open to Debate: Dennis Ross & Mohammed Dajani Daoudi (July 2024)'
     ],
     tags: ['Diplomacy', 'Security', 'Demographics'],
     era: 'Future Horizons'
+  },
+  {
+    id: 'pro-two-state-munk-isolation',
+    parentId: 'thesis-two-state',
+    kind: 'pro',
+    title: 'Olmert & Livni (2025 Munk Debate): Rejecting Two States Risks Isolation & Binational Ruin',
+    summary:
+      'Former Israeli PM Ehud Olmert and FM Tzipi Livni argued on the December 2025 Munk Debate stage that abandoning a two-state horizon consigns Israel to pariah isolation, economic attrition, and an inevitable slide into a non-Jewish or non-democratic single state.',
+    details: [
+      'Emphasizes that supporting a demilitarized Palestinian state is a hard-headed Israeli national-security imperative—not an altruistic concession—to preserve Western alliances and domestic social cohesion.',
+      'Echoed by diplomat Dennis Ross and Palestinian scholar Mohammed Dajani Daoudi (July 2024 CFR Debate): partition need not happen overnight, but preserving its territorial possibility prevents irreversible collapse.'
+    ],
+    references: [
+      'Munk Debate: "Be it Resolved, It Is in Israel’s National Interest to Support a Two-State Solution" (Dec 3, 2025)',
+      'Open to Debate / CFR: "Is the Two-State Solution Still Viable?" (July 2024)'
+    ],
+    tags: ['Diplomacy', 'Demographics', 'Security'],
+    era: '2024–2026'
   },
   {
     id: 'con-two-state-settlements',
@@ -86,14 +105,14 @@ export const endgamesSolutionsNodes: DebateNode[] = [
     kind: 'con',
     title: 'Entrenched Reality of 700,000+ Settlers Makes Evacuation Politically Impossible',
     summary:
-      'Skeptics argue that evacuating even 100,000+ ideological settlers from the West Bank interior—nearly 12x the traumatic 2005 Gaza evacuation of 8,500 settlers—would trigger civil strife inside Israel that no conceivable coalition will attempt.',
+      'Skeptics—including Ilan Pappé and Ghada Karmi at the June 2026 Oxford Union debate—argue that 700,000+ settlers and decades of infrastructure integration prove Israel never intended a sovereign Palestinian state, leaving only fragmented cantons.',
     details: [
       'Settlements such as Ariel, Kiryat Arba/Hebron, Kedumim, and Eli extend deep into the West Bank spine, backed by major highways, water grids, and cabinet representation.',
-      'Decades of "peace process" diplomacy coincided with a tripling of the settler population from ~250,000 in 1993 to >700,000 (including East Jerusalem) today, convincing many observers that two-state rhetoric merely shields permanent control.'
+      'Evacuating 100,000+ interior settlers—12x the 2005 Gaza disengagement—is viewed as politically unthinkable across mainstream Israeli coalitions.'
     ],
     references: [
       'Ian Lustick, Paradigm Lost: From Two-State Solution to One-State Reality (2019)',
-      'Peace Now Annual Settlement Monitor'
+      'Oxford Union Debate: "Israel Never Truly Wanted Peace with Palestine" — Proposition Arguments (June 2026)'
     ],
     tags: ['Governance', 'Demographics'],
     era: '1993–Present',
@@ -103,35 +122,36 @@ export const endgamesSolutionsNodes: DebateNode[] = [
     id: 'con-two-state-security',
     parentId: 'thesis-two-state',
     kind: 'con',
-    title: 'Post-Oct 7 Security Trauma, Past Rejections & Fear of a "Hamastan" in Judea',
+    title: 'Oren, Shaked & Wilf (2025 Munk / 2026 Oxford): Post-Oct 7 Security & Ideological Veto',
     summary:
-      'Israeli security skeptics argue Palestinian leaders turned down statehood offers in 1947, 2000 (Camp David), and 2008 (Olmert), and that after October 7, relinquishing IDF security control over the West Bank risks a Hamas takeover overlooking Tel Aviv and Jerusalem.',
+      'Winning the Dec 2025 Munk Debate audience vote, Michael Oren and Ayelet Shaked—alongside Einat Wilf at the June 2026 Oxford Union—argued October 7 proved a West Bank Palestinian state would become an existential terror launchpad until Palestinian politics abandons the goal of undoing 1948.',
     details: [
-      'Polling after Oct 7 showed Hamas enjoying substantially higher popularity in the West Bank than the aging, unpopular Palestinian Authority.',
-      'Critics point to PA governance deficits, lack of elections since 2006, school curriculum controversies, and "pay-for-slay" prisoner/martyr stipends as proof that state-building prerequisites are absent.',
-      'A sovereign state controls its own borders and politics; paper "demilitarization" pledges can collapse overnight if militants seize power via coup or election, as Hamas did in Gaza in 2006–2007.'
+      'Einat Wilf’s "War of Return" thesis argues peace failed in 1937, 1947, 2000, and 2008 not over 1967 settlement borders, but over persistent ideological refusal to accept sovereign Jewish statehood in *any* borders.',
+      'Elliott Abrams and Oren contend that relinquishing IDF freedom of action in Judea and Samaria invites an Iranian-armed Hamas takeover overlooking Ben Gurion Airport and Tel Aviv.',
+      'Points to post-Oct 7 PCPSR polling, PA governance weakness, and lack of elections since 2006 as evidence that statehood now would reward October 7.'
     ],
     references: [
-      'Palestinian Center for Policy and Survey Research (PCPSR) Public Opinion Polls',
-      'Einat Wilf & Adi Schwartz, The War of Return (2020)'
+      'Michael Oren & Ayelet Shaked — Winning Opposition Arguments, Munk Debate (Dec 2025)',
+      'Einat Wilf — Opposition Speech, Oxford Union Debate (June 2026) & The War of Return (2020)',
+      'Elliott Abrams & Fleur Hassan-Nahoum — CFR / Open to Debate (July 2024)'
     ],
-    tags: ['Security', 'Governance'],
-    era: '2000–Present',
+    tags: ['Security', 'Governance', 'History'],
+    era: '2020–2026',
     relatedIds: ['con-settlements-strategic-depth']
   },
   {
     id: 'con-rebuttal-camp-david-olmert-nuance',
     parentId: 'con-two-state-security',
     kind: 'con',
-    title: '2000/2008 Talks Failed Over Concrete Gaps & Political Timing, Not Pure Rejectionism',
+    title: '2000/2008 Talks Failed Over Concrete Sovereignty Gaps & Timing, Not Pure Rejectionism',
     summary:
-      'Negotiators and historians note Camp David (2000) was poorly prepared, Taba (Jan 2001) achieved historic breakthroughs before Israeli elections ended talks, and Olmert’s Sept 2008 verbal map offer came as Olmert was resigning under corruption indictment.',
+      'Negotiators (including Israeli FM Shlomo Ben-Ami and US advisor Robert Malley) note Camp David (2000) had major territorial/Jerusalem gaps, Taba (Jan 2001) achieved breakthroughs cut short by elections, and Olmert’s Sept 2008 map came as he was resigning.',
     details: [
-      'At Taba, both delegations issued a joint statement declaring they had "never been closer to reaching an agreement," before Ariel Sharon won the Feb 2001 election.',
-      'In 2008, Abbas was not permitted to take Olmert’s hand-drawn map out of the room for technical verification, and Bush Administration officials confirmed a lame-duck Israeli PM could not implement it.',
-      'Meanwhile, PA security forces have maintained daily counter-terrorism coordination with Israel across West Bank cities since 2007 despite intense domestic political cost.'
+      'Shlomo Ben-Ami famously remarked that "if I were a Palestinian, I would have rejected Camp David as well," pointing to initial proposals splitting the West Bank and withholding East Jerusalem sovereignty.',
+      'The PLO formally recognized Israel along 1967 lines in 1988 and 1993—ceding 78% of historic Mandate Palestine—and PA security forces have coordinated daily with the IDF against Hamas since 2007.'
     ],
     references: [
+      'Shlomo Ben-Ami, Scars of War, Wounds of Peace (2006)',
       'Robert Malley & Hussein Agha, "Camp David: The Tragedy of Errors" (NYRB, 2001)',
       'Condoleezza Rice, No Higher Honor — Account of 2008 Annapolis/Olmert Talks (2011)'
     ],
