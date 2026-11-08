@@ -11,7 +11,8 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import clsx from 'clsx';
-import { DEBATE_DATASETS, resolveTopicFromUrl, TOPIC_OPTIONS } from './data/datasets';
+import { fetchDataset, getCachedDatasetSync, resolveTopicFromUrl, TOPIC_OPTIONS } from './data/datasets';
+import { curatedIsraelPalestineDataset } from './data/israelPalestineGraph';
 import { DebateGraphDataset, DebateNode, DebateNodeKind, DebateTag, DebateTopicId, LayoutDirection } from './types/debate';
 import {
   buildFlowGraph,
@@ -25,6 +26,7 @@ import { DebateCardNode } from './components/DebateCardNode';
 import { TopBar } from './components/TopBar';
 import { CanvasToolbar } from './components/CanvasToolbar';
 import { NodeInspectorDrawer } from './components/NodeInspectorDrawer';
+import { Loader2 } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { MethodologyModal } from './components/MethodologyModal';
 
@@ -137,23 +139,35 @@ function DebateGraphWorkspace() {
 
   // Active Topic & Dataset state
   const [topicId, setTopicId] = useState<DebateTopicId>(() => resolveTopicFromUrl());
-  const activeDataset = DEBATE_DATASETS[topicId];
+  const [activeDataset, setActiveDataset] = useState<DebateGraphDataset>(() => {
+    const initialTopic = resolveTopicFromUrl();
+    return getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+  });
+  const [isLoadingTopic, setIsLoadingTopic] = useState<boolean>(false);
 
-  const [nodes, setNodes] = useState<DebateNode[]>(() => loadNodesForDataset(DEBATE_DATASETS[resolveTopicFromUrl()]).nodes);
-  const [hasSandboxChanges, setHasSandboxChanges] = useState<boolean>(
-    () => loadNodesForDataset(DEBATE_DATASETS[resolveTopicFromUrl()]).hasCustom
-  );
+  const [nodes, setNodes] = useState<DebateNode[]>(() => {
+    const initialTopic = resolveTopicFromUrl();
+    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    return loadNodesForDataset(dataset).nodes;
+  });
+  const [hasSandboxChanges, setHasSandboxChanges] = useState<boolean>(() => {
+    const initialTopic = resolveTopicFromUrl();
+    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    return loadNodesForDataset(dataset).hasCustom;
+  });
 
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => {
     const initialTopic = resolveTopicFromUrl();
-    const initialNodes = loadNodesForDataset(DEBATE_DATASETS[initialTopic]).nodes;
+    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    const initialNodes = loadNodesForDataset(dataset).nodes;
     return getInitialCollapsedIds(initialNodes, parseHashNodeId());
   });
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(() => parseHashNodeId());
   const [activePillarId, setActivePillarId] = useState<string | null>(() => {
     const initialTopic = resolveTopicFromUrl();
-    const initialNodes = loadNodesForDataset(DEBATE_DATASETS[initialTopic]).nodes;
+    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    const initialNodes = loadNodesForDataset(dataset).nodes;
     return findOwningPillarId(parseHashNodeId(), initialNodes);
   });
 
@@ -209,10 +223,23 @@ function DebateGraphWorkspace() {
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
   const stats = useMemo(() => computeGraphStats(nodes), [nodes]);
 
-  // Switch between Debate Graph Topics (e.g., Israel–Palestine <-> Economic Policies)
+  // Switch between Debate Graph Topics
   const applyTopicAndTarget = useCallback(
-    (nextTopicId: DebateTopicId, targetNodeId: string | null, updateHistory = true) => {
-      const nextDataset = DEBATE_DATASETS[nextTopicId];
+    async (nextTopicId: DebateTopicId, targetNodeId: string | null, updateHistory = true) => {
+      let nextDataset = getCachedDatasetSync(nextTopicId);
+      if (!nextDataset) {
+        setIsLoadingTopic(true);
+        try {
+          nextDataset = await fetchDataset(nextTopicId);
+        } catch (err) {
+          console.error('Failed to load topic dataset', err);
+          setIsLoadingTopic(false);
+          return;
+        }
+        setIsLoadingTopic(false);
+      }
+
+      setActiveDataset(nextDataset);
       const loaded = loadNodesForDataset(nextDataset);
       setTopicId(nextTopicId);
       setNodes(loaded.nodes);
@@ -253,6 +280,14 @@ function DebateGraphWorkspace() {
     },
     []
   );
+
+  // If initial URL topic was not pre-cached, fetch it on mount
+  useEffect(() => {
+    const initialTopic = resolveTopicFromUrl();
+    if (!getCachedDatasetSync(initialTopic)) {
+      applyTopicAndTarget(initialTopic, parseHashNodeId(), false);
+    }
+  }, [applyTopicAndTarget]);
 
   const handleSwitchTopic = useCallback(
     (nextTopicId: DebateTopicId) => {
@@ -682,7 +717,7 @@ function DebateGraphWorkspace() {
           persistSandboxNodes(importedNodes);
           setCollapsedIds(getInitialCollapsedIds(importedNodes));
           handleSelectNode(null);
-          setPendingCamera({ nodeIds: importedNodes.map((n) => n.id), maxZoom: 0.75, padding: 0.15 });
+          setPendingCamera({ nodeIds: importedNodes.map((n: DebateNode) => n.id), maxZoom: 0.75, padding: 0.15 });
         } catch {
           alert('Could not parse JSON file.');
         }
@@ -700,7 +735,7 @@ function DebateGraphWorkspace() {
     setCollapsedIds(getInitialCollapsedIds(activeDataset.nodes));
     handleSelectNode(null);
     setPendingCamera({
-      nodeIds: activeDataset.nodes.map((n) => n.id),
+      nodeIds: activeDataset.nodes.map((n: DebateNode) => n.id),
       maxZoom: 0.75,
       padding: 0.14,
     });
@@ -755,6 +790,13 @@ function DebateGraphWorkspace() {
         {/* Main Workspace: Infinite Zoomable Canvas + Right Inspector Drawer */}
         <div className="flex-1 flex min-h-0 relative">
           <div className="flex-1 h-full relative">
+            {isLoadingTopic && (
+              <div className="absolute inset-0 z-40 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-3 text-slate-100 animate-in fade-in duration-150">
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                <p className="text-sm font-semibold tracking-wide">Loading Landmark Debate...</p>
+                <p className="text-xs text-slate-400">Fetching curated nodes &amp; primary evidence dossiers</p>
+              </div>
+            )}
             <ReactFlow<DebateFlowNode>
               nodes={rfNodes}
               edges={flowEdges}

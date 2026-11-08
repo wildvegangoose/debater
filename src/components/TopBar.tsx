@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import {
+  ChevronDown,
   Compass,
   Download,
   Filter,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { DebateGraphDataset, DebateNode, DebateTag, DebateTopicId } from '../types/debate';
 import { GraphStats } from '../utils/graphLayout';
+import { TopicPickerModal } from './TopicPickerModal';
 
 interface TopicOption {
   id: DebateTopicId;
@@ -47,7 +49,7 @@ interface TopBarProps {
 
 export function TopBar({
   dataset,
-  topicOptions,
+  topicOptions: _topicOptions,
   onSwitchTopic,
   nodes,
   stats,
@@ -68,6 +70,7 @@ export function TopBar({
 }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [showTagMenu, setShowTagMenu] = useState(false);
+  const [showTopicModal, setShowTopicModal] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,33 +167,32 @@ export function TopBar({
             </div>
           </div>
 
-          {/* Multi-Topic Deep-Dive Switcher */}
-          <div
-            className={clsx(
-              'inline-flex items-center p-0.5 rounded-xl border shrink-0',
-              isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'
-            )}
-          >
-            {topicOptions.map((opt) => {
-              const active = opt.id === dataset.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => onSwitchTopic(opt.id)}
-                  className={clsx(
-                    'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
-                    active
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : isDark
-                        ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
-                  )}
-                >
-                  {opt.shortTitle}
-                </button>
-              );
-            })}
+          {/* Topic Switcher Button */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowTopicModal(true)}
+              className={clsx(
+                'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-xs font-semibold shadow-xs',
+                isDark
+                  ? 'bg-slate-900 border-indigo-500/50 text-indigo-300 hover:bg-slate-800 hover:border-indigo-400'
+                  : 'bg-white border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400'
+              )}
+            >
+              <Compass className="w-3.5 h-3.5 text-indigo-400" />
+              <span>{dataset.shortTitle}</span>
+              <span
+                className={clsx(
+                  'px-1.5 py-0.5 rounded-md text-[10px] font-bold border',
+                  isDark
+                    ? 'bg-indigo-950/60 border-indigo-700/60 text-indigo-300'
+                    : 'bg-indigo-100 border-indigo-200 text-indigo-800'
+                )}
+              >
+                22 Topics
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+            </button>
           </div>
         </div>
 
@@ -471,6 +473,15 @@ export function TopBar({
           </button>
         ))}
       </div>
+
+      {/* 22-Topic Deep-Dive Selector Modal */}
+      <TopicPickerModal
+        isOpen={showTopicModal}
+        onClose={() => setShowTopicModal(false)}
+        activeTopicId={dataset.id}
+        onSelectTopic={onSwitchTopic}
+        isDark={isDark}
+      />
     </header>
   );
 }

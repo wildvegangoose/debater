@@ -1,9 +1,53 @@
 export type DebateNodeKind = 'root' | 'pillar' | 'thesis' | 'pro' | 'con';
 
-export type DebateTopicId = 'israel-palestine' | 'economic-policies';
+export type DebateTopicCategory =
+  | 'Geopolitics & Conflict'
+  | 'Technology & AI'
+  | 'Economics & Labor'
+  | 'Energy & Climate'
+  | 'Law & Society';
+
+export type DebateTopicId =
+  // Existing
+  | 'israel-palestine'
+  | 'economic-policies'
+  // Technology & AI
+  | 'ai-risk'
+  | 'social-media-censorship'
+  | 'big-tech-antitrust'
+  | 'crypto-defi'
+  | 'crispr-gene-editing'
+  // Politics, Governance & World Order
+  | 'liberal-democracy-populism'
+  | 'russia-ukraine-nato'
+  | 'china-western-order'
+  | 'immigration-borders'
+  | 'death-penalty'
+  // Economics, Work & Wealth
+  | 'capitalism-socialism'
+  | 'universal-basic-income'
+  | 'globalization-tariffs'
+  | 'higher-education-debt'
+  | 'future-of-work'
+  // Climate, Energy, Law & Culture
+  | 'nuclear-energy'
+  | 'climate-growth-degrowth'
+  | 'space-exploration'
+  | 'drug-decriminalization'
+  | 'meritocracy';
+
+export interface DebateTopicMetadata {
+  id: DebateTopicId;
+  category: DebateTopicCategory;
+  shortTitle: string;
+  title: string;
+  subtitle: string;
+  iconName?: string;
+  landmarkDebate?: string;
+}
 
 export type DebateTag =
-  // Israel–Palestine & General Lenses
+  // General & Geopolitics
   | 'History'
   | 'International Law'
   | 'Security'
@@ -14,7 +58,7 @@ export type DebateTag =
   | 'Diplomacy'
   | 'Religion & Culture'
   | 'Governance'
-  // Economic Policies Lenses
+  // Economics & Markets
   | 'Macroeconomics'
   | 'Taxation & Fiscal'
   | 'Trade & Industry'
@@ -22,7 +66,16 @@ export type DebateTag =
   | 'Regulation & Markets'
   | 'Housing & Healthcare'
   | 'Energy & Climate'
-  | 'Empirical Studies';
+  | 'Empirical Studies'
+  // Tech, AI & Bioethics
+  | 'AI & Technology'
+  | 'Free Speech & Media'
+  | 'Bioethics'
+  | 'National Security'
+  | 'Criminal Justice'
+  | 'Philosophy & Ethics'
+  | 'Science & Innovation'
+  | 'Civil Liberties';
 
 export type SourceCategory =
   | 'Primary Text / Treaty'
