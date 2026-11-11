@@ -162,17 +162,13 @@ jobs:
 
           PR_URL=$(gh pr list --head "$BRANCH" --json url --jq '.[0].url')
           if [ -z "$PR_URL" ]; then
-            PR_BODY=$(cat <<EOF
-          Automated Pull Request generated from approved community suggestion #${ISSUE_NUMBER} (submitted by @${ISSUE_AUTHOR}).
-
-          Closes #${ISSUE_NUMBER}
-
-          $(cat /tmp/pr-report.md)
-          EOF
-            )
+            {
+              printf 'Automated Pull Request generated from approved community suggestion #%s (submitted by @%s).\n\nCloses #%s\n\n' "$ISSUE_NUMBER" "$ISSUE_AUTHOR" "$ISSUE_NUMBER"
+              cat /tmp/pr-report.md
+            } > /tmp/pr-body.md
             PR_URL=$(gh pr create \
               --title "feat(community): ${ISSUE_TITLE} (#${ISSUE_NUMBER})" \
-              --body "$PR_BODY" \
+              --body-file /tmp/pr-body.md \
               --base main \
               --head "$BRANCH")
           fi
