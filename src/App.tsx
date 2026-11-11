@@ -11,8 +11,7 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import clsx from 'clsx';
-import { fetchDataset, getCachedDatasetSync, resolveTopicFromUrl, TOPIC_OPTIONS } from './data/datasets';
-import { curatedIsraelPalestineDataset } from './data/israelPalestineGraph';
+import { DEFAULT_LANDING_DATASET, fetchDataset, getCachedDatasetSync, resolveTopicFromUrl, TOPIC_OPTIONS } from './data/datasets';
 import { DebateGraphDataset, DebateNode, DebateNodeKind, DebateTag, DebateTopicId, DebateViewMode, LayoutDirection } from './types/debate';
 import {
   buildFlowGraph,
@@ -28,12 +27,14 @@ import { CanvasToolbar } from './components/CanvasToolbar';
 import { NodeInspectorDrawer } from './components/NodeInspectorDrawer';
 import { MobileOutlineView } from './components/MobileOutlineView';
 import { FlashcardQuizView } from './components/FlashcardQuizView';
-import { Loader2 } from 'lucide-react';
+import { GitPullRequest, Loader2, Sparkles, X } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
+import { SuggestNodeDraft, SuggestNodeModal } from './components/SuggestNodeModal';
 import { MethodologyModal } from './components/MethodologyModal';
 
 const STORAGE_PREFIX = 'dialectica-debate-sandbox-';
 const THEME_KEY = 'dialectica-theme-v1';
+const WELCOME_DISMISSED_KEY = 'dialectica-welcome-dismissed-v1';
 
 const nodeTypes = {
   debateCard: DebateCardNode,
@@ -143,24 +144,24 @@ function DebateGraphWorkspace() {
   const [topicId, setTopicId] = useState<DebateTopicId>(() => resolveTopicFromUrl());
   const [activeDataset, setActiveDataset] = useState<DebateGraphDataset>(() => {
     const initialTopic = resolveTopicFromUrl();
-    return getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    return getCachedDatasetSync(initialTopic) ?? DEFAULT_LANDING_DATASET;
   });
   const [isLoadingTopic, setIsLoadingTopic] = useState<boolean>(false);
 
   const [nodes, setNodes] = useState<DebateNode[]>(() => {
     const initialTopic = resolveTopicFromUrl();
-    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    const dataset = getCachedDatasetSync(initialTopic) ?? DEFAULT_LANDING_DATASET;
     return loadNodesForDataset(dataset).nodes;
   });
   const [hasSandboxChanges, setHasSandboxChanges] = useState<boolean>(() => {
     const initialTopic = resolveTopicFromUrl();
-    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    const dataset = getCachedDatasetSync(initialTopic) ?? DEFAULT_LANDING_DATASET;
     return loadNodesForDataset(dataset).hasCustom;
   });
 
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => {
     const initialTopic = resolveTopicFromUrl();
-    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    const dataset = getCachedDatasetSync(initialTopic) ?? DEFAULT_LANDING_DATASET;
     const initialNodes = loadNodesForDataset(dataset).nodes;
     return getInitialCollapsedIds(initialNodes, parseHashNodeId());
   });
@@ -168,7 +169,7 @@ function DebateGraphWorkspace() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(() => parseHashNodeId());
   const [activePillarId, setActivePillarId] = useState<string | null>(() => {
     const initialTopic = resolveTopicFromUrl();
-    const dataset = getCachedDatasetSync(initialTopic) ?? curatedIsraelPalestineDataset;
+    const dataset = getCachedDatasetSync(initialTopic) ?? DEFAULT_LANDING_DATASET;
     const initialNodes = loadNodesForDataset(dataset).nodes;
     return findOwningPillarId(parseHashNodeId(), initialNodes);
   });
@@ -178,6 +179,18 @@ function DebateGraphWorkspace() {
   const [direction, setDirection] = useState<LayoutDirection>('SPLIT');
   const [showCrossLinks, setShowCrossLinks] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [suggestState, setSuggestState] = useState<{
+    isOpen: boolean;
+    draft: SuggestNodeDraft | null;
+  }>({ isOpen: false, draft: null });
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(() => {
+    try {
+      const hasTopicQuery = new URLSearchParams(window.location.search).has('topic');
+      return !localStorage.getItem(WELCOME_DISMISSED_KEY) && !hasTopicQuery && !parseHashNodeId();
+    } catch {
+      return false;
+    }
+  });
 
   // View Mode: Graph (Visual Canvas) | Outline (Mobile-first Feed) | Flashcards (Quiz)
   const [viewMode, setViewMode] = useState<DebateViewMode>(() => {
@@ -766,6 +779,53 @@ function DebateGraphWorkspace() {
     });
   }, [activeDataset, handleSelectNode]);
 
+  const handleDismissWelcome = useCallback(() => {
+    setShowWelcomeBanner(false);
+    try {
+      localStorage.setItem(WELCOME_DISMISSED_KEY, '1');
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  const handleOpenSuggestModal = useCallback(
+    (draft: SuggestNodeDraft | null = null) => {
+      setSuggestState({
+        isOpen: true,
+        draft: draft ?? {
+          topicId: activeDataset.id,
+          parentId: selectedNodeId ?? activeDataset.nodes[0]?.id ?? null,
+          kind:
+            selectedNodeId && nodeMap.get(selectedNodeId)?.kind !== 'root' && nodeMap.get(selectedNodeId)?.kind !== 'pillar'
+              ? 'con'
+              : 'thesis',
+        },
+      });
+    },
+    [activeDataset, selectedNodeId, nodeMap]
+  );
+
+  const handlePreviewSuggestInSandbox = useCallback(
+    (nodeData: Omit<DebateNode, 'id'>) => {
+      const generatedId = `custom-${Date.now()}`;
+      const createdNode: DebateNode = {
+        ...nodeData,
+        id: generatedId,
+        isCustom: true,
+      };
+      persistSandboxNodes([...nodes, createdNode]);
+      if (createdNode.parentId) {
+        setCollapsedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(createdNode.parentId!);
+          return next;
+        });
+      }
+      setSelectedNodeId(generatedId);
+    },
+    [nodes, persistSandboxNodes]
+  );
+
   const graphActionsValue = useMemo(
     () => ({
       isDark,
@@ -812,7 +872,92 @@ function DebateGraphWorkspace() {
           isDark={isDark}
           onToggleTheme={() => setIsDark((d) => !d)}
           onOpenGuide={() => setIsGuideOpen(true)}
+          onOpenSuggestModal={() => handleOpenSuggestModal(null)}
         />
+
+        {showWelcomeBanner && (
+          <div
+            className={clsx(
+              'px-4 py-2 border-b flex flex-wrap items-center justify-between gap-2 text-xs shrink-0',
+              isDark
+                ? 'bg-indigo-950/55 border-indigo-500/30 text-indigo-100'
+                : 'bg-indigo-50 border-indigo-200 text-indigo-950'
+            )}
+          >
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              <span className="inline-flex items-center gap-1 font-semibold text-indigo-400 shrink-0">
+                <Sparkles className="w-3.5 h-3.5" />
+                22 Landmark Debates:
+              </span>
+              <span className={clsx('hidden md:inline', isDark ? 'text-slate-300' : 'text-slate-700')}>
+                Explore steelmanned argument trees, switch topics anytime, or test yourself:
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(
+                  [
+                    { id: 'ai-risk', label: 'AI Risk' },
+                    { id: 'economic-policies', label: 'Economics' },
+                    { id: 'israel-palestine', label: 'Israel–Palestine' },
+                    { id: 'capitalism-socialism', label: 'Capitalism vs Socialism' },
+                    { id: 'nuclear-energy', label: 'Nuclear Power' },
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleSwitchTopic(item.id)}
+                    className={clsx(
+                      'px-2 py-0.5 rounded-md font-medium transition-colors border',
+                      topicId === item.id
+                        ? 'bg-indigo-600 border-indigo-500 text-white'
+                        : isDark
+                          ? 'bg-slate-900/70 border-slate-700 text-slate-300 hover:border-indigo-400'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-400'
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange('flashcards')}
+                  className={clsx(
+                    'px-2 py-0.5 rounded-md font-semibold border transition-colors',
+                    isDark
+                      ? 'bg-amber-500/15 border-amber-400/35 text-amber-300 hover:bg-amber-500/25'
+                      : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+                  )}
+                >
+                  Quiz Mode
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOpenSuggestModal(null)}
+                  className={clsx(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border transition-colors',
+                    isDark
+                      ? 'bg-emerald-500/15 border-emerald-400/35 text-emerald-300 hover:bg-emerald-500/25'
+                      : 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                  )}
+                >
+                  <GitPullRequest className="w-3 h-3" />
+                  Suggest Node
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleDismissWelcome}
+              aria-label="Dismiss welcome banner"
+              className={clsx(
+                'p-1 rounded-md transition-colors shrink-0',
+                isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-indigo-100 text-slate-500'
+              )}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Main Workspace: Infinite Zoomable Canvas / Mobile Outline Feed / Flashcard Quiz */}
         <div className="flex-1 flex min-h-0 relative overflow-hidden">
@@ -935,6 +1080,7 @@ function DebateGraphWorkspace() {
             onOpenAddChild={handleOpenAddModal}
             onOpenEdit={handleOpenEditModal}
             onDeleteNode={handleDeleteNode}
+            onSuggestNode={(draft) => handleOpenSuggestModal(draft)}
           />
         </div>
 
@@ -948,6 +1094,22 @@ function DebateGraphWorkspace() {
           isDark={isDark}
           onClose={() => setEditorState((s) => ({ ...s, isOpen: false }))}
           onSave={handleSaveNode}
+          onSuggestToPublic={(draft) =>
+            handleOpenSuggestModal({
+              topicId: activeDataset.id,
+              ...draft,
+            })
+          }
+        />
+
+        <SuggestNodeModal
+          isOpen={suggestState.isOpen}
+          onClose={() => setSuggestState((s) => ({ ...s, isOpen: false }))}
+          activeDataset={activeDataset}
+          activeNodes={nodes}
+          initialDraft={suggestState.draft}
+          onPreviewInSandbox={handlePreviewSuggestInSandbox}
+          isDark={isDark}
         />
 
         <MethodologyModal

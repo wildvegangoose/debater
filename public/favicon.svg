@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <!-- Central beam & dialectical branches -->
+  <path d="M32 14v36M16 24h32M16 24l-5 12h10l-5-12zm32 0l-5 12h10l-5-12z" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="14" r="3.5" fill="#fff"/>
+  <path d="M22 50h20" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- Pro/Con subtle indicators -->
+  <circle cx="16" cy="41" r="3.5" fill="#34d399"/>
+  <circle cx="48" cy="41" r="3.5" fill="#fb7185"/>
+</svg>

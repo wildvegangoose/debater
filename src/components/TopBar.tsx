@@ -5,6 +5,7 @@ import {
   Compass,
   Download,
   Filter,
+  GitPullRequest,
   HelpCircle,
   Landmark,
   Moon,
@@ -48,6 +49,7 @@ interface TopBarProps {
   isDark: boolean;
   onToggleTheme: () => void;
   onOpenGuide: () => void;
+  onOpenSuggestModal: () => void;
 }
 
 export function TopBar({
@@ -72,6 +74,7 @@ export function TopBar({
   isDark,
   onToggleTheme,
   onOpenGuide,
+  onOpenSuggestModal,
 }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [showTagMenu, setShowTagMenu] = useState(false);
@@ -403,6 +406,22 @@ export function TopBar({
               <span className="hidden xl:inline">Reset</span>
             </button>
           )}
+
+          {/* Suggest Node to Public Map */}
+          <button
+            type="button"
+            onClick={onOpenSuggestModal}
+            title="Suggest an argument node or source for the public GitHub map"
+            className={clsx(
+              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
+              isDark
+                ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300 hover:bg-emerald-500/25'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+            )}
+          >
+            <GitPullRequest className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Suggest Node</span>
+          </button>
 
           {/* Methodology Guide */}
           <button

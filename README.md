@@ -1,32 +1,56 @@
-# Dialectica — Interactive Dialectical Debate Graphs
+# Dialectica — Interactive Landmark Debate Graphs
 
-An interactive, infinitely zoomable argument-mapping platform covering two comprehensive deep-dive datasets—the **Israeli–Palestinian Conflict** and **Economic Policies & Market Systems**—complete with multi-section background dossiers and direct links to original treaties, watchdog audits, empirical studies, and broadcasts.
+Interactive dialectical argument maps for **22 landmark debates (2014–2026)** across geopolitics, macroeconomics, AI & technology, climate & energy, and law & society — pairing steelmanned pro/con rebuttal trees with primary-source citations, mobile-first outlines, and spaced-retrieval quiz flashcards.
 
-## Live Deep-Dive Datasets
-
-1. **Israeli–Palestinian Conflict (`?topic=israel-palestine` — 10 Symmetrical Pillars, 124 Nodes):**
-   - Covers historical roots & 1948, 1967 borders & settlements, Gaza/Oct 7/ICJ law, regional geopolitics (Abraham Accords, Iran, U.S. aid), **UNRWA schools/textbooks, Arabic media & UN institutional bias** (UN Watch, IMPACT-se, MEMRI, PMW), refugees & equality, Jerusalem, global discourse (BDS, IHRA/JDA, apartheid law), conflict economic policies (Paris Protocol, *Maqasa*, labor permits), and constitutional endgames.
-2. **Economic Policies & Market Systems (`?topic=economic-policies` — 8 Symmetrical Pillars, 90+ Nodes):**
-   - Covers fiscal stimulus, sovereign debt & central bank independence; progressive wealth taxes vs. supply-side & Georgist land-value taxes; free trade vs. tariffs & industrial policy (CHIPS/IRA); minimum wage, unions & AI/UBI; YIMBY zoning reform vs. rent control; Neo-Brandeisian antitrust vs. consumer welfare & deregulation; single-payer healthcare, school vouchers & pensions; and carbon pricing vs. nuclear abundance & green growth.
+**Live Site:** https://wildvegangoose.github.io/debater/
 
 ## Key Features
 
-- **Rich Node Dossiers & Original Source Links:**
-  - Clicking any card opens an expandable side dossier featuring an executive summary, multi-paragraph background & empirical analysis (`**bold**` key concepts, metrics, and mechanisms), scannable takeaways, and clickable external cards linking directly to original primary documents (Yale Avalon Project, NBER, World Bank, CBO, UN Watch, IMPACT-se, MEMRI, ICJ, ICRC, etc.).
-- **3-Tier Semantic Zoom (Level-of-Detail Rendering):**
-  - **Macro Overview (`< 36%`):** High-contrast poster headlines and Pro/Con branch counts.
-  - **Standard Exploration (`36% – 90%`):** Summaries, eras, thematic lens tags, and expand/collapse controls.
-  - **Deep Citations (`>= 90%`):** Inline evidence previews and clickable primary source links right on canvas cards.
-- **Multi-Topic Switcher & Live Deep-Linking:**
-  - Switch seamlessly via the header toggle or share direct URLs (`?topic=israel-palestine#node=...` and `?topic=economic-policies#node=...`).
-- **Interactive Local Sandbox:**
-  - Add supporting (`+`) or challenging (`−`) arguments, edit rich markdown dossiers and source links, import/export JSON, or reset to the curated baseline.
+- **22 Curated Debate Graphs:** Spanning flagship topics including *AI Existential Risk*, *Israel–Palestine*, *Economic Policies & Market Systems*, *Capitalism vs. Socialism*, *Free Speech vs. Content Moderation*, *Nuclear Energy*, *Russia–Ukraine–NATO*, *Rise of China*, *CRISPR Gene Editing*, and more.
+- **3 Native Views:**
+  - **Graph Canvas:** Zoomable dialectical tree with Semantic Level-of-Detail (LOD), bilateral Split / Top-Down / Left-Right layouts, and cross-branch conceptual links.
+  - **Outline Feed (`?view=outline`):** Responsive reading view built for phones and deep linear study.
+  - **Flashcard Quiz (`?view=flashcards`):** Active-recall steelmanning drills over curated arguments.
+- **Rich Evidence Inspector:** Every node carries multi-paragraph analysis, crisp empirical takeaways, and clickable external links to treaties, court dockets, peer-reviewed NBER/academic papers, watchdog audits, and debate transcripts.
+- **Local Sandbox + Community Suggestions:** Readers can prototype arguments locally in `localStorage` (with JSON export/import) and submit new nodes directly into a GitHub-backed review pipeline.
 
-## Local Development & Deployment
+## Community Contributions & Automated GitHub Review Pipeline
+
+Visitors can propose new arguments, theses, or source citations directly from the app via the **Suggest Node** modal (or pre-filled **GitHub Issue Form**):
+
+1. **In-App Suggestion Builder (`Suggest Node`):** Helps contributors pick the topic and exact parent node ID, format primary sources (`Title | https://url | Publisher`), export spreadsheet-ready CSV/JSON, preview in their local sandbox, and open a pre-filled GitHub Issue (`node-suggestion.yml`).
+2. **Automated Validation Workflow (`.github/workflows/review-node-suggestion.yml`):** On any issue labeled `node-suggestion`, [`scripts/validateSuggestion.mjs`](scripts/validateSuggestion.mjs) verifies:
+   - Valid topic ID & existing target `parentId`
+   - Valid `DebateNodeKind` (`pro` / `con` / `thesis`) and canonical `DebateTag`s
+   - Duplicate headline checks & steelmanning quality checks
+   - Live HTTP reachability check (`HEAD` / `GET`) for every submitted primary source URL
+   - Clean JSON payload & TypeScript (`npx tsc --noEmit`) verification
+3. **One-Click Maintainer Approval (`approved-for-pr`):** When a maintainer adds the `approved-for-pr` label to a validated issue, the workflow appends the formatted [`CommunityContributionEntry`](src/types/debate.ts) to [`src/data/communityContributions.json`](src/data/communityContributions.json), runs `npm run build` to verify static compilation, and opens a **Pull Request** ready for merge.
+
+> **Maintainer Setup Note:** To allow the workflow to open PRs automatically, enable **Settings → Actions → General → Workflow permissions → "Allow GitHub Actions to create and approve pull requests"** in the repository settings.
+
+## Privacy-Friendly Analytics (Optional)
+
+Dialectica ships with an opt-in, cookie-free analytics loader in [`src/utils/analytics.ts`](src/utils/analytics.ts). Set either GitHub repository **Actions Variable** (no secret needed) to activate metrics in production builds:
+
+- `VITE_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics token
+- `VITE_GOATCOUNTER_CODE` — GoatCounter site code (e.g. `dialectica`)
+
+## Local Development
 
 ```bash
 npm install
-npm run dev      # Local server at http://localhost:5173/
-npm run build    # Production bundle
-npm run deploy   # Deploy to GitHub Pages
+npm run dev
 ```
+
+To verify types, build static assets, and self-test the community validator locally:
+
+```bash
+node scripts/validateSuggestion.mjs --self-test
+npx tsc --noEmit
+npm run build
+```
+
+## Deployment
+
+Pushes to `main` automatically build and publish to GitHub Pages via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), serving [`public/og-image.png`](public/og-image.png), [`public/favicon.svg`](public/favicon.svg), [`public/robots.txt`](public/robots.txt), and [`public/sitemap.xml`](public/sitemap.xml).

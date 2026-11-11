@@ -1,0 +1,179 @@
+name: Review & Auto-PR Community Node Suggestions
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+jobs:
+  validate-submission:
+    name: Validate Community Node Submission
+    if: >
+      contains(github.event.issue.labels.*.name, 'node-suggestion') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'node-suggestion')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate schema, parent node, sources & types
+        id: validate
+        continue-on-error: true
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: "@${{ github.event.issue.user.login }}"
+        run: |
+          node scripts/validateSuggestion.mjs \
+            --issue-number "$ISSUE_NUMBER" \
+            --author "$ISSUE_AUTHOR" \
+            --check-urls \
+            --check-tsc \
+            --report-file /tmp/validation-report.md
+
+      - name: Post or update validation report comment & labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.existsSync('/tmp/validation-report.md')
+              ? fs.readFileSync('/tmp/validation-report.md', 'utf8')
+              : '## Dialectica Automated Submission Report — ERROR\n\nValidator exited unexpectedly before writing report.';
+            const passed = '${{ steps.validate.outcome }}' === 'success';
+            const issueNumber = context.issue.number;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              per_page: 50,
+            });
+            const existing = comments.data.find((c) =>
+              c.body && c.body.startsWith('## Dialectica Automated Submission Report')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body: report,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: report,
+              });
+            }
+
+            const addLabel = passed ? 'validation-passed' : 'validation-failed';
+            const removeLabel = passed ? 'validation-failed' : 'validation-passed';
+
+            try {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                name: removeLabel,
+              });
+            } catch (_) {}
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              labels: [addLabel],
+            });
+
+  create-pr:
+    name: Create Pull Request for Approved Node
+    if: >
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'approved-for-pr' &&
+      contains(github.event.issue.labels.*.name, 'node-suggestion')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate and apply node to communityContributions.json
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: "@${{ github.event.issue.user.login }}"
+        run: |
+          node scripts/validateSuggestion.mjs \
+            --issue-number "$ISSUE_NUMBER" \
+            --author "$ISSUE_AUTHOR" \
+            --check-urls \
+            --apply \
+            --report-file /tmp/pr-report.md
+
+      - name: Verify production TypeScript & Vite build
+        run: npm run build
+
+      - name: Commit change & open Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: |
+          BRANCH="community/issue-${ISSUE_NUMBER}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add src/data/communityContributions.json
+          if git diff --cached --quiet; then
+            echo "No changes to communityContributions.json — skipping PR."
+            exit 0
+          fi
+          git commit -m "feat(community): add debate node from #${ISSUE_NUMBER}"
+          git push origin "$BRANCH" --force
+
+          PR_URL=$(gh pr list --head "$BRANCH" --json url --jq '.[0].url')
+          if [ -z "$PR_URL" ]; then
+            PR_BODY=$(cat <<EOF
+          Automated Pull Request generated from approved community suggestion #${ISSUE_NUMBER} (submitted by @${ISSUE_AUTHOR}).
+
+          Closes #${ISSUE_NUMBER}
+
+          $(cat /tmp/pr-report.md)
+          EOF
+            )
+            PR_URL=$(gh pr create \
+              --title "feat(community): ${ISSUE_TITLE} (#${ISSUE_NUMBER})" \
+              --body "$PR_BODY" \
+              --base main \
+              --head "$BRANCH")
+          fi
+          gh issue comment "$ISSUE_NUMBER" --body "🚀 Automated Pull Request created and verified with \`npm run build\`: ${PR_URL}"

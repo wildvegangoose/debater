@@ -116,6 +116,17 @@ export interface DebateNode {
   era?: string;
   relatedIds?: string[];
   isCustom?: boolean;
+  isCommunity?: boolean;
+  contributor?: string;
+  issueNumber?: number;
+}
+
+export interface CommunityContributionEntry {
+  topicId: DebateTopicId;
+  issueNumber?: number;
+  contributor?: string;
+  addedAt: string;
+  node: DebateNode;
 }
 
 export type LayoutDirection = 'SPLIT' | 'LR' | 'TB';

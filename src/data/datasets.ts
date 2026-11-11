@@ -1,6 +1,14 @@
-import { DebateGraphDataset, DebateTopicCategory, DebateTopicId } from '../types/debate';
+import {
+  CommunityContributionEntry,
+  DebateGraphDataset,
+  DebateNode,
+  DebateTopicCategory,
+  DebateTopicId,
+} from '../types/debate';
 import { curatedIsraelPalestineDataset } from './israelPalestineGraph';
 import { curatedEconomicPoliciesDataset } from './economicPoliciesGraph';
+import { aiRiskDataset } from './topics/aiRisk';
+import communityRegistryRaw from './communityContributions.json';
 
 export interface TopicCatalogItem {
   id: DebateTopicId;
@@ -259,16 +267,47 @@ export const TOPIC_OPTIONS = TOPIC_CATALOG.map((t) => ({
   category: t.category,
 }));
 
+const COMMUNITY_ENTRIES = communityRegistryRaw as unknown as CommunityContributionEntry[];
+
+function applyCommunityNodes(dataset: DebateGraphDataset): DebateGraphDataset {
+  const additions = COMMUNITY_ENTRIES.filter((entry) => entry.topicId === dataset.id);
+  if (additions.length === 0) return dataset;
+
+  const knownIds = new Set(dataset.nodes.map((n) => n.id));
+  const mergedNodes: DebateNode[] = [...dataset.nodes];
+
+  for (const entry of additions) {
+    const candidate = entry.node;
+    if (!candidate || !candidate.id || knownIds.has(candidate.id)) continue;
+    if (candidate.parentId !== null && !knownIds.has(candidate.parentId)) continue;
+
+    mergedNodes.push({
+      ...candidate,
+      isCommunity: true,
+      contributor: entry.contributor ?? candidate.contributor,
+      issueNumber: entry.issueNumber ?? candidate.issueNumber,
+    });
+    knownIds.add(candidate.id);
+  }
+
+  return mergedNodes.length === dataset.nodes.length
+    ? dataset
+    : { ...dataset, nodes: mergedNodes };
+}
+
 // In-memory dataset cache
 const datasetCache = new Map<DebateTopicId, DebateGraphDataset>();
-datasetCache.set('israel-palestine', curatedIsraelPalestineDataset);
-datasetCache.set('economic-policies', curatedEconomicPoliciesDataset);
+datasetCache.set('israel-palestine', applyCommunityNodes(curatedIsraelPalestineDataset));
+datasetCache.set('economic-policies', applyCommunityNodes(curatedEconomicPoliciesDataset));
+datasetCache.set('ai-risk', applyCommunityNodes(aiRiskDataset));
+
+export const DEFAULT_LANDING_DATASET: DebateGraphDataset = datasetCache.get('ai-risk')!;
 
 // Dynamic loaders for each dataset chunk to prevent bundling all 22 topics into initial page load
 export const DATASET_LOADERS: Record<DebateTopicId, () => Promise<DebateGraphDataset>> = {
   'israel-palestine': async () => curatedIsraelPalestineDataset,
   'economic-policies': async () => curatedEconomicPoliciesDataset,
-  'ai-risk': async () => (await import('./topics/aiRisk')).aiRiskDataset,
+  'ai-risk': async () => aiRiskDataset,
   'social-media-censorship': async () => (await import('./topics/socialMediaCensorship')).socialMediaCensorshipDataset,
   'big-tech-antitrust': async () => (await import('./topics/bigTechAntitrust')).bigTechAntitrustDataset,
   'crypto-defi': async () => (await import('./topics/cryptoDefi')).cryptoDefiDataset,
@@ -297,7 +336,7 @@ export async function fetchDataset(topicId: DebateTopicId): Promise<DebateGraphD
   if (!loader) {
     throw new Error(`Unknown debate topic ID: ${topicId}`);
   }
-  const loaded = await loader();
+  const loaded = applyCommunityNodes(await loader());
   datasetCache.set(topicId, loaded);
   return loaded;
 }
@@ -337,14 +376,20 @@ export function resolveTopicFromUrl(): DebateTopicId {
     if (raw === 'meritocracy') return 'meritocracy';
   }
 
-  // Check if hash belongs to a known node
+  // Check if hash belongs to a known pre-loaded topic node
   const hash = window.location.hash;
   if (hash.startsWith('#node=')) {
     const targetId = decodeURIComponent(hash.slice('#node='.length));
     if (curatedEconomicPoliciesDataset.nodes.some((n) => n.id === targetId)) {
       return 'economic-policies';
     }
+    if (curatedIsraelPalestineDataset.nodes.some((n) => n.id === targetId)) {
+      return 'israel-palestine';
+    }
+    if (aiRiskDataset.nodes.some((n) => n.id === targetId)) {
+      return 'ai-risk';
+    }
   }
 
-  return 'israel-palestine';
+  return 'ai-risk';
 }

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
-import { X } from 'lucide-react';
+import { GitPullRequest, X } from 'lucide-react';
 import { DebateContentSection, DebateNode, DebateNodeKind, DebateSourceLink, DebateTag } from '../types/debate';
+import type { SuggestNodeDraft } from './SuggestNodeModal';
 
 interface NodeEditorModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface NodeEditorModalProps {
   isDark: boolean;
   onClose: () => void;
   onSave: (nodeData: Omit<DebateNode, 'id'> & { id?: string }) => void;
+  onSuggestToPublic?: (draft: SuggestNodeDraft) => void;
 }
 
 export function NodeEditorModal({
@@ -25,6 +27,7 @@ export function NodeEditorModal({
   isDark,
   onClose,
   onSave,
+  onSuggestToPublic,
 }: NodeEditorModalProps) {
   const [kind, setKind] = useState<DebateNodeKind>(defaultKind);
   const [title, setTitle] = useState('');
@@ -361,23 +364,58 @@ export function NodeEditorModal({
             />
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className={clsx(
-                'px-4 py-2 rounded-lg text-xs font-semibold transition-colors',
-                isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              )}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
-            >
-              {mode === 'edit' ? 'Save Changes' : 'Add to Debate Graph'}
-            </button>
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
+            {onSuggestToPublic ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const safeKind = kind === 'root' || kind === 'pillar' ? 'thesis' : kind;
+                  onSuggestToPublic({
+                    parentId: mode === 'edit' && initialNode ? initialNode.parentId : parentNode?.id ?? null,
+                    kind: safeKind,
+                    title,
+                    summary,
+                    details: detailsText
+                      .split('\n')
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                    sourcesText,
+                    tags: selectedTags,
+                    era,
+                  });
+                  onClose();
+                }}
+                className={clsx(
+                  'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors',
+                  isDark
+                    ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-300 hover:bg-emerald-500/20'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                )}
+              >
+                <GitPullRequest className="w-3.5 h-3.5" />
+                Suggest to Public Map...
+              </button>
+            ) : (
+              <span />
+            )}
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className={clsx(
+                  'px-4 py-2 rounded-lg text-xs font-semibold transition-colors',
+                  isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                )}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
+              >
+                {mode === 'edit' ? 'Save Changes' : 'Add to Debate Graph'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
