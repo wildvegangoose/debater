@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { BookOpen, GitBranch, GraduationCap } from 'lucide-react';
+import { BookOpen, GitBranch, GraduationCap, Swords } from 'lucide-react';
 import { DebateViewMode } from '../types/debate';
 
 interface ViewModeSwitcherProps {
@@ -25,6 +25,27 @@ export function ViewModeSwitcher({
         className
       )}
     >
+      {/* Prep Mode (graded practice) */}
+      <button
+        type="button"
+        role="tab"
+        aria-selected={viewMode === 'prep'}
+        onClick={() => onChangeViewMode('prep')}
+        className={clsx(
+          'inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
+          viewMode === 'prep'
+            ? isDark
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'bg-white text-indigo-700 shadow-xs'
+            : isDark
+            ? 'text-slate-400 hover:text-slate-200'
+            : 'text-slate-600 hover:text-slate-900'
+        )}
+      >
+        <Swords className="w-3.5 h-3.5 text-amber-400" />
+        <span>Prep</span>
+      </button>
+
       {/* Graph Mode */}
       <button
         type="button"
@@ -84,9 +105,8 @@ export function ViewModeSwitcher({
             : 'text-slate-600 hover:text-slate-900'
         )}
       >
-        <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
-        <span>Quiz</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse -ml-0.5" />
+        <GraduationCap className="w-3.5 h-3.5" />
+        <span>Cards</span>
       </button>
     </div>
   );

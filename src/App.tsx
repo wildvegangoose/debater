@@ -27,6 +27,7 @@ import { CanvasToolbar } from './components/CanvasToolbar';
 import { NodeInspectorDrawer } from './components/NodeInspectorDrawer';
 import { MobileOutlineView } from './components/MobileOutlineView';
 import { FlashcardQuizView } from './components/FlashcardQuizView';
+import { PrepView } from './components/prep/PrepView';
 import { GitPullRequest, Loader2, Sparkles, X } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { SuggestNodeDraft, SuggestNodeModal } from './components/SuggestNodeModal';
@@ -199,15 +200,18 @@ function DebateGraphWorkspace() {
       const v = params.get('view')?.toLowerCase();
       if (v === 'outline' || v === 'feed') return 'outline';
       if (v === 'flashcards' || v === 'quiz') return 'flashcards';
-      if (window.innerWidth < 640) return 'outline';
+      if (v === 'graph') return 'graph';
+      if (v === 'prep' || v === 'practice') return 'prep';
+      // Deep links to a specific node open the graph; everything else lands in Prep.
+      if (parseHashNodeId()) return window.innerWidth < 640 ? 'outline' : 'graph';
     }
-    return 'graph';
+    return 'prep';
   });
 
   const handleViewModeChange = useCallback((mode: DebateViewMode) => {
     setViewMode(mode);
     const url = new URL(window.location.href);
-    if (mode === 'graph') {
+    if (mode === 'prep') {
       url.searchParams.delete('view');
     } else {
       url.searchParams.set('view', mode);
@@ -843,7 +847,8 @@ function DebateGraphWorkspace() {
     <GraphActionsContext.Provider value={graphActionsValue}>
       <div
         className={clsx(
-          'w-screen h-screen flex flex-col overflow-hidden',
+          // Safe-area padding keeps content clear of the status/navigation bars in the edge-to-edge Android app.
+          'w-screen h-screen flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]',
           isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
         )}
       >
@@ -890,7 +895,7 @@ function DebateGraphWorkspace() {
                 22 Landmark Debates:
               </span>
               <span className={clsx('hidden md:inline', isDark ? 'text-slate-300' : 'text-slate-700')}>
-                Explore steelmanned argument trees, switch topics anytime, or test yourself:
+                Prep for your next debate with graded drills, or explore the argument trees:
               </span>
               <div className="flex flex-wrap items-center gap-1.5">
                 {(
@@ -920,7 +925,7 @@ function DebateGraphWorkspace() {
                 ))}
                 <button
                   type="button"
-                  onClick={() => handleViewModeChange('flashcards')}
+                  onClick={() => handleViewModeChange('prep')}
                   className={clsx(
                     'px-2 py-0.5 rounded-md font-semibold border transition-colors',
                     isDark
@@ -928,7 +933,7 @@ function DebateGraphWorkspace() {
                       : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
                   )}
                 >
-                  Quiz Mode
+                  Practice &amp; Get Graded
                 </button>
                 <button
                   type="button"
@@ -1048,6 +1053,20 @@ function DebateGraphWorkspace() {
               onInspectNode={handleSelectNode}
               onSwitchToGraph={(nodeId) => {
                 handleViewModeChange('graph');
+                if (nodeId) handleSelectAndZoom(nodeId, true);
+              }}
+              isDark={isDark}
+            />
+          )}
+
+          {viewMode === 'prep' && (
+            <PrepView
+              dataset={activeDataset}
+              nodes={nodes}
+              activePillarId={activePillarId}
+              onSelectPillar={setActivePillarId}
+              onSwitchToGraph={(nodeId) => {
+                handleViewModeChange(window.innerWidth < 640 ? 'outline' : 'graph');
                 if (nodeId) handleSelectAndZoom(nodeId, true);
               }}
               isDark={isDark}

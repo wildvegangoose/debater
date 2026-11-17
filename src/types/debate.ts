@@ -131,7 +131,7 @@ export interface CommunityContributionEntry {
 
 export type LayoutDirection = 'SPLIT' | 'LR' | 'TB';
 
-export type DebateViewMode = 'graph' | 'outline' | 'flashcards';
+export type DebateViewMode = 'graph' | 'outline' | 'flashcards' | 'prep';
 
 export type ZoomLOD = 'macro' | 'standard' | 'detailed';
 

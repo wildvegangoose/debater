@@ -216,7 +216,7 @@ export function TopBar({
         {/* Search + Filter + Actions */}
         <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
           {/* Instant Search Input */}
-          <div className="relative w-full sm:w-60 md:w-72">
+          <div className={clsx('relative w-full sm:w-60 md:w-72', viewMode === 'prep' && 'max-sm:hidden')}>
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               ref={searchInputRef}

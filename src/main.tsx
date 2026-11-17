@@ -3,8 +3,10 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { initAnalytics } from './utils/analytics';
+import { initNativeShell, isNativeApp } from './native';
 
-initAnalytics();
+if (!isNativeApp) initAnalytics();
+initNativeShell();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
