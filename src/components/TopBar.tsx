@@ -77,10 +77,12 @@ export function TopBar({
   onOpenSuggestModal,
 }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showTagMenu, setShowTagMenu] = useState(false);
   const [showTopicModal, setShowTopicModal] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isVoiceMode = viewMode === 'voice';
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -133,8 +135,131 @@ export function TopBar({
         isDark ? 'bg-slate-950/95 border-slate-800/90 text-slate-100' : 'bg-white/95 border-slate-200 text-slate-900'
       )}
     >
-      {/* Main Row */}
-      <div className="px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      {/* Mobile / Android Native-Style Single-Row App Bar (< md) */}
+      <div className="md:hidden px-3 h-13 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setShowTopicModal(true)}
+          className="flex items-center gap-2 min-w-0 flex-1 text-left py-1 rounded-xl active:opacity-80"
+        >
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white shadow-sm shrink-0">
+            {dataset.id === 'economic-policies' ? (
+              <Landmark className="w-4 h-4" />
+            ) : (
+              <Scale className="w-4 h-4" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="font-editorial text-[15px] font-semibold truncate">
+                {dataset.shortTitle}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            </div>
+            <div className="text-[10px] text-slate-400 leading-none">
+              Tap to switch topic (22)
+            </div>
+          </div>
+        </button>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          {!isVoiceMode && viewMode !== 'flashcards' && (
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen((v) => !v)}
+              aria-label="Search arguments"
+              className={clsx(
+                'p-2 rounded-xl border transition-colors',
+                mobileSearchOpen
+                  ? 'bg-indigo-600 border-indigo-500 text-white'
+                  : isDark
+                    ? 'bg-slate-900 border-slate-800 text-slate-300'
+                    : 'bg-slate-100 border-slate-200 text-slate-700'
+              )}
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            aria-label="Toggle theme"
+            className={clsx(
+              'p-2 rounded-xl border transition-colors',
+              isDark
+                ? 'bg-slate-900 border-slate-800 text-slate-300'
+                : 'bg-slate-100 border-slate-200 text-slate-700'
+            )}
+          >
+            {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-slate-700" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Expandable Mobile Search Drawer (only when user taps search icon in Graph/Outline) */}
+      {mobileSearchOpen && !isVoiceMode && (
+        <div
+          className={clsx(
+            'md:hidden px-3 pb-2.5 border-t pt-2',
+            isDark ? 'border-slate-800/80' : 'border-slate-200'
+          )}
+        >
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={dataset.searchPlaceholder}
+              className={clsx(
+                'w-full pl-8 pr-8 py-2 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                isDark
+                  ? 'bg-slate-900 border-slate-700 text-slate-100'
+                  : 'bg-slate-100 border-slate-300 text-slate-900'
+              )}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          {searchDropdownResults.length > 0 && (
+            <div
+              className={clsx(
+                'mt-1.5 rounded-xl border shadow-xl overflow-hidden max-h-60 overflow-y-auto',
+                isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+              )}
+            >
+              {searchDropdownResults.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    onSelectSearchResult(item.id);
+                    setMobileSearchOpen(false);
+                  }}
+                  className={clsx(
+                    'w-full text-left px-3 py-2 border-b last:border-b-0 flex flex-col gap-0.5',
+                    isDark ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'
+                  )}
+                >
+                  <span className="text-xs font-semibold truncate">{item.title}</span>
+                  <span className="text-[11px] text-slate-400 line-clamp-1">{item.summary}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Desktop TopBar (md and larger) */}
+      <div className="hidden md:flex px-4 py-2.5 flex-wrap items-center justify-between gap-3">
         {/* Brand, Topic Switcher & Stats */}
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -150,28 +275,32 @@ export function TopBar({
                 <h1 className="font-editorial text-lg font-semibold tracking-tight truncate">
                   {dataset.title}
                 </h1>
-                <span
-                  className={clsx(
-                    'hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
-                    isDark
-                      ? 'bg-slate-900 border-slate-800 text-slate-300'
-                      : 'bg-slate-100 border-slate-200 text-slate-600'
-                  )}
-                >
-                  <span>{stats.totalNodes} nodes</span>
-                  <span className="text-emerald-400">+{stats.proCount}</span>
-                  <span className="text-rose-400">−{stats.conCount}</span>
-                </span>
-                {hasSandboxChanges && (
+                {!isVoiceMode && (
+                  <span
+                    className={clsx(
+                      'hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-slate-300'
+                        : 'bg-slate-100 border-slate-200 text-slate-600'
+                    )}
+                  >
+                    <span>{stats.totalNodes} nodes</span>
+                    <span className="text-emerald-400">+{stats.proCount}</span>
+                    <span className="text-rose-400">−{stats.conCount}</span>
+                  </span>
+                )}
+                {hasSandboxChanges && !isVoiceMode && (
                   <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/20 text-violet-300 border border-violet-400/30">
                     <Sparkles className="w-3 h-3" />
                     Sandbox
                   </span>
                 )}
               </div>
-              <p className={clsx('text-[11.5px] hidden md:block truncate', isDark ? 'text-slate-400' : 'text-slate-500')}>
-                {dataset.subtitle}
-              </p>
+              {!isVoiceMode && (
+                <p className={clsx('text-[11.5px] hidden lg:block truncate', isDark ? 'text-slate-400' : 'text-slate-500')}>
+                  {dataset.subtitle}
+                </p>
+              )}
             </div>
           </div>
 
@@ -204,7 +333,7 @@ export function TopBar({
           </div>
         </div>
 
-        {/* View Mode Switcher: Graph | Outline | Quiz */}
+        {/* View Mode Switcher: Graph | Outline | Quiz | Voice */}
         <div className="flex items-center justify-center">
           <ViewModeSwitcher
             viewMode={viewMode}
@@ -213,10 +342,12 @@ export function TopBar({
           />
         </div>
 
-        {/* Search + Filter + Actions */}
-        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
+        {/* Search + Filter + Actions (hidden in Voice Mode for calm focus) */}
+        <div className="flex items-center gap-2 justify-end">
+          {!isVoiceMode && (
+          <>
           {/* Instant Search Input */}
-          <div className="relative w-full sm:w-60 md:w-72">
+          <div className="relative w-56 lg:w-64">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               ref={searchInputRef}
@@ -438,6 +569,8 @@ export function TopBar({
             <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
             <span className="hidden md:inline">Guide</span>
           </button>
+          </>
+          )}
 
           {/* Theme Toggle */}
           <button

@@ -1,5 +1,5 @@
 // Dialectica PWA Service Worker — enables Android Chrome WebAPK installation & offline sparring
-const CACHE_NAME = 'dialectica-pwa-v1';
+const CACHE_NAME = 'dialectica-pwa-v2';
 const APP_SHELL_URLS = [
   './',
   './index.html',

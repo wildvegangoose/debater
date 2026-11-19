@@ -32,6 +32,7 @@ import { MobileOutlineView } from './components/MobileOutlineView';
 import { FlashcardQuizView } from './components/FlashcardQuizView';
 import { VoiceDebateView } from './components/VoiceDebateView';
 import { InstallPwaBanner } from './components/InstallPwaBanner';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { GitPullRequest, Loader2, Mic, Sparkles, X } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { SuggestNodeDraft, SuggestNodeModal } from './components/SuggestNodeModal';
@@ -910,10 +911,10 @@ function DebateGraphWorkspace() {
 
         <InstallPwaBanner isDark={isDark} />
 
-        {showWelcomeBanner && (
+        {showWelcomeBanner && viewMode !== 'voice' && (
           <div
             className={clsx(
-              'px-4 py-2 border-b flex flex-wrap items-center justify-between gap-2 text-xs shrink-0',
+              'hidden md:flex px-4 py-2 border-b flex-wrap items-center justify-between gap-2 text-xs shrink-0',
               isDark
                 ? 'bg-indigo-950/55 border-indigo-500/30 text-indigo-100'
                 : 'bg-indigo-50 border-indigo-200 text-indigo-950'
@@ -1146,6 +1147,12 @@ function DebateGraphWorkspace() {
             onSuggestNode={(draft) => handleOpenSuggestModal(draft)}
           />
         </div>
+
+        <MobileBottomNav
+          viewMode={viewMode}
+          onChangeViewMode={handleViewModeChange}
+          isDark={isDark}
+        />
 
         <NodeEditorModal
           isOpen={editorState.isOpen}
