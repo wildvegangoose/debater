@@ -1,7 +1,6 @@
 import { DebateSourceLink } from './debate';
 
 export type VoiceAIBackend =
-  | 'gemini-live'
   | 'gemini-flash'
   | 'local-openai'
   | 'offline-curated';
@@ -11,16 +10,6 @@ export type DebateUserStance = 'pro' | 'con' | 'switch' | 'explore';
 export type DebateOpponentPersona = 'sparring' | 'oxford' | 'socratic';
 
 export type DebateRoundPhase = 'opening' | 'sparring' | 'cross-exam' | 'closing';
-
-export type GeminiLiveVoiceName = 'Puck' | 'Kore' | 'Fenrir' | 'Aoede' | 'Charon';
-
-export type VoiceOrbState =
-  | 'idle'
-  | 'connecting'
-  | 'listening'
-  | 'thinking'
-  | 'speaking'
-  | 'error';
 
 export type RhetoricBadgeType =
   | 'steelman'
@@ -55,13 +44,9 @@ export interface VoiceDebateSettings {
   backend: VoiceAIBackend;
   geminiApiKey: string;
   geminiModel: string;
-  geminiLiveModel: string;
-  geminiLiveVoice: GeminiLiveVoiceName;
   localEndpoint: string;
   localModel: string;
   localApiKey: string;
-  autoListen: boolean;
-  speechRate: number;
 }
 
 export interface LiveVisualFeedback {

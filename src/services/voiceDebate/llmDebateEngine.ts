@@ -143,6 +143,25 @@ function normalizeStructuredResponse(
   };
 }
 
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = 20000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Request timed out after 20s. Check your connection or try again.');
+    }
+    throw err;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 export async function generateGeminiFlashReply(params: {
   settings: VoiceDebateSettings;
   dataset: DebateGraphDataset;
@@ -155,7 +174,7 @@ export async function generateGeminiFlashReply(params: {
 }): Promise<StructuredDebateResponse> {
   const apiKey = params.settings.geminiApiKey.trim();
   if (!apiKey) {
-    throw new Error('Gemini API key is missing. Add your key in Voice Settings.');
+    throw new Error('Gemini API key is missing. Add your key in AI Settings.');
   }
 
   const model = params.settings.geminiModel.trim() || 'gemini-2.5-flash';
@@ -181,7 +200,7 @@ export async function generateGeminiFlashReply(params: {
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -224,7 +243,7 @@ export async function generateLocalOpenAIReply(params: {
 }): Promise<StructuredDebateResponse> {
   const baseUrl = params.settings.localEndpoint.trim().replace(/\/+$/, '');
   if (!baseUrl) {
-    throw new Error('Local AI server URL is empty. Set it in Voice Settings.');
+    throw new Error('Local AI server URL is empty. Set it in AI Settings.');
   }
   const endpoint = baseUrl.endsWith('/chat/completions')
     ? baseUrl
@@ -253,7 +272,7 @@ export async function generateLocalOpenAIReply(params: {
     headers.Authorization = `Bearer ${params.settings.localApiKey.trim()}`;
   }
 
-  const res = await fetch(endpoint, {
+  const res = await fetchWithTimeout(endpoint, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -288,15 +307,17 @@ export async function testVoiceBackendConnection(
     return { ok: true, message: 'Offline Curated Sparring is built-in and ready immediately.' };
   }
 
-  if (settings.backend === 'gemini-flash' || settings.backend === 'gemini-live') {
+  if (settings.backend === 'gemini-flash') {
     const apiKey = settings.geminiApiKey.trim();
     if (!apiKey) {
       return { ok: false, message: 'Please paste your Gemini API key first.' };
     }
     try {
       const model = settings.geminiModel.trim() || 'gemini-2.5-flash';
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}?key=${encodeURIComponent(apiKey)}`
+      const res = await fetchWithTimeout(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}?key=${encodeURIComponent(apiKey)}`,
+        {},
+        10000
       );
       if (!res.ok) {
         return {
@@ -306,10 +327,7 @@ export async function testVoiceBackendConnection(
       }
       return {
         ok: true,
-        message:
-          settings.backend === 'gemini-live'
-            ? 'Gemini API key verified! Ready for Gemini Live real-time voice.'
-            : `Gemini API key verified with ${model}!`,
+        message: `Gemini API key verified with ${model}!`,
       };
     } catch (err) {
       return {
@@ -326,7 +344,7 @@ export async function testVoiceBackendConnection(
     if (settings.localApiKey.trim()) {
       headers.Authorization = `Bearer ${settings.localApiKey.trim()}`;
     }
-    const res = await fetch(`${baseUrl}/models`, { headers });
+    const res = await fetchWithTimeout(`${baseUrl}/models`, { headers }, 8000);
     if (!res.ok) {
       return { ok: false, message: `Local server returned HTTP ${res.status} on /models.` };
     }
@@ -334,7 +352,7 @@ export async function testVoiceBackendConnection(
   } catch (err) {
     return {
       ok: false,
-      message: `Could not reach ${settings.localEndpoint}. Ensure Ollama/LM Studio is running and reachable on your network (${err instanceof Error ? err.message : String(err)}).`,
+      message: `Could not reach ${settings.localEndpoint}. Ensure Ollama/LM Studio is running and reachable (${err instanceof Error ? err.message : String(err)}).`,
     };
   }
 }

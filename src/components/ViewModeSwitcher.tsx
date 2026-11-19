@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { BookOpen, GitBranch, GraduationCap, Mic } from 'lucide-react';
+import { BookOpen, GitBranch, GraduationCap, MessageSquare } from 'lucide-react';
 import { DebateViewMode } from '../types/debate';
 
 interface ViewModeSwitcherProps {
@@ -88,7 +88,7 @@ export function ViewModeSwitcher({
         <span>Quiz</span>
       </button>
 
-      {/* Voice AI Debate Arena Mode */}
+      {/* AI Debate Sparring Mode */}
       <button
         type="button"
         role="tab"
@@ -105,8 +105,8 @@ export function ViewModeSwitcher({
             : 'text-slate-600 hover:text-slate-900'
         )}
       >
-        <Mic className={clsx('w-3.5 h-3.5', viewMode === 'voice' ? 'text-white sm:text-current' : 'text-emerald-400')} />
-        <span>Voice</span>
+        <MessageSquare className={clsx('w-3.5 h-3.5', viewMode === 'voice' ? 'text-white sm:text-current' : 'text-emerald-400')} />
+        <span>Spar</span>
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse -ml-0.5" />
       </button>
     </div>

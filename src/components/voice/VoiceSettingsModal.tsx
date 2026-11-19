@@ -6,19 +6,13 @@ import {
   ExternalLink,
   KeyRound,
   Loader2,
-  Radio,
   Server,
   Sparkles,
-  Volume2,
   WifiOff,
   X,
   XCircle,
 } from 'lucide-react';
-import {
-  GeminiLiveVoiceName,
-  VoiceAIBackend,
-  VoiceDebateSettings,
-} from '../../types/voiceDebate';
+import { VoiceAIBackend, VoiceDebateSettings } from '../../types/voiceDebate';
 import { testVoiceBackendConnection } from '../../services/voiceDebate/llmDebateEngine';
 
 interface VoiceSettingsModalProps {
@@ -34,39 +28,30 @@ const BACKEND_CARDS: Array<{
   title: string;
   subtitle: string;
   badge: string;
-  icon: typeof Radio;
+  icon: typeof Sparkles;
 }> = [
   {
-    id: 'gemini-live',
-    title: 'Gemini Live Voice',
-    subtitle: 'Real-time voice-to-voice AI with natural interruptions & live HUD tool feedback.',
-    badge: 'Lowest Latency',
-    icon: Radio,
-  },
-  {
     id: 'gemini-flash',
-    title: 'Gemini Flash Coach',
-    subtitle: 'Android/Web voice + structured JSON coaching, scoring & citations every turn.',
-    badge: 'Most Reliable',
+    title: 'Gemini AI (Recommended)',
+    subtitle: 'Natural conversational sparring, rhetoric scoring, and citations grounded in Dialectica.',
+    badge: 'Free Key',
     icon: Sparkles,
   },
   {
     id: 'local-openai',
     title: 'Local / Self-Hosted AI',
-    subtitle: 'Connect to Ollama, LM Studio, or any OpenAI-compatible server on Wi-Fi or device.',
-    badge: 'Private / Local',
+    subtitle: 'Connect to Ollama, LM Studio, or any OpenAI-compatible server on your Wi-Fi.',
+    badge: 'Private',
     icon: Server,
   },
   {
     id: 'offline-curated',
     title: 'Offline Curated Sparring',
-    subtitle: 'Zero setup & 100% offline. Spars using all 22 curated Dialectica argument trees.',
+    subtitle: 'Zero setup & 100% offline. Spars immediately using all 22 built-in debate graphs.',
     badge: 'No Key Needed',
     icon: WifiOff,
   },
 ];
-
-const GEMINI_VOICES: GeminiLiveVoiceName[] = ['Puck', 'Kore', 'Fenrir', 'Aoede', 'Charon'];
 
 export function VoiceSettingsModal({
   isOpen,
@@ -95,10 +80,14 @@ export function VoiceSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/75 backdrop-blur-xs"
+      onClick={onClose}
+    >
       <div
+        onClick={(e) => e.stopPropagation()}
         className={clsx(
-          'w-full max-w-xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
+          'w-full max-w-lg max-h-[88vh] rounded-t-3xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
           isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
         )}
       >
@@ -114,9 +103,9 @@ export function VoiceSettingsModal({
               <Cpu className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold">AI &amp; Voice Engine Settings</h2>
+              <h2 className="text-sm font-bold">AI Opponent Settings</h2>
               <p className="text-[11px] text-slate-400">
-                API keys are stored locally on your device only.
+                Keys stay locally on your device only.
               </p>
             </div>
           </div>
@@ -124,7 +113,7 @@ export function VoiceSettingsModal({
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+            className="p-1.5 rounded-full text-slate-400 hover:bg-slate-800/60"
           >
             <X className="w-4 h-4" />
           </button>
@@ -132,61 +121,55 @@ export function VoiceSettingsModal({
 
         {/* Scrollable Content */}
         <div className="p-4 overflow-y-auto space-y-4">
-          {/* Backend Selector */}
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Choose Debate Partner Engine
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {BACKEND_CARDS.map((card) => {
-                const Icon = card.icon;
-                const active = draft.backend === card.id;
-                return (
-                  <button
-                    key={card.id}
-                    type="button"
-                    onClick={() => {
-                      setDraft((d) => ({ ...d, backend: card.id }));
-                      setTestResult(null);
-                    }}
-                    className={clsx(
-                      'text-left p-3 rounded-xl border transition-all',
-                      active
-                        ? isDark
-                          ? 'bg-indigo-600/20 border-indigo-400 text-white'
-                          : 'bg-indigo-50 border-indigo-500 text-indigo-950'
-                        : isDark
-                          ? 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700'
-                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold">
-                        <Icon className="w-3.5 h-3.5 text-indigo-400" />
-                        {card.title}
-                      </span>
-                      <span
-                        className={clsx(
-                          'px-1.5 py-0.5 rounded text-[9.5px] font-bold',
-                          active
-                            ? 'bg-indigo-500 text-white'
-                            : isDark
-                              ? 'bg-slate-800 text-slate-400'
-                              : 'bg-slate-200 text-slate-600'
-                        )}
-                      >
-                        {card.badge}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 leading-snug">{card.subtitle}</p>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="space-y-2">
+            {BACKEND_CARDS.map((card) => {
+              const Icon = card.icon;
+              const active = draft.backend === card.id;
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => {
+                    setDraft((d) => ({ ...d, backend: card.id }));
+                    setTestResult(null);
+                  }}
+                  className={clsx(
+                    'w-full text-left p-3 rounded-xl border transition-all',
+                    active
+                      ? isDark
+                        ? 'bg-indigo-600/20 border-indigo-400 text-white'
+                        : 'bg-indigo-50 border-indigo-500 text-indigo-950'
+                      : isDark
+                        ? 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold">
+                      <Icon className="w-3.5 h-3.5 text-indigo-400" />
+                      {card.title}
+                    </span>
+                    <span
+                      className={clsx(
+                        'px-2 py-0.5 rounded-full text-[10px] font-bold',
+                        active
+                          ? 'bg-indigo-500 text-white'
+                          : isDark
+                            ? 'bg-slate-800 text-slate-400'
+                            : 'bg-slate-200 text-slate-600'
+                      )}
+                    >
+                      {card.badge}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug">{card.subtitle}</p>
+                </button>
+              );
+            })}
           </div>
 
           {/* Gemini Settings */}
-          {(draft.backend === 'gemini-live' || draft.backend === 'gemini-flash') && (
+          {draft.backend === 'gemini-flash' && (
             <div
               className={clsx(
                 'p-3.5 rounded-xl border space-y-3',
@@ -204,7 +187,7 @@ export function VoiceSettingsModal({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-400 hover:underline"
                 >
-                  <span>Get Free Key in AI Studio</span>
+                  <span>Get Free Key</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -214,74 +197,28 @@ export function VoiceSettingsModal({
                 onChange={(e) => setDraft((d) => ({ ...d, geminiApiKey: e.target.value }))}
                 placeholder="AIzaSy..."
                 className={clsx(
-                  'w-full px-3 py-2 rounded-lg text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                  'w-full px-3 py-2.5 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                   isDark
                     ? 'bg-slate-900 border-slate-700 text-slate-100'
                     : 'bg-white border-slate-300 text-slate-900'
                 )}
               />
-
-              {draft.backend === 'gemini-live' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                      Gemini Live Voice
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {GEMINI_VOICES.map((voice) => (
-                        <button
-                          key={voice}
-                          type="button"
-                          onClick={() => setDraft((d) => ({ ...d, geminiLiveVoice: voice }))}
-                          className={clsx(
-                            'px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors',
-                            draft.geminiLiveVoice === voice
-                              ? 'bg-indigo-600 border-indigo-500 text-white'
-                              : isDark
-                                ? 'bg-slate-900 border-slate-700 text-slate-300'
-                                : 'bg-white border-slate-300 text-slate-700'
-                          )}
-                        >
-                          {voice}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                      Live Audio Model ID
-                    </label>
-                    <input
-                      type="text"
-                      value={draft.geminiLiveModel}
-                      onChange={(e) => setDraft((d) => ({ ...d, geminiLiveModel: e.target.value }))}
-                      className={clsx(
-                        'w-full px-2.5 py-1.5 rounded-lg text-xs font-mono border',
-                        isDark
-                          ? 'bg-slate-900 border-slate-700 text-slate-200'
-                          : 'bg-white border-slate-300 text-slate-800'
-                      )}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                    Gemini Model ID
-                  </label>
-                  <input
-                    type="text"
-                    value={draft.geminiModel}
-                    onChange={(e) => setDraft((d) => ({ ...d, geminiModel: e.target.value }))}
-                    className={clsx(
-                      'w-full px-2.5 py-1.5 rounded-lg text-xs font-mono border',
-                      isDark
-                        ? 'bg-slate-900 border-slate-700 text-slate-200'
-                        : 'bg-white border-slate-300 text-slate-800'
-                    )}
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Model
+                </label>
+                <input
+                  type="text"
+                  value={draft.geminiModel}
+                  onChange={(e) => setDraft((d) => ({ ...d, geminiModel: e.target.value }))}
+                  className={clsx(
+                    'w-full px-3 py-2 rounded-xl text-xs font-mono border',
+                    isDark
+                      ? 'bg-slate-900 border-slate-700 text-slate-200'
+                      : 'bg-white border-slate-300 text-slate-800'
+                  )}
+                />
+              </div>
             </div>
           )}
 
@@ -295,7 +232,7 @@ export function VoiceSettingsModal({
             >
               <div>
                 <label className="block text-xs font-bold mb-1">
-                  OpenAI-Compatible Base URL (Ollama / LM Studio / LocalAI)
+                  OpenAI-Compatible Server URL
                 </label>
                 <input
                   type="url"
@@ -303,15 +240,12 @@ export function VoiceSettingsModal({
                   onChange={(e) => setDraft((d) => ({ ...d, localEndpoint: e.target.value }))}
                   placeholder="http://192.168.1.50:11434/v1"
                   className={clsx(
-                    'w-full px-3 py-2 rounded-lg text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                    'w-full px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-indigo-500',
                     isDark
                       ? 'bg-slate-900 border-slate-700 text-slate-100'
                       : 'bg-white border-slate-300 text-slate-900'
                   )}
                 />
-                <p className="text-[10.5px] text-slate-400 mt-1">
-                  Tip: For Ollama on your PC over Wi-Fi, run with <code className="font-mono">OLLAMA_HOST=0.0.0.0</code> and enter your computer&apos;s LAN IP.
-                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -324,7 +258,7 @@ export function VoiceSettingsModal({
                     onChange={(e) => setDraft((d) => ({ ...d, localModel: e.target.value }))}
                     placeholder="gemma3:4b"
                     className={clsx(
-                      'w-full px-2.5 py-1.5 rounded-lg text-xs font-mono border',
+                      'w-full px-2.5 py-2 rounded-xl text-xs font-mono border',
                       isDark
                         ? 'bg-slate-900 border-slate-700 text-slate-200'
                         : 'bg-white border-slate-300 text-slate-800'
@@ -341,7 +275,7 @@ export function VoiceSettingsModal({
                     onChange={(e) => setDraft((d) => ({ ...d, localApiKey: e.target.value }))}
                     placeholder="Optional"
                     className={clsx(
-                      'w-full px-2.5 py-1.5 rounded-lg text-xs font-mono border',
+                      'w-full px-2.5 py-2 rounded-xl text-xs font-mono border',
                       isDark
                         ? 'bg-slate-900 border-slate-700 text-slate-200'
                         : 'bg-white border-slate-300 text-slate-800'
@@ -351,63 +285,6 @@ export function VoiceSettingsModal({
               </div>
             </div>
           )}
-
-          {/* Voice Playback & Conversation Rhythm */}
-          <div
-            className={clsx(
-              'p-3.5 rounded-xl border space-y-3',
-              isDark ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'
-            )}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-xs font-bold flex items-center gap-1.5">
-                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-                  Hands-Free Auto-Listen
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  Automatically open the mic after the AI finishes speaking (great for walking or practicing hands-free).
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={draft.autoListen}
-                onClick={() => setDraft((d) => ({ ...d, autoListen: !d.autoListen }))}
-                className={clsx(
-                  'w-11 h-6 rounded-full transition-colors p-0.5 shrink-0',
-                  draft.autoListen ? 'bg-emerald-500' : 'bg-slate-700'
-                )}
-              >
-                <span
-                  className={clsx(
-                    'block w-5 h-5 rounded-full bg-white shadow-xs transition-transform',
-                    draft.autoListen ? 'translate-x-5' : 'translate-x-0'
-                  )}
-                />
-              </button>
-            </div>
-
-            {draft.backend !== 'gemini-live' && (
-              <div>
-                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 mb-1">
-                  <span>Voice Speaking Speed (TTS)</span>
-                  <span className="font-mono text-indigo-400">{draft.speechRate.toFixed(2)}x</span>
-                </div>
-                <input
-                  type="range"
-                  min={0.75}
-                  max={1.35}
-                  step={0.05}
-                  value={draft.speechRate}
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, speechRate: parseFloat(e.target.value) }))
-                  }
-                  className="w-full accent-indigo-500"
-                />
-              </div>
-            )}
-          </div>
 
           {/* Connection Test Feedback */}
           {testResult && (
@@ -432,7 +309,7 @@ export function VoiceSettingsModal({
         {/* Footer */}
         <div
           className={clsx(
-            'px-4 py-3 border-t flex items-center justify-between gap-2 shrink-0',
+            'px-4 py-3 border-t flex items-center justify-between gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
             isDark ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-slate-50'
           )}
         >
@@ -448,7 +325,7 @@ export function VoiceSettingsModal({
             )}
           >
             {testing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            <span>Test Connection</span>
+            <span>Test</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -464,7 +341,7 @@ export function VoiceSettingsModal({
               onClick={handleSave}
               className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm"
             >
-              Save Settings
+              Save
             </button>
           </div>
         </div>

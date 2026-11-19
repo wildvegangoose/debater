@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { BookOpen, GitBranch, GraduationCap, Mic } from 'lucide-react';
+import { BookOpen, GitBranch, GraduationCap, MessageSquare } from 'lucide-react';
 import { DebateViewMode } from '../types/debate';
 
 interface MobileBottomNavProps {
@@ -11,9 +11,9 @@ interface MobileBottomNavProps {
 const NAV_ITEMS: Array<{
   id: DebateViewMode;
   label: string;
-  icon: typeof Mic;
+  icon: typeof MessageSquare;
 }> = [
-  { id: 'voice', label: 'Voice', icon: Mic },
+  { id: 'voice', label: 'Spar', icon: MessageSquare },
   { id: 'outline', label: 'Outline', icon: BookOpen },
   { id: 'flashcards', label: 'Quiz', icon: GraduationCap },
   { id: 'graph', label: 'Graph', icon: GitBranch },

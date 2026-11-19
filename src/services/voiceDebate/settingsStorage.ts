@@ -1,4 +1,4 @@
-import { VoiceDebateSettings } from '../../types/voiceDebate';
+import { VoiceAIBackend, VoiceDebateSettings } from '../../types/voiceDebate';
 
 const SETTINGS_KEY = 'dialectica-voice-settings-v1';
 
@@ -6,27 +6,38 @@ export const DEFAULT_VOICE_SETTINGS: VoiceDebateSettings = {
   backend: 'offline-curated',
   geminiApiKey: '',
   geminiModel: 'gemini-2.5-flash',
-  geminiLiveModel: 'gemini-2.5-flash-native-audio-preview-12-2025',
-  geminiLiveVoice: 'Puck',
   localEndpoint: 'http://localhost:11434/v1',
   localModel: 'gemma3:4b',
   localApiKey: '',
-  autoListen: true,
-  speechRate: 1.0,
 };
+
+function normalizeBackend(raw: unknown): VoiceAIBackend {
+  if (raw === 'gemini-flash' || raw === 'gemini-live') return 'gemini-flash';
+  if (raw === 'local-openai') return 'local-openai';
+  return 'offline-curated';
+}
 
 export function loadVoiceSettings(): VoiceDebateSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return { ...DEFAULT_VOICE_SETTINGS };
-    const parsed = JSON.parse(raw) as Partial<VoiceDebateSettings>;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
     return {
-      ...DEFAULT_VOICE_SETTINGS,
-      ...parsed,
-      speechRate:
-        typeof parsed.speechRate === 'number' && parsed.speechRate >= 0.6 && parsed.speechRate <= 1.6
-          ? parsed.speechRate
-          : DEFAULT_VOICE_SETTINGS.speechRate,
+      backend: normalizeBackend(parsed.backend),
+      geminiApiKey: typeof parsed.geminiApiKey === 'string' ? parsed.geminiApiKey : '',
+      geminiModel:
+        typeof parsed.geminiModel === 'string' && parsed.geminiModel.trim()
+          ? parsed.geminiModel
+          : DEFAULT_VOICE_SETTINGS.geminiModel,
+      localEndpoint:
+        typeof parsed.localEndpoint === 'string' && parsed.localEndpoint.trim()
+          ? parsed.localEndpoint
+          : DEFAULT_VOICE_SETTINGS.localEndpoint,
+      localModel:
+        typeof parsed.localModel === 'string' && parsed.localModel.trim()
+          ? parsed.localModel
+          : DEFAULT_VOICE_SETTINGS.localModel,
+      localApiKey: typeof parsed.localApiKey === 'string' ? parsed.localApiKey : '',
     };
   } catch {
     return { ...DEFAULT_VOICE_SETTINGS };
@@ -44,21 +55,14 @@ export function saveVoiceSettings(settings: VoiceDebateSettings): void {
 export function getEffectiveBackendLabel(settings: VoiceDebateSettings): {
   title: string;
   shortLabel: string;
-  badgeColor: 'indigo' | 'emerald' | 'sky' | 'amber';
+  badgeColor: 'sky' | 'amber' | 'emerald';
   isConfigured: boolean;
 } {
   switch (settings.backend) {
-    case 'gemini-live':
-      return {
-        title: 'Gemini Live (Real-Time Voice)',
-        shortLabel: 'Gemini Live',
-        badgeColor: 'indigo',
-        isConfigured: settings.geminiApiKey.trim().length > 10,
-      };
     case 'gemini-flash':
       return {
-        title: 'Gemini Flash (Voice + Coach)',
-        shortLabel: 'Gemini Flash',
+        title: 'Gemini Flash AI',
+        shortLabel: 'Gemini AI',
         badgeColor: 'sky',
         isConfigured: settings.geminiApiKey.trim().length > 10,
       };
@@ -73,7 +77,7 @@ export function getEffectiveBackendLabel(settings: VoiceDebateSettings): {
     default:
       return {
         title: 'Offline Curated Sparring',
-        shortLabel: 'Offline Mode',
+        shortLabel: 'Offline',
         badgeColor: 'emerald',
         isConfigured: true,
       };
