@@ -1,17 +1,57 @@
 {
-  "name": "Dialectica — Voice Debate & Argument Maps",
+  "id": "./",
+  "name": "Dialectica Debate — Voice AI & Argument Maps",
   "short_name": "Dialectica",
-  "description": "Practice conversational voice debates with AI and explore 22 landmark debate argument maps.",
-  "start_url": "./",
+  "description": "Practice conversational voice debates with AI and live visual feedback across 22 landmark debate argument maps.",
+  "start_url": "./?view=voice",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#020617",
   "theme_color": "#020617",
+  "categories": ["education", "productivity", "news"],
   "icons": [
     {
-      "src": "./favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Voice Debate Arena",
+      "short_name": "Voice Spar",
+      "description": "Jump directly into a conversational AI voice debate",
+      "url": "./?view=voice",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Rebuttal Quiz",
+      "short_name": "Quiz",
+      "description": "Practice steelmanned rebuttal flashcards",
+      "url": "./?view=flashcards",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Argument Graph",
+      "short_name": "Graph",
+      "description": "Explore the full interactive dialectical tree",
+      "url": "./",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

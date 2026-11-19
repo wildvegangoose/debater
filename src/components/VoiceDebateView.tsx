@@ -228,6 +228,40 @@ export function VoiceDebateView({
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [turns.length, liveCaption]);
 
+  // Keep phone screen awake during active voice conversation or Gemini Live call
+  useEffect(() => {
+    const isVoiceActive = isLiveConnected || orbState === 'listening' || orbState === 'speaking';
+    if (!isVoiceActive || typeof navigator === 'undefined' || !('wakeLock' in navigator)) {
+      return;
+    }
+    let sentinel: { release: () => Promise<void> } | null = null;
+    let cancelled = false;
+
+    const wakeLockApi = (
+      navigator as unknown as {
+        wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void> }> };
+      }
+    ).wakeLock;
+
+    wakeLockApi
+      ?.request('screen')
+      .then((lock) => {
+        if (cancelled) {
+          lock.release().catch(() => {});
+        } else {
+          sentinel = lock;
+        }
+      })
+      .catch(() => {
+        // Ignore if battery saver or browser denies wake lock
+      });
+
+    return () => {
+      cancelled = true;
+      sentinel?.release().catch(() => {});
+    };
+  }, [isLiveConnected, orbState]);
+
   // Apply structured response to visual HUD & transcript
   const applyStructuredTurnResponse = useCallback(
     (response: StructuredDebateResponse, userTurnText?: string) => {

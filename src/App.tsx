@@ -31,6 +31,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { MobileOutlineView } from './components/MobileOutlineView';
 import { FlashcardQuizView } from './components/FlashcardQuizView';
 import { VoiceDebateView } from './components/VoiceDebateView';
+import { InstallPwaBanner } from './components/InstallPwaBanner';
 import { GitPullRequest, Loader2, Mic, Sparkles, X } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { SuggestNodeDraft, SuggestNodeModal } from './components/SuggestNodeModal';
@@ -906,6 +907,8 @@ function DebateGraphWorkspace() {
           onOpenGuide={() => setIsGuideOpen(true)}
           onOpenSuggestModal={() => handleOpenSuggestModal(null)}
         />
+
+        <InstallPwaBanner isDark={isDark} />
 
         {showWelcomeBanner && (
           <div

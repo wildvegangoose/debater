@@ -15,11 +15,12 @@ Interactive dialectical argument maps for **22 landmark debates (2014–2026)** 
 - **Rich Evidence Inspector:** Every node carries multi-paragraph analysis, crisp empirical takeaways, and clickable external links to treaties, court dockets, peer-reviewed NBER/academic papers, watchdog audits, and debate transcripts.
 - **Local Sandbox + Community Suggestions:** Readers can prototype arguments locally in `localStorage` (with JSON export/import) and submit new nodes directly into a GitHub-backed review pipeline.
 
-## Android App (Installable APK)
+## Android App (PWA WebAPK & Native APK)
 
-Dialectica ships as a Capacitor Android app (`io.dialectica.debater`) with native Android Speech-to-Text, Text-to-Speech, and WebView microphone capture for Gemini Live:
+Dialectica runs as a full-screen Android app in two ways:
 
-- **Direct Download:** Grab `Dialectica-Debate-Android.apk` from the latest [GitHub Release (`android-latest`)](https://github.com/wildvegangoose/debater/releases/tag/android-latest) built automatically by [`.github/workflows/build-android-apk.yml`](.github/workflows/build-android-apk.yml).
+- **Chrome WebAPK / PWA (Recommended for work-managed phones — no APK sideloading):** Open `https://wildvegangoose.github.io/debater/?view=voice` in Chrome on Android and tap **Install** (or Chrome menu `⋮` → **Add to Home screen** → **Install app**). Installs a signed full-screen WebAPK with offline Service Worker caching, launcher shortcuts, screen wake-lock, and native Chrome voice support for both Gemini Live and Gemini Flash.
+- **Native Capacitor APK (`io.dialectica.debater`):** Grab `Dialectica-Debate-Android.apk` from the latest [GitHub Release (`android-latest`)](https://github.com/wildvegangoose/debater/releases/tag/android-latest) built automatically by [`.github/workflows/build-android-apk.yml`](.github/workflows/build-android-apk.yml).
 - **Local Android Build:**
   ```bash
   npm install
