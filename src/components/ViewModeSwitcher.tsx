@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { BookOpen, GitBranch, GraduationCap } from 'lucide-react';
+import { BookOpen, GitBranch, GraduationCap, Mic } from 'lucide-react';
 import { DebateViewMode } from '../types/debate';
 
 interface ViewModeSwitcherProps {
@@ -32,7 +32,7 @@ export function ViewModeSwitcher({
         aria-selected={viewMode === 'graph'}
         onClick={() => onChangeViewMode('graph')}
         className={clsx(
-          'inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
+          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
           viewMode === 'graph'
             ? isDark
               ? 'bg-indigo-600 text-white shadow-xs'
@@ -53,7 +53,7 @@ export function ViewModeSwitcher({
         aria-selected={viewMode === 'outline'}
         onClick={() => onChangeViewMode('outline')}
         className={clsx(
-          'inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
+          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
           viewMode === 'outline'
             ? isDark
               ? 'bg-indigo-600 text-white shadow-xs'
@@ -74,7 +74,7 @@ export function ViewModeSwitcher({
         aria-selected={viewMode === 'flashcards'}
         onClick={() => onChangeViewMode('flashcards')}
         className={clsx(
-          'inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all relative',
+          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all relative',
           viewMode === 'flashcards'
             ? isDark
               ? 'bg-indigo-600 text-white shadow-xs'
@@ -86,7 +86,28 @@ export function ViewModeSwitcher({
       >
         <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
         <span>Quiz</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse -ml-0.5" />
+      </button>
+
+      {/* Voice AI Debate Arena Mode */}
+      <button
+        type="button"
+        role="tab"
+        aria-selected={viewMode === 'voice'}
+        onClick={() => onChangeViewMode('voice')}
+        className={clsx(
+          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all relative',
+          viewMode === 'voice'
+            ? isDark
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'bg-white text-emerald-700 shadow-xs'
+            : isDark
+            ? 'text-slate-400 hover:text-slate-200'
+            : 'text-slate-600 hover:text-slate-900'
+        )}
+      >
+        <Mic className={clsx('w-3.5 h-3.5', viewMode === 'voice' ? 'text-white sm:text-current' : 'text-emerald-400')} />
+        <span>Voice</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse -ml-0.5" />
       </button>
     </div>
   );

@@ -25,9 +25,13 @@ import { DebateCardNode } from './components/DebateCardNode';
 import { TopBar } from './components/TopBar';
 import { CanvasToolbar } from './components/CanvasToolbar';
 import { NodeInspectorDrawer } from './components/NodeInspectorDrawer';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { MobileOutlineView } from './components/MobileOutlineView';
 import { FlashcardQuizView } from './components/FlashcardQuizView';
-import { GitPullRequest, Loader2, Sparkles, X } from 'lucide-react';
+import { VoiceDebateView } from './components/VoiceDebateView';
+import { GitPullRequest, Loader2, Mic, Sparkles, X } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { SuggestNodeDraft, SuggestNodeModal } from './components/SuggestNodeModal';
 import { MethodologyModal } from './components/MethodologyModal';
@@ -138,6 +142,10 @@ function DebateGraphWorkspace() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
     localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
+      StatusBar.setBackgroundColor({ color: isDark ? '#020617' : '#ffffff' }).catch(() => {});
+    }
   }, [isDark]);
 
   // Active Topic & Dataset state
@@ -192,11 +200,12 @@ function DebateGraphWorkspace() {
     }
   });
 
-  // View Mode: Graph (Visual Canvas) | Outline (Mobile-first Feed) | Flashcards (Quiz)
+  // View Mode: Graph (Visual Canvas) | Outline (Mobile-first Feed) | Flashcards (Quiz) | Voice (AI Sparring)
   const [viewMode, setViewMode] = useState<DebateViewMode>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const v = params.get('view')?.toLowerCase();
+      if (v === 'voice' || v === 'spar' || v === 'debate') return 'voice';
       if (v === 'outline' || v === 'feed') return 'outline';
       if (v === 'flashcards' || v === 'quiz') return 'flashcards';
       if (window.innerWidth < 640) return 'outline';
@@ -839,11 +848,34 @@ function DebateGraphWorkspace() {
 
   const selectedNode = selectedNodeId ? nodeMap.get(selectedNodeId) ?? null : null;
 
+  // Handle Android hardware back button cleanly (close drawers/modals before exiting)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listenerPromise = CapApp.addListener('backButton', ({ canGoBack }) => {
+      if (isGuideOpen) {
+        setIsGuideOpen(false);
+      } else if (suggestState.isOpen) {
+        setSuggestState((s) => ({ ...s, isOpen: false }));
+      } else if (editorState.isOpen) {
+        setEditorState((s) => ({ ...s, isOpen: false }));
+      } else if (selectedNodeId) {
+        setSelectedNodeId(null);
+      } else if (canGoBack) {
+        window.history.back();
+      } else {
+        CapApp.exitApp().catch(() => {});
+      }
+    });
+    return () => {
+      listenerPromise.then((h) => h.remove()).catch(() => {});
+    };
+  }, [isGuideOpen, suggestState.isOpen, editorState.isOpen, selectedNodeId]);
+
   return (
     <GraphActionsContext.Provider value={graphActionsValue}>
       <div
         className={clsx(
-          'w-screen h-screen flex flex-col overflow-hidden',
+          'w-screen h-dvh flex flex-col overflow-hidden safe-area-shell',
           isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
         )}
       >
@@ -890,7 +922,7 @@ function DebateGraphWorkspace() {
                 22 Landmark Debates:
               </span>
               <span className={clsx('hidden md:inline', isDark ? 'text-slate-300' : 'text-slate-700')}>
-                Explore steelmanned argument trees, switch topics anytime, or test yourself:
+                Explore steelmanned argument trees, switch topics anytime, or practice live:
               </span>
               <div className="flex flex-wrap items-center gap-1.5">
                 {(
@@ -918,6 +950,19 @@ function DebateGraphWorkspace() {
                     {item.label}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange('voice')}
+                  className={clsx(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border transition-colors',
+                    isDark
+                      ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300 hover:bg-emerald-500/30'
+                      : 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                  )}
+                >
+                  <Mic className="w-3 h-3" />
+                  Voice Spar
+                </button>
                 <button
                   type="button"
                   onClick={() => handleViewModeChange('flashcards')}
@@ -959,7 +1004,7 @@ function DebateGraphWorkspace() {
           </div>
         )}
 
-        {/* Main Workspace: Infinite Zoomable Canvas / Mobile Outline Feed / Flashcard Quiz */}
+        {/* Main Workspace: Graph / Outline / Flashcard Quiz / Voice AI Sparring */}
         <div className="flex-1 flex min-h-0 relative overflow-hidden">
           {viewMode === 'graph' && (
             <div className="flex-1 h-full relative">
@@ -1056,6 +1101,21 @@ function DebateGraphWorkspace() {
 
           {viewMode === 'flashcards' && (
             <FlashcardQuizView
+              dataset={activeDataset}
+              nodes={nodes}
+              activePillarId={activePillarId}
+              onSelectPillar={handleJumpToPillar}
+              onInspectNode={handleSelectNode}
+              onSwitchToGraph={(nodeId) => {
+                handleViewModeChange('graph');
+                if (nodeId) handleSelectAndZoom(nodeId, true);
+              }}
+              isDark={isDark}
+            />
+          )}
+
+          {viewMode === 'voice' && (
+            <VoiceDebateView
               dataset={activeDataset}
               nodes={nodes}
               activePillarId={activePillarId}

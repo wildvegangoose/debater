@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dialectica Debate</string>
+    <string name="title_activity_main">Dialectica Debate</string>
+    <string name="package_name">io.dialectica.debater</string>
+    <string name="custom_url_scheme">io.dialectica.debater</string>
+</resources>

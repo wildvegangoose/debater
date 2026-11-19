@@ -1,0 +1,17 @@
+{
+  "name": "Dialectica — Voice Debate & Argument Maps",
+  "short_name": "Dialectica",
+  "description": "Practice conversational voice debates with AI and explore 22 landmark debate argument maps.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -7,12 +7,26 @@ Interactive dialectical argument maps for **22 landmark debates (2014–2026)** 
 ## Key Features
 
 - **22 Curated Debate Graphs:** Spanning flagship topics including *AI Existential Risk*, *Israel–Palestine*, *Economic Policies & Market Systems*, *Capitalism vs. Socialism*, *Free Speech vs. Content Moderation*, *Nuclear Energy*, *Russia–Ukraine–NATO*, *Rise of China*, *CRISPR Gene Editing*, and more.
-- **3 Native Views:**
+- **4 Native Views:**
   - **Graph Canvas:** Zoomable dialectical tree with Semantic Level-of-Detail (LOD), bilateral Split / Top-Down / Left-Right layouts, and cross-branch conceptual links.
   - **Outline Feed (`?view=outline`):** Responsive reading view built for phones and deep linear study.
   - **Flashcard Quiz (`?view=flashcards`):** Active-recall steelmanning drills over curated arguments.
+  - **Voice Debate Arena (`?view=voice`):** Conversational AI voice sparring with real-time audio visualizer, live Debate Momentum gauge, rhetoric feedback badges, coaching tips, and live argument-graph illumination — powered by **Gemini Live**, **Gemini Flash**, **Local Ollama / LM Studio**, or **Zero-Setup Offline Curated Sparring**.
 - **Rich Evidence Inspector:** Every node carries multi-paragraph analysis, crisp empirical takeaways, and clickable external links to treaties, court dockets, peer-reviewed NBER/academic papers, watchdog audits, and debate transcripts.
 - **Local Sandbox + Community Suggestions:** Readers can prototype arguments locally in `localStorage` (with JSON export/import) and submit new nodes directly into a GitHub-backed review pipeline.
+
+## Android App (Installable APK)
+
+Dialectica ships as a Capacitor Android app (`io.dialectica.debater`) with native Android Speech-to-Text, Text-to-Speech, and WebView microphone capture for Gemini Live:
+
+- **Direct Download:** Grab `Dialectica-Debate-Android.apk` from the latest [GitHub Release (`android-latest`)](https://github.com/wildvegangoose/debater/releases/tag/android-latest) built automatically by [`.github/workflows/build-android-apk.yml`](.github/workflows/build-android-apk.yml).
+- **Local Android Build:**
+  ```bash
+  npm install
+  npm run cap:sync
+  cd android && ./gradlew assembleDebug
+  ```
+  The installable APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Community Contributions & Automated GitHub Review Pipeline
 
