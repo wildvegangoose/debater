@@ -1,19 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import {
   CheckCircle2,
   Cpu,
+  Download,
   ExternalLink,
+  HardDrive,
   KeyRound,
   Loader2,
   Server,
   Sparkles,
+  Trash2,
   WifiOff,
   X,
   XCircle,
 } from 'lucide-react';
 import { VoiceAIBackend, VoiceDebateSettings } from '../../types/voiceDebate';
 import { testVoiceBackendConnection } from '../../services/voiceDebate/llmDebateEngine';
+import {
+  WEBLLM_MODEL_PRESETS,
+  WebGpuSupportResult,
+  WebLlmLoadProgress,
+  checkWebGpuSupport,
+  clearWebLlmModelCache,
+  ensureWebLlmEngine,
+  getLoadedWebLlmModelId,
+  isWebLlmModelCached,
+} from '../../services/voiceDebate/webllmEngine';
 
 interface VoiceSettingsModalProps {
   isOpen: boolean;
@@ -31,9 +44,16 @@ const BACKEND_CARDS: Array<{
   icon: typeof Sparkles;
 }> = [
   {
+    id: 'browser-webllm',
+    title: 'On-Device Browser AI (WebLLM)',
+    subtitle: 'Real AI model running privately on your phone via WebGPU. One-time download, then works offline.',
+    badge: 'No Key · Free',
+    icon: Cpu,
+  },
+  {
     id: 'gemini-flash',
-    title: 'Gemini AI (Recommended)',
-    subtitle: 'Natural conversational sparring, rhetoric scoring, and citations grounded in Dialectica.',
+    title: 'Gemini AI (Cloud)',
+    subtitle: 'Fastest & sharpest cloud sparring with Google AI Studio free tier.',
     badge: 'Free Key',
     icon: Sparkles,
   },
@@ -41,14 +61,14 @@ const BACKEND_CARDS: Array<{
     id: 'local-openai',
     title: 'Local / Self-Hosted AI',
     subtitle: 'Connect to Ollama, LM Studio, or any OpenAI-compatible server on your Wi-Fi.',
-    badge: 'Private',
+    badge: 'LAN Server',
     icon: Server,
   },
   {
     id: 'offline-curated',
-    title: 'Offline Curated Sparring',
-    subtitle: 'Zero setup & 100% offline. Spars immediately using all 22 built-in debate graphs.',
-    badge: 'No Key Needed',
+    title: 'Offline Curated Templates',
+    subtitle: 'Instant zero-download fallback using Dialectica’s 22 built-in debate graphs.',
+    badge: 'Instant',
     icon: WifiOff,
   },
 ];
@@ -64,7 +84,52 @@ export function VoiceSettingsModal({
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
 
+  // WebLLM state
+  const [gpuSupport, setGpuSupport] = useState<WebGpuSupportResult | null>(null);
+  const [cachedModels, setCachedModels] = useState<Record<string, boolean>>({});
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<WebLlmLoadProgress | null>(null);
+  const [clearingCache, setClearingCache] = useState(false);
+  const [loadedModel, setLoadedModel] = useState<string | null>(() => getLoadedWebLlmModelId());
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setDraft(settings);
+    setTestResult(null);
+    setLoadedModel(getLoadedWebLlmModelId());
+  }, [isOpen, settings]);
+
+  useEffect(() => {
+    if (!isOpen || draft.backend !== 'browser-webllm') return;
+    let cancelled = false;
+
+    void checkWebGpuSupport().then((res) => {
+      if (!cancelled) setGpuSupport(res);
+    });
+
+    void Promise.all(
+      WEBLLM_MODEL_PRESETS.map(async (preset) => {
+        const cached = await isWebLlmModelCached(preset.id);
+        return [preset.id, cached] as const;
+      })
+    ).then((entries) => {
+      if (!cancelled) {
+        setCachedModels(Object.fromEntries(entries));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, draft.backend]);
+
   if (!isOpen) return null;
+
+  const selectedModelCached = Boolean(cachedModels[draft.webllmModel]);
+  const selectedPreset =
+    WEBLLM_MODEL_PRESETS.find((m) => m.id === draft.webllmModel) ?? WEBLLM_MODEL_PRESETS[0];
+  const isSelectedLoaded =
+    loadedModel === selectedPreset.id || loadedModel === selectedPreset.f32FallbackId;
 
   const handleTest = async () => {
     setTesting(true);
@@ -72,6 +137,58 @@ export function VoiceSettingsModal({
     const result = await testVoiceBackendConnection(draft);
     setTestResult(result);
     setTesting(false);
+  };
+
+  const handleDownloadAndLoad = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    setTestResult(null);
+    setDownloadProgress({
+      progress: 0.02,
+      text: `Preparing ${selectedPreset.label}...`,
+      modelId: draft.webllmModel,
+    });
+    try {
+      await ensureWebLlmEngine(draft.webllmModel, (status) => {
+        setDownloadProgress(status);
+      });
+      setCachedModels((prev) => ({ ...prev, [draft.webllmModel]: true }));
+      setLoadedModel(getLoadedWebLlmModelId());
+      setTestResult({
+        ok: true,
+        message: `${selectedPreset.label} is downloaded & loaded on your device. Tap Save to start sparring!`,
+      });
+    } catch (err) {
+      setTestResult({
+        ok: false,
+        message: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleClearCache = async () => {
+    if (clearingCache || downloading) return;
+    setClearingCache(true);
+    setTestResult(null);
+    try {
+      await clearWebLlmModelCache(draft.webllmModel);
+      setCachedModels((prev) => ({ ...prev, [draft.webllmModel]: false }));
+      setLoadedModel(getLoadedWebLlmModelId());
+      setDownloadProgress(null);
+      setTestResult({
+        ok: true,
+        message: `Cleared cached weights for ${selectedPreset.label}.`,
+      });
+    } catch (err) {
+      setTestResult({
+        ok: false,
+        message: `Could not clear cache: ${err instanceof Error ? err.message : String(err)}`,
+      });
+    } finally {
+      setClearingCache(false);
+    }
   };
 
   const handleSave = () => {
@@ -105,7 +222,7 @@ export function VoiceSettingsModal({
             <div>
               <h2 className="text-sm font-bold">AI Opponent Settings</h2>
               <p className="text-[11px] text-slate-400">
-                Keys stay locally on your device only.
+                Choose on-device AI (no key) or cloud/local models.
               </p>
             </div>
           </div>
@@ -151,7 +268,7 @@ export function VoiceSettingsModal({
                     </span>
                     <span
                       className={clsx(
-                        'px-2 py-0.5 rounded-full text-[10px] font-bold',
+                        'px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
                         active
                           ? 'bg-indigo-500 text-white'
                           : isDark
@@ -167,6 +284,169 @@ export function VoiceSettingsModal({
               );
             })}
           </div>
+
+          {/* On-Device WebLLM Settings */}
+          {draft.backend === 'browser-webllm' && (
+            <div
+              className={clsx(
+                'p-3.5 rounded-xl border space-y-3',
+                isDark ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'
+              )}
+            >
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold">
+                  <HardDrive className="w-3.5 h-3.5 text-violet-400" />
+                  Select On-Device Model
+                </span>
+                {gpuSupport && (
+                  <span
+                    className={clsx(
+                      'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border',
+                      gpuSupport.supported
+                        ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
+                        : 'bg-rose-500/15 border-rose-500/35 text-rose-300'
+                    )}
+                  >
+                    {gpuSupport.supported ? 'WebGPU Ready' : 'WebGPU Unavailable'}
+                  </span>
+                )}
+              </div>
+
+              {gpuSupport && !gpuSupport.supported && (
+                <div className="px-3 py-2 rounded-lg bg-rose-500/15 border border-rose-500/35 text-rose-300 text-[11px] leading-snug">
+                  {gpuSupport.reason}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                {WEBLLM_MODEL_PRESETS.map((preset) => {
+                  const selected = draft.webllmModel === preset.id;
+                  const cached = Boolean(cachedModels[preset.id]);
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      disabled={downloading}
+                      onClick={() => {
+                        setDraft((d) => ({ ...d, webllmModel: preset.id }));
+                        setTestResult(null);
+                      }}
+                      className={clsx(
+                        'w-full text-left px-3 py-2.5 rounded-xl border transition-all disabled:opacity-60',
+                        selected
+                          ? isDark
+                            ? 'bg-violet-500/15 border-violet-400 text-white'
+                            : 'bg-violet-50 border-violet-500 text-violet-950'
+                          : isDark
+                            ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold flex items-center gap-1.5">
+                          <span>{preset.label}</span>
+                          {preset.recommended && (
+                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-violet-500/25 text-violet-300">
+                              Recommended
+                            </span>
+                          )}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {cached && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/20 text-emerald-300">
+                              Cached
+                            </span>
+                          )}
+                          <span className="text-[10.5px] font-mono text-slate-400">
+                            {preset.downloadSizeLabel}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                        {preset.tagline} ({preset.vramLabel})
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Download Progress Bar */}
+              {downloading && downloadProgress && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-[11px] font-medium">
+                    <span className="text-violet-300 truncate pr-2">{downloadProgress.text}</span>
+                    <span className="text-slate-300 font-mono shrink-0">
+                      {Math.round(downloadProgress.progress * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                    <div
+                      style={{ width: `${Math.max(4, Math.round(downloadProgress.progress * 100))}%` }}
+                      className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-300"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Pre-Download & Cache Controls */}
+              <div className="flex items-center gap-2 pt-1 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleDownloadAndLoad}
+                  disabled={downloading || (gpuSupport !== null && !gpuSupport.supported)}
+                  className={clsx(
+                    'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors disabled:opacity-50',
+                    isSelectedLoaded
+                      ? 'bg-emerald-600/20 border border-emerald-500/40 text-emerald-300'
+                      : 'bg-violet-600 hover:bg-violet-500 text-white'
+                  )}
+                >
+                  {downloading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Loading...</span>
+                    </>
+                  ) : isSelectedLoaded ? (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Model Loaded & Ready</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{selectedModelCached ? 'Load Cached Model' : 'Download & Load Model'}</span>
+                    </>
+                  )}
+                </button>
+
+                {selectedModelCached && (
+                  <button
+                    type="button"
+                    onClick={handleClearCache}
+                    disabled={clearingCache || downloading}
+                    title="Delete cached model weights from browser storage"
+                    className={clsx(
+                      'inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50',
+                      isDark
+                        ? 'bg-slate-900 border-slate-700 text-slate-300 hover:text-rose-300 hover:border-rose-500/40'
+                        : 'bg-white border-slate-300 text-slate-700 hover:text-rose-600'
+                    )}
+                  >
+                    {clearingCache ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>Clear</span>
+                  </button>
+                )}
+              </div>
+
+              <p className="text-[10.5px] text-slate-400 leading-snug">
+                Downloads once over Wi-Fi and saves in Chrome storage. You can also just tap Save and it will auto-download on your first message.
+              </p>
+            </div>
+          )}
 
           {/* Gemini Settings */}
           {draft.backend === 'gemini-flash' && (
@@ -316,9 +596,9 @@ export function VoiceSettingsModal({
           <button
             type="button"
             onClick={handleTest}
-            disabled={testing}
+            disabled={testing || downloading}
             className={clsx(
-              'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors',
+              'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50',
               isDark
                 ? 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'
                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'

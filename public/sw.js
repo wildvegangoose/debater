@@ -1,5 +1,5 @@
 // Dialectica PWA Service Worker — enables Android Chrome WebAPK installation & offline sparring
-const CACHE_NAME = 'dialectica-pwa-v3';
+const CACHE_NAME = 'dialectica-pwa-v4';
 const APP_SHELL_URLS = [
   './',
   './index.html',
@@ -23,7 +23,12 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+        Promise.all(
+          keys
+            // Only remove old Dialectica app-shell caches; NEVER delete WebLLM model weight caches!
+            .filter((k) => k.startsWith('dialectica-pwa-') && k !== CACHE_NAME)
+            .map((k) => caches.delete(k))
+        )
       )
       .then(() => self.clients.claim())
   );

@@ -115,16 +115,27 @@ export function generateOfflineOpening(params: {
   };
 }
 
-export function generateOfflineDebateReply(params: {
-  dataset: DebateGraphDataset;
+export interface DebateTurnGrounding {
+  matchedUserNode?: DebateNode;
+  counterNode?: DebateNode;
+  suggestedFollowUp?: DebateNode;
+  topRelevantNodes: DebateNode[];
+  targetKind: 'pro' | 'con';
+  strength: number;
+  persuasionShift: number;
+  badges: RhetoricBadge[];
+  coachingTip: string;
+  hasNuance: boolean;
+  hasEvidence: boolean;
+}
+
+export function analyzeDebateTurnForGrounding(params: {
   nodes: DebateNode[];
   pillarId: string | null;
   stance: DebateUserStance;
-  persona: DebateOpponentPersona;
   userText: string;
   usedNodeIds: Set<string>;
-  userTurnCount: number;
-}): StructuredDebateResponse {
+}): DebateTurnGrounding {
   const scoped = getScopedDebateNodes(params.nodes, params.pillarId);
   const argumentNodes = scoped.filter(
     (n) => n.kind === 'pro' || n.kind === 'con' || n.kind === 'thesis'
@@ -195,6 +206,18 @@ export function generateOfflineDebateReply(params: {
         !params.usedNodeIds.has(n.id)
     ) ??
     pool.find((n) => n.kind === userSideKind && !params.usedNodeIds.has(n.id));
+
+  // Build top 5 relevant nodes (counterNode first, then matchedUserNode, then highest ranked)
+  const relevantSet = new Map<string, DebateNode>();
+  if (counterNode) relevantSet.set(counterNode.id, counterNode);
+  if (matchedUserNode) relevantSet.set(matchedUserNode.id, matchedUserNode);
+  for (const r of ranked) {
+    if (relevantSet.size >= 5) break;
+    if (!relevantSet.has(r.node.id)) {
+      relevantSet.set(r.node.id, r.node);
+    }
+  }
+  const topRelevantNodes = Array.from(relevantSet.values());
 
   // Heuristic rhetorical scoring of the user's turn
   const words = params.userText.trim().split(/\s+/).filter(Boolean);
@@ -268,6 +291,48 @@ export function generateOfflineDebateReply(params: {
     Math.min(14, Math.round((strength - 58) / 3.5))
   );
 
+  const coachingTip = suggestedFollowUp
+    ? `Next move: Counter using "${suggestedFollowUp.title}" — ${firstSentence(suggestedFollowUp.summary)}`
+    : hasEvidence
+      ? "Great use of grounding — try directly addressing the opponent's strongest premise before pivoting."
+      : 'Try citing a concrete mechanism, historical precedent, or empirical figure on your next turn.';
+
+  return {
+    matchedUserNode,
+    counterNode,
+    suggestedFollowUp,
+    topRelevantNodes,
+    targetKind,
+    strength,
+    persuasionShift,
+    badges: badges.slice(0, 2),
+    coachingTip,
+    hasNuance,
+    hasEvidence,
+  };
+}
+
+export function generateOfflineDebateReply(params: {
+  dataset: DebateGraphDataset;
+  nodes: DebateNode[];
+  pillarId: string | null;
+  stance: DebateUserStance;
+  persona: DebateOpponentPersona;
+  userText: string;
+  usedNodeIds: Set<string>;
+  userTurnCount: number;
+}): StructuredDebateResponse {
+  const analysis = analyzeDebateTurnForGrounding({
+    nodes: params.nodes,
+    pillarId: params.pillarId,
+    stance: params.stance,
+    userText: params.userText,
+    usedNodeIds: params.usedNodeIds,
+  });
+
+  const { counterNode, matchedUserNode, suggestedFollowUp, targetKind, strength, persuasionShift, badges, coachingTip, hasNuance } =
+    analysis;
+
   // Compose conversational spoken reply from the counterNode
   const summaryLine = counterNode ? firstSentence(counterNode.summary) : 'There is a serious counter-perspective worth testing here.';
   const detailLine = counterNode?.details[0]
@@ -307,12 +372,6 @@ export function generateOfflineDebateReply(params: {
     .filter(Boolean)
     .join(' ');
 
-  const coachingTip = suggestedFollowUp
-    ? `Next move: Counter using "${suggestedFollowUp.title}" — ${firstSentence(suggestedFollowUp.summary)}`
-    : hasEvidence
-      ? 'Great use of grounding — try directly addressing the opponent\'s strongest premise before pivoting.'
-      : 'Try citing a concrete mechanism, historical precedent, or empirical figure on your next turn.';
-
   return {
     spokenReply,
     stanceTag: targetKind,
@@ -321,7 +380,7 @@ export function generateOfflineDebateReply(params: {
     argumentStrength: strength,
     persuasionShift,
     roundPhase: determineNextRoundPhase(params.userTurnCount),
-    rhetoricBadges: badges.slice(0, 2),
+    rhetoricBadges: badges,
     coachingTip,
     suggestedFollowUpNodeId: suggestedFollowUp?.id ?? null,
     citedSource: sourceObj,

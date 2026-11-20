@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import {
   ArrowUpRight,
   Compass,
+  Cpu,
   ExternalLink,
   Lightbulb,
   Loader2,
@@ -36,6 +37,7 @@ import {
   generateGeminiFlashReply,
   generateLocalOpenAIReply,
 } from '../services/voiceDebate/llmDebateEngine';
+import type { WebLlmLoadProgress } from '../services/voiceDebate/webllmEngine';
 import { getScopedDebateNodes } from '../services/voiceDebate/debateContextBuilder';
 import { LiveDebateHud } from './voice/LiveDebateHud';
 import { VoiceSettingsModal } from './voice/VoiceSettingsModal';
@@ -96,6 +98,8 @@ export function VoiceDebateView({
   );
 
   const [isThinking, setIsThinking] = useState(false);
+  const [modelLoadStatus, setModelLoadStatus] = useState<WebLlmLoadProgress | null>(null);
+  const [streamingReply, setStreamingReply] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [draftText, setDraftText] = useState('');
 
@@ -179,6 +183,8 @@ export function VoiceDebateView({
         engagedByAiIds: opening.engagedNodeIds,
       });
       setIsThinking(false);
+      setModelLoadStatus(null);
+      setStreamingReply('');
       setErrorMessage(null);
       setDraftText('');
     },
@@ -199,7 +205,7 @@ export function VoiceDebateView({
 
   useEffect(() => {
     feedEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [turns.length, isThinking]);
+  }, [turns.length, isThinking, streamingReply]);
 
   const applyStructuredTurnResponse = useCallback(
     (response: StructuredDebateResponse) => {
@@ -281,9 +287,34 @@ export function VoiceDebateView({
         ]);
         const nextUserCount = historySnapshot.filter((t) => t.speaker === 'user').length + 1;
 
-        if (activeSettings.backend === 'gemini-flash') {
+        if (activeSettings.backend === 'browser-webllm') {
+          const { generateWebLlmDebateReply } = await import(
+            '../services/voiceDebate/webllmEngine'
+          );
+          response = await generateWebLlmDebateReply({
+            modelId: activeSettings.webllmModel,
+            dataset,
+            nodes,
+            pillarId: activePillarId,
+            stance,
+            persona,
+            history: historySnapshot,
+            userText: clean,
+            usedNodeIds: usedIds,
+            userTurnCount: nextUserCount,
+            onProgress: (status) => {
+              if (!mountedRef.current) return;
+              setModelLoadStatus(status.progress >= 1 ? null : status);
+            },
+            onToken: (partial) => {
+              if (!mountedRef.current) return;
+              setModelLoadStatus(null);
+              setStreamingReply(partial);
+            },
+          });
+        } else if (activeSettings.backend === 'gemini-flash') {
           if (!activeSettings.geminiApiKey.trim()) {
-            throw new Error('Add your free Gemini API key in AI Settings, or switch to Offline mode.');
+            throw new Error('Add your free Gemini API key in AI Settings, or switch to On-Device AI.');
           }
           response = await generateGeminiFlashReply({
             settings: activeSettings,
@@ -321,6 +352,8 @@ export function VoiceDebateView({
         }
 
         if (!mountedRef.current) return;
+        setStreamingReply('');
+        setModelLoadStatus(null);
         applyStructuredTurnResponse(response);
       } catch (err) {
         if (!mountedRef.current) return;
@@ -329,6 +362,8 @@ export function VoiceDebateView({
       } finally {
         if (mountedRef.current) {
           setIsThinking(false);
+          setModelLoadStatus(null);
+          setStreamingReply('');
         }
       }
     },
@@ -450,14 +485,20 @@ export function VoiceDebateView({
             onClick={() => setShowSettings(true)}
             className={clsx(
               'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold border transition-colors',
-              backendMeta.badgeColor === 'sky'
-                ? 'bg-sky-500/15 border-sky-400/40 text-sky-300'
-                : backendMeta.badgeColor === 'amber'
-                  ? 'bg-amber-500/15 border-amber-400/40 text-amber-300'
-                  : 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300'
+              backendMeta.badgeColor === 'violet'
+                ? 'bg-violet-500/15 border-violet-400/40 text-violet-300'
+                : backendMeta.badgeColor === 'sky'
+                  ? 'bg-sky-500/15 border-sky-400/40 text-sky-300'
+                  : backendMeta.badgeColor === 'amber'
+                    ? 'bg-amber-500/15 border-amber-400/40 text-amber-300'
+                    : 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300'
             )}
           >
-            <Settings2 className="w-3.5 h-3.5" />
+            {settings.backend === 'browser-webllm' ? (
+              <Cpu className="w-3.5 h-3.5" />
+            ) : (
+              <Settings2 className="w-3.5 h-3.5" />
+            )}
             <span>{backendMeta.shortLabel}</span>
           </button>
 
@@ -650,8 +691,60 @@ export function VoiceDebateView({
               );
             })}
 
-            {/* Clean non-blocking Thinking indicator */}
-            {isThinking && (
+            {/* Model Download / Live Streaming / Thinking indicator */}
+            {isThinking && modelLoadStatus ? (
+              <div className="flex items-start">
+                <div
+                  className={clsx(
+                    'w-full max-w-[92%] sm:max-w-[80%] px-3.5 py-3 rounded-2xl rounded-bl-sm border space-y-2',
+                    isDark
+                      ? 'bg-slate-900 border-violet-500/40 text-slate-200'
+                      : 'bg-white border-violet-300 text-slate-800 shadow-xs'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2 text-xs font-semibold">
+                    <span className="inline-flex items-center gap-1.5 text-violet-400 truncate">
+                      <Cpu className="w-3.5 h-3.5 animate-pulse shrink-0" />
+                      <span className="truncate">{modelLoadStatus.text}</span>
+                    </span>
+                    <span className="font-mono text-[11px] shrink-0">
+                      {Math.round(modelLoadStatus.progress * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                    <div
+                      style={{
+                        width: `${Math.max(5, Math.round(modelLoadStatus.progress * 100))}%`,
+                      }}
+                      className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-300"
+                    />
+                  </div>
+                  <p className="text-[10.5px] text-slate-400">
+                    One-time download cached locally on your device for future offline sparring.
+                  </p>
+                </div>
+              </div>
+            ) : isThinking && streamingReply ? (
+              <div className="flex flex-col gap-1 items-start">
+                <div className="flex items-center gap-1.5 text-[10.5px] font-medium text-violet-400 px-1">
+                  <Cpu className="w-3 h-3 animate-pulse" />
+                  <span>Dialectica AI · Generating on device...</span>
+                </div>
+                <div
+                  className={clsx(
+                    'max-w-[92%] sm:max-w-[85%] rounded-2xl rounded-bl-sm px-4 py-3 text-[14px] leading-relaxed border',
+                    isDark
+                      ? 'bg-slate-900 border-violet-500/35 text-slate-100'
+                      : 'bg-white border-violet-200 text-slate-800 shadow-xs'
+                  )}
+                >
+                  <p>
+                    {streamingReply}
+                    <span className="inline-block w-1.5 h-4 ml-0.5 align-middle bg-violet-400 animate-pulse rounded-xs" />
+                  </p>
+                </div>
+              </div>
+            ) : isThinking ? (
               <div className="flex items-start">
                 <div
                   className={clsx(
@@ -665,7 +758,7 @@ export function VoiceDebateView({
                   <span>Crafting rebuttal...</span>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Error Alert */}
             {errorMessage && (
@@ -687,6 +780,16 @@ export function VoiceDebateView({
           {/* Quick Starters (only before user's first turn) */}
           {userTurnCount === 0 && starterPrompts.length > 0 && (
             <div className="px-3.5 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+              {settings.backend === 'offline-curated' && (
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(true)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold border shrink-0 bg-violet-500/15 border-violet-400/40 text-violet-300 hover:bg-violet-500/25 transition-colors"
+                >
+                  <Cpu className="w-3 h-3" />
+                  <span>Enable On-Device AI (Free)</span>
+                </button>
+              )}
               {starterPrompts.map((item) => (
                 <button
                   key={item.nodeId}

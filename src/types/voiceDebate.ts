@@ -1,6 +1,7 @@
 import { DebateSourceLink } from './debate';
 
 export type VoiceAIBackend =
+  | 'browser-webllm'
   | 'gemini-flash'
   | 'local-openai'
   | 'offline-curated';
@@ -42,6 +43,7 @@ export interface VoiceDebateTurn {
 
 export interface VoiceDebateSettings {
   backend: VoiceAIBackend;
+  webllmModel: string;
   geminiApiKey: string;
   geminiModel: string;
   localEndpoint: string;

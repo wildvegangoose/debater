@@ -4,6 +4,7 @@ const SETTINGS_KEY = 'dialectica-voice-settings-v1';
 
 export const DEFAULT_VOICE_SETTINGS: VoiceDebateSettings = {
   backend: 'offline-curated',
+  webllmModel: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
   geminiApiKey: '',
   geminiModel: 'gemini-2.5-flash',
   localEndpoint: 'http://localhost:11434/v1',
@@ -12,6 +13,7 @@ export const DEFAULT_VOICE_SETTINGS: VoiceDebateSettings = {
 };
 
 function normalizeBackend(raw: unknown): VoiceAIBackend {
+  if (raw === 'browser-webllm') return 'browser-webllm';
   if (raw === 'gemini-flash' || raw === 'gemini-live') return 'gemini-flash';
   if (raw === 'local-openai') return 'local-openai';
   return 'offline-curated';
@@ -24,6 +26,10 @@ export function loadVoiceSettings(): VoiceDebateSettings {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     return {
       backend: normalizeBackend(parsed.backend),
+      webllmModel:
+        typeof parsed.webllmModel === 'string' && parsed.webllmModel.trim()
+          ? parsed.webllmModel
+          : DEFAULT_VOICE_SETTINGS.webllmModel,
       geminiApiKey: typeof parsed.geminiApiKey === 'string' ? parsed.geminiApiKey : '',
       geminiModel:
         typeof parsed.geminiModel === 'string' && parsed.geminiModel.trim()
@@ -55,10 +61,17 @@ export function saveVoiceSettings(settings: VoiceDebateSettings): void {
 export function getEffectiveBackendLabel(settings: VoiceDebateSettings): {
   title: string;
   shortLabel: string;
-  badgeColor: 'sky' | 'amber' | 'emerald';
+  badgeColor: 'violet' | 'sky' | 'amber' | 'emerald';
   isConfigured: boolean;
 } {
   switch (settings.backend) {
+    case 'browser-webllm':
+      return {
+        title: 'On-Device AI (WebLLM)',
+        shortLabel: 'On-Device AI',
+        badgeColor: 'violet',
+        isConfigured: true,
+      };
     case 'gemini-flash':
       return {
         title: 'Gemini Flash AI',

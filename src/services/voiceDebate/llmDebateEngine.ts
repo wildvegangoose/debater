@@ -307,6 +307,27 @@ export async function testVoiceBackendConnection(
     return { ok: true, message: 'Offline Curated Sparring is built-in and ready immediately.' };
   }
 
+  if (settings.backend === 'browser-webllm') {
+    const { checkWebGpuSupport, getWebLlmPreset, isWebLlmModelCached } = await import(
+      './webllmEngine'
+    );
+    const gpu = await checkWebGpuSupport();
+    if (!gpu.supported) {
+      return {
+        ok: false,
+        message: gpu.reason || 'WebGPU is not supported in this browser.',
+      };
+    }
+    const preset = getWebLlmPreset(settings.webllmModel);
+    const cached = await isWebLlmModelCached(settings.webllmModel);
+    return {
+      ok: true,
+      message: cached
+        ? `WebGPU ready & ${preset.label} is already cached on your device!`
+        : `WebGPU ready! Tap "Download & Load Model" (or send a message) to cache ${preset.label} (${preset.downloadSizeLabel}).`,
+    };
+  }
+
   if (settings.backend === 'gemini-flash') {
     const apiKey = settings.geminiApiKey.trim();
     if (!apiKey) {
