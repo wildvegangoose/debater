@@ -1,4 +1,4 @@
-import { DebateSourceLink } from './debate';
+import { DebateSourceLink, DebateTopicId } from './debate';
 
 export type VoiceAIBackend =
   | 'browser-webllm'
@@ -76,4 +76,64 @@ export interface StructuredDebateResponse {
   coachingTip: string;
   suggestedFollowUpNodeId?: string | null;
   citedSource?: DebateSourceLink | null;
+}
+
+/** Chess-style landing verdict for each individual argument turn */
+export type ArgumentLandingRating = 'knockout' | 'solid' | 'mixed' | 'vulnerable';
+
+export interface ArgumentTurnReview {
+  turnIndex: number;
+  userText: string;
+  aiReply: string;
+  timestamp: string;
+  argumentStrength: number;
+  persuasionShift: number;
+  cumulativeBalance: number;
+  landingRating: ArgumentLandingRating;
+  landingLabel: string;
+  landingSummary: string;
+  whatWorked: string[];
+  whatToImprove: string;
+  strongerAngleNodeId?: string | null;
+  strongerAngleTitle?: string;
+  strongerAnglePrompt?: string;
+  aiRewrite?: string;
+  rhetoricBadges: RhetoricBadge[];
+  userEngagedNodeIds: string[];
+  aiEngagedNodeIds: string[];
+  citedSource?: DebateSourceLink | null;
+}
+
+export type DebateSessionVerdict = 'won' | 'edge' | 'split' | 'outflanked';
+
+export interface DebateSessionRecord {
+  id: string;
+  startedAt: string;
+  updatedAt: string;
+  topicId: DebateTopicId;
+  topicTitle: string;
+  pillarTitle?: string;
+  stance: DebateUserStance;
+  persona: DebateOpponentPersona;
+  backend: VoiceAIBackend;
+  avgStrength: number;
+  peakStrength: number;
+  finalBalance: number;
+  verdict: DebateSessionVerdict;
+  turnCount: number;
+  nodesEngagedCount: number;
+  momentumSeries: number[];
+  topStrength: string;
+  primaryFocus: string;
+  turnReviews: ArgumentTurnReview[];
+}
+
+export interface DebaterCareerStats {
+  totalRounds: number;
+  totalArguments: number;
+  avgStrength: number;
+  recentTrendDelta: number; // recent 3 rounds avg minus earlier rounds avg
+  edgeRatePct: number;      // % of rounds ending 'won' or 'edge'
+  topStrength: string;
+  primaryFocus: string;
 }

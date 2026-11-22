@@ -361,7 +361,7 @@ export function NodeInspectorDrawer({
             <div>
               <div className="font-semibold">Local Sandbox Argument</div>
               <div className="opacity-80 text-[11px] mt-0.5">
-                Saved only in your browser. Propose it to the public Dialectica graph via GitHub.
+                Saved only in your browser. Propose it to the public Steelman graph via GitHub.
               </div>
             </div>
             <button

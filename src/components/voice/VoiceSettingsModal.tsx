@@ -67,7 +67,7 @@ const BACKEND_CARDS: Array<{
   {
     id: 'offline-curated',
     title: 'Offline Curated Templates',
-    subtitle: 'Instant zero-download fallback using Dialectica’s 22 built-in debate graphs.',
+    subtitle: 'Instant zero-download fallback using Steelman’s 22 built-in debate graphs.',
     badge: 'Instant',
     icon: WifiOff,
   },
@@ -198,30 +198,38 @@ export function VoiceSettingsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/75 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/75 backdrop-blur-xs"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         className={clsx(
           'w-full max-w-lg max-h-[88vh] rounded-t-3xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
-          isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+          isDark
+            ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
+            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-900'
         )}
       >
+        <div className="pt-2 pb-0.5 flex justify-center sm:hidden shrink-0">
+          <span className="w-10 h-1 rounded-full bg-stone-500/40" />
+        </div>
+
         {/* Header */}
         <div
           className={clsx(
-            'px-4 py-3.5 border-b flex items-center justify-between gap-3 shrink-0',
-            isDark ? 'border-slate-800' : 'border-slate-200'
+            'px-4 py-3 border-b flex items-center justify-between gap-3 shrink-0',
+            isDark ? 'border-[#222938]' : 'border-[#E7E2D8]'
           )}
         >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/35 flex items-center justify-center text-amber-400">
               <Cpu className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold">AI Opponent Settings</h2>
-              <p className="text-[11px] text-slate-400">
+              <h2 className="font-editorial text-base font-semibold leading-tight">
+                AI Opponent Settings
+              </h2>
+              <p className="text-[11px] text-stone-400">
                 Choose on-device AI (no key) or cloud/local models.
               </p>
             </div>
@@ -230,7 +238,7 @@ export function VoiceSettingsModal({
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            className="p-1.5 rounded-full text-slate-400 hover:bg-slate-800/60"
+            className="p-1.5 rounded-full text-stone-400 hover:bg-stone-500/15"
           >
             <X className="w-4 h-4" />
           </button>
@@ -254,32 +262,32 @@ export function VoiceSettingsModal({
                     'w-full text-left p-3 rounded-xl border transition-all',
                     active
                       ? isDark
-                        ? 'bg-indigo-600/20 border-indigo-400 text-white'
-                        : 'bg-indigo-50 border-indigo-500 text-indigo-950'
+                        ? 'bg-amber-400/12 border-amber-400/60 text-stone-50'
+                        : 'bg-amber-50 border-amber-500 text-amber-950'
                       : isDark
-                        ? 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700'
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                        ? 'bg-[#0B0E14] border-[#222938] text-stone-300 hover:border-[#323C50]'
+                        : 'bg-white border-[#E5DEC9] text-stone-700 hover:border-amber-400'
                   )}
                 >
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <span className="inline-flex items-center gap-1.5 text-xs font-bold">
-                      <Icon className="w-3.5 h-3.5 text-indigo-400" />
+                      <Icon className="w-3.5 h-3.5 text-amber-400" />
                       {card.title}
                     </span>
                     <span
                       className={clsx(
                         'px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
                         active
-                          ? 'bg-indigo-500 text-white'
+                          ? 'bg-amber-500 text-stone-950'
                           : isDark
-                            ? 'bg-slate-800 text-slate-400'
-                            : 'bg-slate-200 text-slate-600'
+                            ? 'bg-[#1A202D] text-stone-400'
+                            : 'bg-[#F3EFE6] text-stone-600'
                       )}
                     >
                       {card.badge}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-snug">{card.subtitle}</p>
+                  <p className="text-[11px] text-stone-400 leading-snug">{card.subtitle}</p>
                 </button>
               );
             })}
@@ -290,12 +298,12 @@ export function VoiceSettingsModal({
             <div
               className={clsx(
                 'p-3.5 rounded-xl border space-y-3',
-                isDark ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'
+                isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
               )}
             >
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold">
-                  <HardDrive className="w-3.5 h-3.5 text-violet-400" />
+                  <HardDrive className="w-3.5 h-3.5 text-amber-400" />
                   Select On-Device Model
                 </span>
                 {gpuSupport && (
@@ -335,18 +343,18 @@ export function VoiceSettingsModal({
                         'w-full text-left px-3 py-2.5 rounded-xl border transition-all disabled:opacity-60',
                         selected
                           ? isDark
-                            ? 'bg-violet-500/15 border-violet-400 text-white'
-                            : 'bg-violet-50 border-violet-500 text-violet-950'
+                            ? 'bg-amber-400/12 border-amber-400/60 text-stone-50'
+                            : 'bg-amber-50 border-amber-500 text-amber-950'
                           : isDark
-                            ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                            ? 'bg-[#12161F] border-[#222938] text-stone-300 hover:border-[#323C50]'
+                            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-700 hover:border-amber-400'
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-bold flex items-center gap-1.5">
                           <span>{preset.label}</span>
                           {preset.recommended && (
-                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-violet-500/25 text-violet-300">
+                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-400/20 text-amber-300">
                               Recommended
                             </span>
                           )}
@@ -357,12 +365,12 @@ export function VoiceSettingsModal({
                               Cached
                             </span>
                           )}
-                          <span className="text-[10.5px] font-mono text-slate-400">
+                          <span className="text-[10.5px] font-mono text-stone-400">
                             {preset.downloadSizeLabel}
                           </span>
                         </div>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      <p className="text-[11px] text-stone-400 mt-0.5 leading-snug">
                         {preset.tagline} ({preset.vramLabel})
                       </p>
                     </button>
@@ -374,15 +382,15 @@ export function VoiceSettingsModal({
               {downloading && downloadProgress && (
                 <div className="space-y-1.5 pt-1">
                   <div className="flex items-center justify-between text-[11px] font-medium">
-                    <span className="text-violet-300 truncate pr-2">{downloadProgress.text}</span>
-                    <span className="text-slate-300 font-mono shrink-0">
+                    <span className="text-amber-300 truncate pr-2">{downloadProgress.text}</span>
+                    <span className="text-stone-300 font-mono shrink-0">
                       {Math.round(downloadProgress.progress * 100)}%
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                  <div className="h-2 w-full rounded-full bg-stone-800 overflow-hidden">
                     <div
                       style={{ width: `${Math.max(4, Math.round(downloadProgress.progress * 100))}%` }}
-                      className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300"
                     />
                   </div>
                 </div>
@@ -398,7 +406,7 @@ export function VoiceSettingsModal({
                     'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors disabled:opacity-50',
                     isSelectedLoaded
                       ? 'bg-emerald-600/20 border border-emerald-500/40 text-emerald-300'
-                      : 'bg-violet-600 hover:bg-violet-500 text-white'
+                      : 'bg-amber-500 hover:bg-amber-400 text-stone-950'
                   )}
                 >
                   {downloading ? (
@@ -409,7 +417,7 @@ export function VoiceSettingsModal({
                   ) : isSelectedLoaded ? (
                     <>
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Model Loaded & Ready</span>
+                      <span>Model Loaded &amp; Ready</span>
                     </>
                   ) : (
                     <>
@@ -428,8 +436,8 @@ export function VoiceSettingsModal({
                     className={clsx(
                       'inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50',
                       isDark
-                        ? 'bg-slate-900 border-slate-700 text-slate-300 hover:text-rose-300 hover:border-rose-500/40'
-                        : 'bg-white border-slate-300 text-slate-700 hover:text-rose-600'
+                        ? 'bg-[#12161F] border-[#262E3E] text-stone-300 hover:text-rose-300 hover:border-rose-500/40'
+                        : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-700 hover:text-rose-600'
                     )}
                   >
                     {clearingCache ? (
@@ -442,7 +450,7 @@ export function VoiceSettingsModal({
                 )}
               </div>
 
-              <p className="text-[10.5px] text-slate-400 leading-snug">
+              <p className="text-[10.5px] text-stone-400 leading-snug">
                 Downloads once over Wi-Fi and saves in Chrome storage. You can also just tap Save and it will auto-download on your first message.
               </p>
             </div>
@@ -453,19 +461,19 @@ export function VoiceSettingsModal({
             <div
               className={clsx(
                 'p-3.5 rounded-xl border space-y-3',
-                isDark ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'
+                isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
               )}
             >
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <label className="inline-flex items-center gap-1.5 text-xs font-bold">
-                  <KeyRound className="w-3.5 h-3.5 text-indigo-400" />
+                  <KeyRound className="w-3.5 h-3.5 text-amber-400" />
                   Google Gemini API Key
                 </label>
                 <a
                   href="https://aistudio.google.com/apikey"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-400 hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:underline"
                 >
                   <span>Get Free Key</span>
                   <ExternalLink className="w-3 h-3" />
@@ -477,14 +485,14 @@ export function VoiceSettingsModal({
                 onChange={(e) => setDraft((d) => ({ ...d, geminiApiKey: e.target.value }))}
                 placeholder="AIzaSy..."
                 className={clsx(
-                  'w-full px-3 py-2.5 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                  'w-full px-3 py-2.5 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-amber-400/70',
                   isDark
-                    ? 'bg-slate-900 border-slate-700 text-slate-100'
-                    : 'bg-white border-slate-300 text-slate-900'
+                    ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
+                    : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-900'
                 )}
               />
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                <label className="block text-[11px] font-semibold text-stone-400 mb-1">
                   Model
                 </label>
                 <input
@@ -494,8 +502,8 @@ export function VoiceSettingsModal({
                   className={clsx(
                     'w-full px-3 py-2 rounded-xl text-xs font-mono border',
                     isDark
-                      ? 'bg-slate-900 border-slate-700 text-slate-200'
-                      : 'bg-white border-slate-300 text-slate-800'
+                      ? 'bg-[#12161F] border-[#262E3E] text-stone-200'
+                      : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-800'
                   )}
                 />
               </div>
@@ -507,7 +515,7 @@ export function VoiceSettingsModal({
             <div
               className={clsx(
                 'p-3.5 rounded-xl border space-y-3',
-                isDark ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-50 border-slate-200'
+                isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
               )}
             >
               <div>
@@ -520,16 +528,16 @@ export function VoiceSettingsModal({
                   onChange={(e) => setDraft((d) => ({ ...d, localEndpoint: e.target.value }))}
                   placeholder="http://192.168.1.50:11434/v1"
                   className={clsx(
-                    'w-full px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                    'w-full px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-amber-400/70',
                     isDark
-                      ? 'bg-slate-900 border-slate-700 text-slate-100'
-                      : 'bg-white border-slate-300 text-slate-900'
+                      ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
+                      : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-900'
                   )}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  <label className="block text-[11px] font-semibold text-stone-400 mb-1">
                     Model Name
                   </label>
                   <input
@@ -540,13 +548,13 @@ export function VoiceSettingsModal({
                     className={clsx(
                       'w-full px-2.5 py-2 rounded-xl text-xs font-mono border',
                       isDark
-                        ? 'bg-slate-900 border-slate-700 text-slate-200'
-                        : 'bg-white border-slate-300 text-slate-800'
+                        ? 'bg-[#12161F] border-[#262E3E] text-stone-200'
+                        : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-800'
                     )}
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  <label className="block text-[11px] font-semibold text-stone-400 mb-1">
                     Optional Bearer Token
                   </label>
                   <input
@@ -557,8 +565,8 @@ export function VoiceSettingsModal({
                     className={clsx(
                       'w-full px-2.5 py-2 rounded-xl text-xs font-mono border',
                       isDark
-                        ? 'bg-slate-900 border-slate-700 text-slate-200'
-                        : 'bg-white border-slate-300 text-slate-800'
+                        ? 'bg-[#12161F] border-[#262E3E] text-stone-200'
+                        : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-800'
                     )}
                   />
                 </div>
@@ -590,7 +598,7 @@ export function VoiceSettingsModal({
         <div
           className={clsx(
             'px-4 py-3 border-t flex items-center justify-between gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
-            isDark ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-slate-50'
+            isDark ? 'border-[#222938] bg-[#0B0E14]' : 'border-[#E7E2D8] bg-[#F3EFE6]'
           )}
         >
           <button
@@ -600,8 +608,8 @@ export function VoiceSettingsModal({
             className={clsx(
               'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50',
               isDark
-                ? 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'
-                : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
+                ? 'bg-[#171C28] border-[#262E3E] text-stone-200 hover:bg-[#1E2534]'
+                : 'bg-white border-[#D8D0C0] text-stone-700 hover:bg-stone-100'
             )}
           >
             {testing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -612,14 +620,14 @@ export function VoiceSettingsModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200"
+              className="px-3 py-2 rounded-xl text-xs font-semibold text-stone-400 hover:text-stone-200"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-sm"
             >
               Save
             </button>

@@ -125,7 +125,7 @@ export function buildVoiceSystemPrompt(params: {
 
   if (params.mode === 'live') {
     return [
-      'You are Dialectica, a live voice debate sparring partner.',
+      'You are Steelman, a sharp debate sparring partner.',
       'SPEAKING STYLE: Speak naturally like a real human conversation! Keep every spoken response concise (2 to 4 crisp sentences, ~30-55 words) so there is lively back-and-forth rhythm. Never read bullet points, markdown, or node IDs out loud.',
       stanceText,
       personaText,
@@ -136,8 +136,8 @@ export function buildVoiceSystemPrompt(params: {
   }
 
   return [
-    'You are Dialectica, a conversational voice debate sparring partner and rhetoric coach.',
-    'SPEAKING STYLE: Your `spokenReply` will be read aloud via text-to-speech. Keep it natural, warm, punchy, and conversational (2 to 4 sentences, 35-70 words). No markdown, no bullet lists, no node IDs in `spokenReply`. End with a crisp hook or question to invite the user\'s reply.',
+    'You are Steelman, a conversational debate sparring partner and rhetoric coach.',
+    'SPEAKING STYLE: Keep `spokenReply` natural, sharp, and conversational (2 to 4 sentences, 35-70 words). No markdown, no bullet lists, no node IDs in `spokenReply`. End with a crisp hook or question to invite the user\'s reply.',
     stanceText,
     personaText,
     'EVALUATION: Ground your counter-argument in the curated dossier below whenever relevant. Return valid JSON matching the requested schema, referencing exact node IDs from the dossier in `engagedNodeIds`, `userEngagedNodeIds`, and `suggestedFollowUpNodeId`.',

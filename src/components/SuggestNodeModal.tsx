@@ -343,7 +343,7 @@ export function SuggestNodeModal({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `dialectica-suggestion-${selectedTopicId}-${slugifyId(headline)}.csv`;
+    a.download = `steelman-suggestion-${selectedTopicId}-${slugifyId(headline)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     showToast('Downloaded spreadsheet CSV row');

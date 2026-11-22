@@ -9,6 +9,13 @@ interface ViewModeSwitcherProps {
   className?: string;
 }
 
+const TABS: Array<{ id: DebateViewMode; label: string; icon: typeof GitBranch }> = [
+  { id: 'graph', label: 'Graph', icon: GitBranch },
+  { id: 'outline', label: 'Outline', icon: BookOpen },
+  { id: 'flashcards', label: 'Quiz', icon: GraduationCap },
+  { id: 'voice', label: 'Spar', icon: MessageSquare },
+];
+
 export function ViewModeSwitcher({
   viewMode,
   onChangeViewMode,
@@ -18,97 +25,39 @@ export function ViewModeSwitcher({
   return (
     <div
       role="tablist"
-      aria-label="Debate visualization mode"
+      aria-label="Debate view mode"
       className={clsx(
         'inline-flex items-center p-1 rounded-xl border shadow-xs transition-colors shrink-0',
-        isDark ? 'bg-slate-900 border-slate-700/80' : 'bg-slate-100 border-slate-300',
+        isDark ? 'bg-[#12161F] border-[#262E3E]' : 'bg-[#F3EFE6] border-[#E5DEC9]',
         className
       )}
     >
-      {/* Graph Mode */}
-      <button
-        type="button"
-        role="tab"
-        aria-selected={viewMode === 'graph'}
-        onClick={() => onChangeViewMode('graph')}
-        className={clsx(
-          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
-          viewMode === 'graph'
-            ? isDark
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-white text-indigo-700 shadow-xs'
-            : isDark
-            ? 'text-slate-400 hover:text-slate-200'
-            : 'text-slate-600 hover:text-slate-900'
-        )}
-      >
-        <GitBranch className="w-3.5 h-3.5" />
-        <span>Graph</span>
-      </button>
-
-      {/* Outline Feed Mode (Mobile Friendly) */}
-      <button
-        type="button"
-        role="tab"
-        aria-selected={viewMode === 'outline'}
-        onClick={() => onChangeViewMode('outline')}
-        className={clsx(
-          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
-          viewMode === 'outline'
-            ? isDark
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-white text-indigo-700 shadow-xs'
-            : isDark
-            ? 'text-slate-400 hover:text-slate-200'
-            : 'text-slate-600 hover:text-slate-900'
-        )}
-      >
-        <BookOpen className="w-3.5 h-3.5" />
-        <span>Outline</span>
-      </button>
-
-      {/* Flashcard Quiz Mode */}
-      <button
-        type="button"
-        role="tab"
-        aria-selected={viewMode === 'flashcards'}
-        onClick={() => onChangeViewMode('flashcards')}
-        className={clsx(
-          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all relative',
-          viewMode === 'flashcards'
-            ? isDark
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-white text-indigo-700 shadow-xs'
-            : isDark
-            ? 'text-slate-400 hover:text-slate-200'
-            : 'text-slate-600 hover:text-slate-900'
-        )}
-      >
-        <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
-        <span>Quiz</span>
-      </button>
-
-      {/* AI Debate Sparring Mode */}
-      <button
-        type="button"
-        role="tab"
-        aria-selected={viewMode === 'voice'}
-        onClick={() => onChangeViewMode('voice')}
-        className={clsx(
-          'inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all relative',
-          viewMode === 'voice'
-            ? isDark
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'bg-white text-emerald-700 shadow-xs'
-            : isDark
-            ? 'text-slate-400 hover:text-slate-200'
-            : 'text-slate-600 hover:text-slate-900'
-        )}
-      >
-        <MessageSquare className={clsx('w-3.5 h-3.5', viewMode === 'voice' ? 'text-white sm:text-current' : 'text-emerald-400')} />
-        <span>Spar</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse -ml-0.5" />
-      </button>
+      {TABS.map((tab) => {
+        const Icon = tab.icon;
+        const active = viewMode === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChangeViewMode(tab.id)}
+            className={clsx(
+              'inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
+              active
+                ? isDark
+                  ? 'bg-amber-500 text-stone-950 shadow-xs'
+                  : 'bg-[#181B22] text-amber-300 shadow-xs'
+                : isDark
+                  ? 'text-stone-400 hover:text-stone-200'
+                  : 'text-stone-600 hover:text-stone-900'
+            )}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            <span>{tab.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -227,7 +227,7 @@ function DebateGraphWorkspace() {
   }, []);
 
   useEffect(() => {
-    document.title = `${activeDataset.title} — Dialectica`;
+    document.title = `${activeDataset.title} — Steelman`;
   }, [activeDataset.title]);
 
   const persistSandboxNodes = useCallback(
@@ -878,7 +878,7 @@ function DebateGraphWorkspace() {
       <div
         className={clsx(
           'w-screen h-dvh flex flex-col overflow-hidden safe-area-shell',
-          isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
+          isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
         )}
       >
         <TopBar

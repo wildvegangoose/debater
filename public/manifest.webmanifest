@@ -1,15 +1,15 @@
 {
   "id": "./",
-  "name": "Dialectica Debate — Voice AI & Argument Maps",
-  "short_name": "Dialectica",
-  "description": "Practice conversational voice debates with AI and live visual feedback across 22 landmark debate argument maps.",
+  "name": "Steelman — Debate Sparring & Argument Maps",
+  "short_name": "Steelman",
+  "description": "Sharpen your reasoning against the strongest version of every counter-argument with on-device AI sparring, performance logs, and 22 sourced argument maps.",
   "start_url": "./?view=voice",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "background_color": "#0B0E14",
+  "theme_color": "#0B0E14",
   "categories": ["education", "productivity", "news"],
   "icons": [
     {
@@ -33,9 +33,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Voice Debate Arena",
-      "short_name": "Voice Spar",
-      "description": "Jump directly into a conversational AI voice debate",
+      "name": "Debate Sparring Arena",
+      "short_name": "Spar",
+      "description": "Jump straight into a steelmanned debate round",
       "url": "./?view=voice",
       "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
@@ -49,7 +49,7 @@
     {
       "name": "Argument Graph",
       "short_name": "Graph",
-      "description": "Explore the full interactive dialectical tree",
+      "description": "Explore the full interactive argument tree",
       "url": "./",
       "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }

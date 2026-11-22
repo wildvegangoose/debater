@@ -305,7 +305,7 @@ function buildCompactWebLlmPrompt(params: {
     : '';
 
   return [
-    `You are Dialectica, a sharp, natural debate sparring partner on the topic: "${params.dataset.title}".`,
+    `You are Steelman, a sharp, natural debate sparring partner on the topic: "${params.dataset.title}".`,
     activePillar ? `Focused sub-topic: ${activePillar.title}.` : '',
     describeStanceInstructions(params.stance),
     describePersonaInstructions(params.persona),
@@ -326,7 +326,7 @@ function buildCompactWebLlmPrompt(params: {
 function cleanLlmReply(raw: string): string {
   return raw
     .replace(/^["'\s]+|["'\s]+$/g, '')
-    .replace(/^(Dialectica|AI|Opponent|Response|Rebuttal)\s*:\s*/i, '')
+    .replace(/^(Steelman|Dialectica|AI|Opponent|Response|Rebuttal)\s*:\s*/i, '')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/__(.*?)__/g, '$1')
     .replace(/\s+/g, ' ')

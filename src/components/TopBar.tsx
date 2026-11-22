@@ -132,7 +132,7 @@ export function TopBar({
     <header
       className={clsx(
         'z-30 border-b shrink-0 transition-colors',
-        isDark ? 'bg-slate-950/95 border-slate-800/90 text-slate-100' : 'bg-white/95 border-slate-200 text-slate-900'
+        isDark ? 'bg-[#0E1219]/95 border-[#222938] text-stone-100' : 'bg-white/95 border-[#E7E2D8] text-stone-900'
       )}
     >
       {/* Mobile / Android Native-Style Single-Row App Bar (< md) */}
@@ -140,9 +140,16 @@ export function TopBar({
         <button
           type="button"
           onClick={() => setShowTopicModal(true)}
-          className="flex items-center gap-2 min-w-0 flex-1 text-left py-1 rounded-xl active:opacity-80"
+          className="flex items-center gap-2.5 min-w-0 flex-1 text-left py-1 rounded-xl active:opacity-80"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white shadow-sm shrink-0">
+          <div
+            className={clsx(
+              'w-8 h-8 rounded-xl border flex items-center justify-center shadow-xs shrink-0',
+              isDark
+                ? 'bg-[#161C27] border-amber-400/40 text-amber-400'
+                : 'bg-[#181B22] border-amber-500/40 text-amber-300'
+            )}
+          >
             {dataset.id === 'economic-policies' ? (
               <Landmark className="w-4 h-4" />
             ) : (
@@ -151,13 +158,13 @@ export function TopBar({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1 min-w-0">
-              <span className="font-editorial text-[15px] font-semibold truncate">
+              <span className="font-editorial text-[15.5px] font-semibold truncate">
                 {dataset.shortTitle}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <ChevronDown className="w-3.5 h-3.5 text-stone-400 shrink-0" />
             </div>
-            <div className="text-[10px] text-slate-400 leading-none">
-              Tap to switch topic (22)
+            <div className="text-[9.5px] font-bold uppercase tracking-widest text-amber-400/85 leading-none mt-0.5">
+              Steelman · 22 Topics
             </div>
           </div>
         </button>
@@ -171,10 +178,10 @@ export function TopBar({
               className={clsx(
                 'p-2 rounded-xl border transition-colors',
                 mobileSearchOpen
-                  ? 'bg-indigo-600 border-indigo-500 text-white'
+                  ? 'bg-amber-500 border-amber-400 text-stone-950'
                   : isDark
-                    ? 'bg-slate-900 border-slate-800 text-slate-300'
-                    : 'bg-slate-100 border-slate-200 text-slate-700'
+                    ? 'bg-[#151A24] border-[#262E3E] text-stone-300'
+                    : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700'
               )}
             >
               <Search className="w-4 h-4" />
@@ -187,11 +194,11 @@ export function TopBar({
             className={clsx(
               'p-2 rounded-xl border transition-colors',
               isDark
-                ? 'bg-slate-900 border-slate-800 text-slate-300'
-                : 'bg-slate-100 border-slate-200 text-slate-700'
+                ? 'bg-[#151A24] border-[#262E3E] text-stone-300'
+                : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700'
             )}
           >
-            {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-slate-700" />}
+            {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-stone-700" />}
           </button>
         </div>
       </div>
@@ -263,7 +270,14 @@ export function TopBar({
         {/* Brand, Topic Switcher & Stats */}
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 shrink-0">
+            <div
+              className={clsx(
+                'w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs shrink-0',
+                isDark
+                  ? 'bg-[#161C27] border-amber-400/40 text-amber-400'
+                  : 'bg-[#181B22] border-amber-500/40 text-amber-300'
+              )}
+            >
               {dataset.id === 'economic-policies' ? (
                 <Landmark className="w-5 h-5" />
               ) : (
@@ -272,6 +286,10 @@ export function TopBar({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/90 hidden xl:inline">
+                  Steelman
+                </span>
+                <span className="text-stone-600 hidden xl:inline">·</span>
                 <h1 className="font-editorial text-lg font-semibold tracking-tight truncate">
                   {dataset.title}
                 </h1>
@@ -280,8 +298,8 @@ export function TopBar({
                     className={clsx(
                       'hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
                       isDark
-                        ? 'bg-slate-900 border-slate-800 text-slate-300'
-                        : 'bg-slate-100 border-slate-200 text-slate-600'
+                        ? 'bg-[#151A24] border-[#262E3E] text-stone-300'
+                        : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-600'
                     )}
                   >
                     <span>{stats.totalNodes} nodes</span>
@@ -290,14 +308,14 @@ export function TopBar({
                   </span>
                 )}
                 {hasSandboxChanges && !isVoiceMode && (
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/20 text-violet-300 border border-violet-400/30">
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-400/15 text-amber-300 border border-amber-400/30">
                     <Sparkles className="w-3 h-3" />
                     Sandbox
                   </span>
                 )}
               </div>
               {!isVoiceMode && (
-                <p className={clsx('text-[11.5px] hidden lg:block truncate', isDark ? 'text-slate-400' : 'text-slate-500')}>
+                <p className={clsx('text-[11.5px] hidden lg:block truncate', isDark ? 'text-stone-400' : 'text-stone-500')}>
                   {dataset.subtitle}
                 </p>
               )}
@@ -312,18 +330,18 @@ export function TopBar({
               className={clsx(
                 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-xs font-semibold shadow-xs',
                 isDark
-                  ? 'bg-slate-900 border-indigo-500/50 text-indigo-300 hover:bg-slate-800 hover:border-indigo-400'
-                  : 'bg-white border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400'
+                  ? 'bg-[#151A24] border-amber-400/40 text-amber-200 hover:bg-[#1C2332] hover:border-amber-400'
+                  : 'bg-white border-amber-400/60 text-amber-900 hover:bg-amber-50 hover:border-amber-500'
               )}
             >
-              <Compass className="w-3.5 h-3.5 text-indigo-400" />
+              <Compass className="w-3.5 h-3.5 text-amber-400" />
               <span>{dataset.shortTitle}</span>
               <span
                 className={clsx(
                   'px-1.5 py-0.5 rounded-md text-[10px] font-bold border',
                   isDark
-                    ? 'bg-indigo-950/60 border-indigo-700/60 text-indigo-300'
-                    : 'bg-indigo-100 border-indigo-200 text-indigo-800'
+                    ? 'bg-amber-400/15 border-amber-400/30 text-amber-300'
+                    : 'bg-amber-50 border-amber-200 text-amber-900'
                 )}
               >
                 22 Topics

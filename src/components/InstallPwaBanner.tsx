@@ -85,21 +85,21 @@ export function InstallPwaBanner({ isDark }: InstallPwaBannerProps) {
       className={clsx(
         'px-3 sm:px-4 py-2 border-b flex items-center justify-between gap-2 text-xs shrink-0',
         isDark
-          ? 'bg-emerald-950/60 border-emerald-500/35 text-emerald-100'
-          : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+          ? 'bg-[#151A24] border-amber-400/25 text-stone-100'
+          : 'bg-amber-50 border-amber-200 text-stone-900'
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <Smartphone className="w-4 h-4 text-emerald-400 shrink-0" />
+        <Smartphone className="w-4 h-4 text-amber-400 shrink-0" />
         <span className="truncate">
-          <strong>Install Dialectica App</strong> — full-screen Android app via Chrome (no APK sideloading needed).
+          <strong>Install Steelman</strong> — full-screen Android app via Chrome (no APK sideloading needed).
         </span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
           onClick={() => void handleInstall()}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-xs transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold shadow-xs transition-colors"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Install</span>
@@ -108,7 +108,7 @@ export function InstallPwaBanner({ isDark }: InstallPwaBannerProps) {
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss install banner"
-          className="p-1 rounded-md text-slate-400 hover:text-slate-200"
+          className="p-1 rounded-md text-stone-400 hover:text-stone-200"
         >
           <X className="w-3.5 h-3.5" />
         </button>

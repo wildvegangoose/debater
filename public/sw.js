@@ -1,5 +1,5 @@
-// Dialectica PWA Service Worker — enables Android Chrome WebAPK installation & offline sparring
-const CACHE_NAME = 'dialectica-pwa-v4';
+// Steelman PWA Service Worker — enables Android Chrome WebAPK installation & offline sparring
+const CACHE_NAME = 'steelman-pwa-v5';
 const APP_SHELL_URLS = [
   './',
   './index.html',
@@ -25,8 +25,12 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            // Only remove old Dialectica app-shell caches; NEVER delete WebLLM model weight caches!
-            .filter((k) => k.startsWith('dialectica-pwa-') && k !== CACHE_NAME)
+            // Only remove old app-shell caches; NEVER delete WebLLM model weight caches!
+            .filter(
+              (k) =>
+                (k.startsWith('dialectica-pwa-') || k.startsWith('steelman-pwa-')) &&
+                k !== CACHE_NAME
+            )
             .map((k) => caches.delete(k))
         )
       )
@@ -40,7 +44,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Never intercept Gemini API, external APIs, or local LAN LLM servers
+  // Never intercept Gemini API, HuggingFace model weights, or local LAN LLM servers
   if (url.origin !== self.location.origin) {
     return;
   }

@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.dialectica.debater',
-  appName: 'Dialectica Debate',
+  appName: 'Steelman',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
