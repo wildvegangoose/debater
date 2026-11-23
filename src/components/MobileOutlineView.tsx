@@ -113,14 +113,14 @@ export function MobileOutlineView({
     <div
       className={clsx(
         'flex-1 flex flex-col h-full overflow-hidden transition-colors',
-        isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'
+        isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
       )}
     >
       {/* Top Mobile Pillar Scrollbar */}
       <div
         className={clsx(
-          'px-3 py-2.5 border-b shrink-0 overflow-x-auto flex items-center gap-1.5 scrollbar-none',
-          isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          'px-3 py-2.5 border-b shrink-0 overflow-x-auto flex items-center gap-1.5 no-scrollbar',
+          isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-white border-[#E7E2D8]'
         )}
       >
         <button
@@ -129,10 +129,10 @@ export function MobileOutlineView({
           className={clsx(
             'px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0',
             activePillarId === null
-              ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs'
+              ? 'bg-amber-500 border-amber-400 text-stone-950 font-bold shadow-xs'
               : isDark
-              ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
-              : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+              ? 'bg-[#151A24] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
+              : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700 hover:border-amber-400'
           )}
         >
           All Pillars ({pillars.length})
@@ -149,10 +149,10 @@ export function MobileOutlineView({
               className={clsx(
                 'px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 flex items-center gap-1.5',
                 isSelected
-                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs'
+                  ? 'bg-amber-500 border-amber-400 text-stone-950 font-bold shadow-xs'
                   : isDark
-                  ? 'bg-slate-800/80 border-slate-700/80 text-slate-300 hover:bg-slate-750'
-                  : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-[#151A24] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
+                  : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700 hover:border-amber-400'
               )}
             >
               <span>{shortLabel}</span>
@@ -165,7 +165,7 @@ export function MobileOutlineView({
       <div
         className={clsx(
           'px-4 py-2 border-b shrink-0 flex items-center justify-between gap-2 text-xs flex-wrap',
-          isDark ? 'bg-slate-900/60 border-slate-800/80 text-slate-400' : 'bg-white/70 border-slate-200 text-slate-600'
+          isDark ? 'bg-[#0E1219]/70 border-[#222938] text-stone-400' : 'bg-white/80 border-[#E7E2D8] text-stone-600'
         )}
       >
         {/* Pro / Con / All Quick Filter */}
@@ -174,7 +174,7 @@ export function MobileOutlineView({
           <div
             className={clsx(
               'inline-flex items-center p-0.5 rounded-lg border text-xs',
-              isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-200/80 border-slate-300'
+              isDark ? 'bg-[#151A24] border-[#262E3E]' : 'bg-[#F3EFE6] border-[#E5DEC9]'
             )}
           >
             <button
@@ -184,9 +184,9 @@ export function MobileOutlineView({
                 'px-2 py-0.5 rounded-md font-medium transition-colors',
                 activeSideFilter === 'all'
                   ? isDark
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-amber-500 text-stone-950 font-bold'
+                    : 'bg-[#181B22] text-amber-300 shadow-xs'
+                  : 'text-stone-400 hover:text-stone-200'
               )}
             >
               Both

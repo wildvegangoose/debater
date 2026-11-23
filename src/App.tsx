@@ -210,13 +210,16 @@ function DebateGraphWorkspace() {
       if (v === 'voice' || v === 'spar' || v === 'debate') return 'voice';
       if (v === 'outline' || v === 'feed') return 'outline';
       if (v === 'flashcards' || v === 'quiz') return 'flashcards';
-      if (window.innerWidth < 640) return 'outline';
+      if (window.innerWidth < 640) return 'voice';
     }
     return 'graph';
   });
 
+  const [inActiveSparRound, setInActiveSparRound] = useState(false);
+
   const handleViewModeChange = useCallback((mode: DebateViewMode) => {
     setViewMode(mode);
+    if (mode !== 'voice') setInActiveSparRound(false);
     const url = new URL(window.location.href);
     if (mode === 'graph') {
       url.searchParams.delete('view');
@@ -881,33 +884,35 @@ function DebateGraphWorkspace() {
           isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
         )}
       >
-        <TopBar
-          dataset={activeDataset}
-          topicOptions={TOPIC_OPTIONS}
-          onSwitchTopic={handleSwitchTopic}
-          viewMode={viewMode}
-          onChangeViewMode={handleViewModeChange}
-          nodes={nodes}
-          stats={stats}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          activeTag={activeTag}
-          onTagChange={setActiveTag}
-          activePillarId={activePillarId}
-          onJumpToPillar={handleJumpToPillar}
-          onSelectSearchResult={(id) => {
-            setSearchQuery('');
-            handleSelectAndZoom(id, false);
-          }}
-          hasSandboxChanges={hasSandboxChanges}
-          onExportJson={handleExportJson}
-          onImportJson={handleImportJson}
-          onResetSandbox={handleResetSandbox}
-          isDark={isDark}
-          onToggleTheme={() => setIsDark((d) => !d)}
-          onOpenGuide={() => setIsGuideOpen(true)}
-          onOpenSuggestModal={() => handleOpenSuggestModal(null)}
-        />
+        <div className={clsx(inActiveSparRound && viewMode === 'voice' && 'hidden md:block')}>
+          <TopBar
+            dataset={activeDataset}
+            topicOptions={TOPIC_OPTIONS}
+            onSwitchTopic={handleSwitchTopic}
+            viewMode={viewMode}
+            onChangeViewMode={handleViewModeChange}
+            nodes={nodes}
+            stats={stats}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            activeTag={activeTag}
+            onTagChange={setActiveTag}
+            activePillarId={activePillarId}
+            onJumpToPillar={handleJumpToPillar}
+            onSelectSearchResult={(id) => {
+              setSearchQuery('');
+              handleSelectAndZoom(id, false);
+            }}
+            hasSandboxChanges={hasSandboxChanges}
+            onExportJson={handleExportJson}
+            onImportJson={handleImportJson}
+            onResetSandbox={handleResetSandbox}
+            isDark={isDark}
+            onToggleTheme={() => setIsDark((d) => !d)}
+            onOpenGuide={() => setIsGuideOpen(true)}
+            onOpenSuggestModal={() => handleOpenSuggestModal(null)}
+          />
+        </div>
 
         <InstallPwaBanner isDark={isDark} />
 
@@ -1122,6 +1127,8 @@ function DebateGraphWorkspace() {
             <VoiceDebateView
               dataset={activeDataset}
               nodes={nodes}
+              isLoadingTopic={isLoadingTopic}
+              onSwitchTopic={handleSwitchTopic}
               activePillarId={activePillarId}
               onSelectPillar={handleJumpToPillar}
               onInspectNode={handleSelectNode}
@@ -1129,6 +1136,7 @@ function DebateGraphWorkspace() {
                 handleViewModeChange('graph');
                 if (nodeId) handleSelectAndZoom(nodeId, true);
               }}
+              onActiveRoundChange={setInActiveSparRound}
               isDark={isDark}
             />
           )}
