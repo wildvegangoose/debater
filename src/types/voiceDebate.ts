@@ -12,6 +12,8 @@ export type DebateOpponentPersona = 'sparring' | 'oxford' | 'socratic';
 
 export type DebateRoundPhase = 'opening' | 'sparring' | 'cross-exam' | 'closing';
 
+export type DebateRoundLength = 3 | 5 | 'open';
+
 export type RhetoricBadgeType =
   | 'steelman'
   | 'evidence'
@@ -49,6 +51,8 @@ export interface VoiceDebateSettings {
   localEndpoint: string;
   localModel: string;
   localApiKey: string;
+  roundLength: DebateRoundLength;
+  persona: DebateOpponentPersona;
 }
 
 export interface LiveVisualFeedback {

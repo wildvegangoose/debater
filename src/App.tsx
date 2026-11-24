@@ -215,11 +215,8 @@ function DebateGraphWorkspace() {
     return 'graph';
   });
 
-  const [inActiveSparRound, setInActiveSparRound] = useState(false);
-
   const handleViewModeChange = useCallback((mode: DebateViewMode) => {
     setViewMode(mode);
-    if (mode !== 'voice') setInActiveSparRound(false);
     const url = new URL(window.location.href);
     if (mode === 'graph') {
       url.searchParams.delete('view');
@@ -881,10 +878,10 @@ function DebateGraphWorkspace() {
       <div
         className={clsx(
           'w-screen h-dvh flex flex-col overflow-hidden safe-area-shell',
-          isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
+          isDark ? 'bg-[#0C0C0E] text-zinc-100' : 'bg-white text-zinc-950'
         )}
       >
-        <div className={clsx(inActiveSparRound && viewMode === 'voice' && 'hidden md:block')}>
+        <div className={clsx(viewMode === 'voice' && 'hidden md:block')}>
           <TopBar
             dataset={activeDataset}
             topicOptions={TOPIC_OPTIONS}
@@ -1136,7 +1133,7 @@ function DebateGraphWorkspace() {
                 handleViewModeChange('graph');
                 if (nodeId) handleSelectAndZoom(nodeId, true);
               }}
-              onActiveRoundChange={setInActiveSparRound}
+              onToggleTheme={() => setIsDark((d) => !d)}
               isDark={isDark}
             />
           )}

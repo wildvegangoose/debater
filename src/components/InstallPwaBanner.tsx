@@ -83,23 +83,28 @@ export function InstallPwaBanner({ isDark }: InstallPwaBannerProps) {
   return (
     <div
       className={clsx(
-        'px-3 sm:px-4 py-2 border-b flex items-center justify-between gap-2 text-xs shrink-0',
+        'px-4 py-2 border-b flex items-center justify-between gap-2 text-xs shrink-0',
         isDark
-          ? 'bg-[#151A24] border-amber-400/25 text-stone-100'
-          : 'bg-amber-50 border-amber-200 text-stone-900'
+          ? 'bg-[#141417] border-white/[0.08] text-zinc-200'
+          : 'bg-zinc-50 border-zinc-200 text-zinc-800'
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <Smartphone className="w-4 h-4 text-amber-400 shrink-0" />
+        <Smartphone className="w-4 h-4 text-zinc-400 shrink-0" />
         <span className="truncate">
-          <strong>Install Steelman</strong> — full-screen Android app via Chrome (no APK sideloading needed).
+          <strong className="font-semibold">Install Steelman</strong> — full-screen Android app via Chrome.
         </span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
           onClick={() => void handleInstall()}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold shadow-xs transition-colors"
+          className={clsx(
+            'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-colors',
+            isDark
+              ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+              : 'bg-zinc-950 text-white hover:bg-zinc-800'
+          )}
         >
           <Download className="w-3.5 h-3.5" />
           <span>Install</span>
@@ -108,7 +113,7 @@ export function InstallPwaBanner({ isDark }: InstallPwaBannerProps) {
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss install banner"
-          className="p-1 rounded-md text-stone-400 hover:text-stone-200"
+          className="p-1 rounded-md text-zinc-500 hover:text-zinc-300"
         >
           <X className="w-3.5 h-3.5" />
         </button>

@@ -2,23 +2,13 @@ import { useState } from 'react';
 import clsx from 'clsx';
 import {
   ArrowLeft,
-  ArrowLeftRight,
   ArrowUpRight,
-  Award,
   Check,
-  CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Compass,
   Copy,
   ExternalLink,
-  Lightbulb,
   Loader2,
-  RotateCcw,
-  Sparkles,
-  Target,
-  TrendingUp,
-  Trophy,
   Wand2,
   X,
 } from 'lucide-react';
@@ -52,7 +42,7 @@ interface DebateScorecardModalProps {
 export function MomentumSparkline({
   series,
   isDark,
-  height = 36,
+  height = 34,
 }: {
   series: number[];
   isDark: boolean;
@@ -65,7 +55,7 @@ export function MomentumSparkline({
 
   const coords = points.map((val, i) => {
     const x = (i / Math.max(1, points.length - 1)) * width;
-    const norm = (val + maxAbs) / (2 * maxAbs); // 0..1
+    const norm = (val + maxAbs) / (2 * maxAbs);
     const y = height - padY - norm * (height - padY * 2);
     return { x, y, val };
   });
@@ -74,70 +64,54 @@ export function MomentumSparkline({
   const midY = height / 2;
   const last = coords[coords.length - 1];
   const strokeColor =
-    last.val >= 5 ? '#34D399' : last.val <= -8 ? '#FB7185' : '#D4AF6A';
+    last.val >= 5
+      ? '#10B981'
+      : last.val <= -8
+        ? '#F43F5E'
+        : isDark
+          ? '#A1A1AA'
+          : '#52525B';
 
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       className="w-full overflow-visible"
       style={{ height }}
-      aria-label="Debate momentum trajectory"
+      aria-label="Momentum curve"
     >
       <line
         x1={0}
         y1={midY}
         x2={width}
         y2={midY}
-        stroke={isDark ? 'rgba(148,163,184,0.22)' : 'rgba(100,116,139,0.22)'}
+        stroke={isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}
         strokeDasharray="3 3"
         strokeWidth="1"
       />
       <polyline
         fill="none"
         stroke={strokeColor}
-        strokeWidth="2.2"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
         points={polyline}
       />
-      {coords.map((c, idx) => (
-        <circle
-          key={idx}
-          cx={c.x}
-          cy={c.y}
-          r={idx === coords.length - 1 ? 3.2 : 2}
-          fill={
-            c.val >= 5
-              ? '#34D399'
-              : c.val <= -8
-                ? '#FB7185'
-                : '#D4AF6A'
-          }
-        />
-      ))}
+      <circle cx={last.x} cy={last.y} r={3} fill={strokeColor} />
     </svg>
   );
 }
 
-function landingPillClasses(rating: ArgumentTurnReview['landingRating'], isDark: boolean) {
+function ratingTextClass(rating: ArgumentTurnReview['landingRating'], isDark: boolean) {
   switch (rating) {
     case 'knockout':
-      return isDark
-        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-        : 'bg-emerald-50 border-emerald-300 text-emerald-800';
-    case 'solid':
-      return isDark
-        ? 'bg-amber-400/15 border-amber-400/35 text-amber-300'
-        : 'bg-amber-50 border-amber-300 text-amber-800';
-    case 'mixed':
-      return isDark
-        ? 'bg-stone-700/40 border-stone-600 text-stone-200'
-        : 'bg-stone-100 border-stone-300 text-stone-700';
+      return 'text-emerald-500';
     case 'vulnerable':
+      return 'text-rose-500';
+    case 'solid':
+      return isDark ? 'text-zinc-200' : 'text-zinc-800';
+    case 'mixed':
     default:
-      return isDark
-        ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
-        : 'bg-rose-50 border-rose-300 text-rose-800';
+      return 'text-zinc-500';
   }
 }
 
@@ -212,63 +186,52 @@ export function DebateScorecardModal({
   const formattedDate = new Date(session.updatedAt).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/75 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-xs"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         className={clsx(
-          'w-full max-w-xl max-h-[90vh] rounded-t-3xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
+          'w-full max-w-xl max-h-[90vh] rounded-t-2xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
           isDark
-            ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
-            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-900'
+            ? 'bg-[#141417] border-white/[0.08] text-zinc-100'
+            : 'bg-white border-zinc-200 text-zinc-950'
         )}
       >
-        {/* Drag handle on mobile */}
-        <div className="pt-2 pb-0.5 flex justify-center sm:hidden shrink-0">
-          <span className="w-10 h-1 rounded-full bg-stone-500/40" />
+        <div className="pt-2.5 pb-1 flex justify-center sm:hidden shrink-0">
+          <span className="w-9 h-1 rounded-full bg-zinc-500/35" />
         </div>
 
         {/* Header */}
         <div
           className={clsx(
-            'px-4 py-3 border-b flex items-center justify-between gap-2 shrink-0',
-            isDark ? 'border-[#222938]' : 'border-[#E7E2D8]'
+            'px-5 py-3.5 border-b flex items-center justify-between gap-3 shrink-0',
+            isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           <div className="flex items-center gap-2.5 min-w-0">
-            {isHistoricalView && onBackToLog ? (
+            {isHistoricalView && onBackToLog && (
               <button
                 type="button"
                 onClick={onBackToLog}
-                aria-label="Back to performance log"
+                aria-label="Back to log"
                 className={clsx(
-                  'p-2 rounded-xl border transition-colors shrink-0',
-                  isDark
-                    ? 'bg-[#171C28] border-[#262E3E] text-stone-300 hover:text-amber-300'
-                    : 'bg-white border-[#E5DEC9] text-stone-700'
+                  'p-1.5 -ml-1 rounded-lg transition-colors shrink-0',
+                  isDark ? 'text-zinc-400 hover:bg-white/[0.06]' : 'text-zinc-500 hover:bg-zinc-100'
                 )}
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
-            ) : (
-              <div className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/35 flex items-center justify-center text-amber-400 shrink-0">
-                <Trophy className="w-4 h-4" />
-              </div>
             )}
             <div className="min-w-0">
-              <h2 className="font-editorial text-base font-semibold truncate leading-tight">
-                {session.topicTitle}
-              </h2>
-              <p className="text-[11px] text-stone-400 truncate">
+              <h2 className="text-[15px] font-semibold truncate">{session.topicTitle}</h2>
+              <p className="text-xs text-zinc-500 truncate">
                 {session.stance.toUpperCase()} · {session.turnCount}{' '}
-                {session.turnCount === 1 ? 'argument' : 'arguments'} · {formattedDate}
+                {session.turnCount === 1 ? 'turn' : 'turns'} · {formattedDate}
               </p>
             </div>
           </div>
@@ -277,117 +240,107 @@ export function DebateScorecardModal({
             <button
               type="button"
               onClick={() => void handleCopyDebrief()}
-              title="Copy Markdown debrief"
               className={clsx(
-                'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border transition-colors',
+                'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
                 isDark
-                  ? 'bg-[#171C28] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
-                  : 'bg-white border-[#E5DEC9] text-stone-700 hover:border-amber-400'
+                  ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                  : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
               )}
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Copied</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Copy</span>
+                  <span>Copy</span>
                 </>
               )}
             </button>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close debrief"
-              className="p-1.5 rounded-full text-stone-400 hover:bg-stone-500/15"
+              aria-label="Close"
+              className={clsx(
+                'p-1.5 rounded-lg transition-colors',
+                isDark ? 'text-zinc-400 hover:bg-white/[0.06]' : 'text-zinc-500 hover:bg-zinc-100'
+              )}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Sub-Navigation: Game Tape (Turn-by-Turn) | Overview */}
-        <div
-          className={clsx(
-            'px-4 py-2 border-b flex items-center gap-2 shrink-0',
-            isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-[#F3EFE6] border-[#E7E2D8]'
-          )}
-        >
-          <button
-            type="button"
-            onClick={() => setActiveTab('tape')}
+        {/* Clean Segmented Sub-Nav */}
+        <div className="px-5 pt-3 pb-2 shrink-0">
+          <div
             className={clsx(
-              'flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all',
-              activeTab === 'tape'
-                ? isDark
-                  ? 'bg-amber-400/15 border border-amber-400/40 text-amber-300'
-                  : 'bg-white border border-amber-400/50 text-amber-900 shadow-xs'
-                : 'text-stone-400 hover:text-stone-200 border border-transparent'
+              'grid grid-cols-2 p-1 rounded-xl',
+              isDark ? 'bg-[#0C0C0E]' : 'bg-zinc-100'
             )}
           >
-            Game Tape ({session.turnReviews.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('overview')}
-            className={clsx(
-              'flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all',
-              activeTab === 'overview'
-                ? isDark
-                  ? 'bg-amber-400/15 border border-amber-400/40 text-amber-300'
-                  : 'bg-white border border-amber-400/50 text-amber-900 shadow-xs'
-                : 'text-stone-400 hover:text-stone-200 border border-transparent'
-            )}
-          >
-            Verdict &amp; Prep
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('tape')}
+              className={clsx(
+                'py-1.5 rounded-lg text-xs font-medium transition-all',
+                activeTab === 'tape'
+                  ? isDark
+                    ? 'bg-[#26262B] text-white shadow-xs'
+                    : 'bg-white text-zinc-950 shadow-xs'
+                  : 'text-zinc-500'
+              )}
+            >
+              Game Tape ({session.turnReviews.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('overview')}
+              className={clsx(
+                'py-1.5 rounded-lg text-xs font-medium transition-all',
+                activeTab === 'overview'
+                  ? isDark
+                    ? 'bg-[#26262B] text-white shadow-xs'
+                    : 'bg-white text-zinc-950 shadow-xs'
+                  : 'text-zinc-500'
+              )}
+            >
+              Summary
+            </button>
+          </div>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="p-4 overflow-y-auto space-y-4">
+        {/* Body */}
+        <div className="px-5 py-3 overflow-y-auto space-y-5">
           {activeTab === 'tape' ? (
             <>
-              {/* Compact Verdict + Sparkline Strip */}
+              {/* Clean Verdict Header */}
               <div
                 className={clsx(
-                  'p-3.5 rounded-2xl border flex items-center justify-between gap-4',
-                  isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
+                  'pb-4 border-b flex items-center justify-between gap-4',
+                  isDark ? 'border-white/[0.08]' : 'border-zinc-100'
                 )}
               >
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={clsx(
-                        'font-editorial text-base font-semibold',
-                        verdict.tone === 'emerald'
-                          ? 'text-emerald-400'
-                          : verdict.tone === 'rose'
-                            ? 'text-rose-400'
-                            : 'text-amber-400'
-                      )}
-                    >
-                      {verdict.title}
-                    </span>
-                    <span className="font-mono text-xs font-semibold text-stone-400 tabular-nums">
-                      Avg {session.avgStrength}/100
-                    </span>
+                  <div className="font-editorial text-xl font-medium">{verdict.title}</div>
+                  <div className="text-xs text-zinc-500 mt-0.5 tabular-nums">
+                    Avg {session.avgStrength}/100 · Peak {session.peakStrength}/100
                   </div>
-                  <p className="text-[11px] text-stone-400 mt-0.5 line-clamp-2">
-                    {verdict.subtitle}
-                  </p>
                 </div>
                 <div className="w-28 shrink-0">
-                  <MomentumSparkline series={session.momentumSeries} isDark={isDark} height={34} />
-                  <div className="text-[9.5px] font-mono text-stone-500 text-center mt-0.5">
-                    Momentum Curve
-                  </div>
+                  <MomentumSparkline series={session.momentumSeries} isDark={isDark} height={32} />
                 </div>
               </div>
 
-              {/* Argument-by-Argument Cards */}
-              <div className="space-y-3">
+              {/* Turn-by-Turn Hairline List (No Over-Nested Boxes!) */}
+              <div
+                className={clsx(
+                  'divide-y',
+                  isDark ? 'divide-white/[0.08]' : 'divide-zinc-100'
+                )}
+              >
                 {session.turnReviews.map((rev) => {
                   const deltaStr =
                     rev.persuasionShift >= 0
@@ -398,131 +351,97 @@ export function DebateScorecardModal({
                   const rewriteErr = rewriteErrors[rev.turnIndex];
 
                   return (
-                    <div
-                      key={rev.turnIndex}
-                      className={clsx(
-                        'rounded-2xl border p-3.5 space-y-3',
-                        isDark ? 'bg-[#0E1219] border-[#232A39]' : 'bg-white border-[#E5DEC9]'
-                      )}
-                    >
-                      {/* Turn Header */}
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[11px] font-bold text-stone-400">
-                            TURN {rev.turnIndex}
-                          </span>
+                    <div key={rev.turnIndex} className="py-4 first:pt-1 space-y-3">
+                      {/* Turn Metadata Row */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="font-mono text-zinc-500">Turn {rev.turnIndex}</span>
                           <span
                             className={clsx(
-                              'px-2 py-0.5 rounded-full text-[10.5px] font-bold border',
-                              landingPillClasses(rev.landingRating, isDark)
+                              'font-semibold',
+                              ratingTextClass(rev.landingRating, isDark)
                             )}
                           >
                             {rev.landingLabel}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 font-mono text-xs tabular-nums">
-                          <span
-                            className={clsx(
-                              'font-bold',
-                              rev.argumentStrength >= 75
-                                ? 'text-emerald-400'
-                                : rev.argumentStrength >= 55
-                                  ? 'text-amber-400'
-                                  : 'text-rose-400'
-                            )}
-                          >
+                        <div className="font-mono text-xs tabular-nums flex items-center gap-2">
+                          <span className={isDark ? 'text-zinc-200' : 'text-zinc-900'}>
                             {rev.argumentStrength}/100
                           </span>
                           <span
-                            className={clsx(
-                              'px-1.5 py-0.5 rounded text-[10.5px] font-bold',
+                            className={
                               rev.persuasionShift > 0
-                                ? 'bg-emerald-500/15 text-emerald-400'
+                                ? 'text-emerald-500'
                                 : rev.persuasionShift < 0
-                                  ? 'bg-rose-500/15 text-rose-400'
-                                  : 'bg-stone-500/15 text-stone-400'
-                            )}
+                                  ? 'text-rose-500'
+                                  : 'text-zinc-500'
+                            }
                           >
                             {deltaStr}
                           </span>
                         </div>
                       </div>
 
-                      {/* Debater's Quoted Argument */}
+                      {/* Debater's Argument */}
                       <blockquote
                         className={clsx(
-                          'pl-3 border-l-2 text-[13px] leading-relaxed italic',
+                          'pl-3.5 border-l-2 text-[14px] leading-relaxed',
                           isDark
-                            ? 'border-amber-400/50 text-stone-200'
-                            : 'border-amber-500 text-stone-800'
+                            ? 'border-zinc-700 text-zinc-200'
+                            : 'border-zinc-300 text-zinc-800'
                         )}
                       >
-                        “{rev.userText}”
+                        {rev.userText}
                       </blockquote>
 
                       {/* How It Landed */}
-                      <div className="space-y-1">
-                        <div className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-400/90 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>How It Landed</span>
-                        </div>
-                        <ul className="space-y-1 text-xs leading-snug">
+                      <div className="space-y-1 text-xs">
+                        <div className="font-medium text-zinc-500">How it landed</div>
+                        <ul className="space-y-1 leading-relaxed">
                           {rev.whatWorked.map((item, idx) => (
                             <li
                               key={idx}
-                              className={clsx(
-                                'flex items-start gap-1.5',
-                                isDark ? 'text-stone-300' : 'text-stone-700'
-                              )}
+                              className={isDark ? 'text-zinc-300' : 'text-zinc-700'}
                             >
-                              <span className="text-emerald-400 mt-0.5">•</span>
-                              <span>{item}</span>
+                              {item}
                             </li>
                           ))}
                         </ul>
                       </div>
 
                       {/* How It Could Have Gone Better */}
-                      <div
-                        className={clsx(
-                          'p-3 rounded-xl border space-y-2',
-                          isDark
-                            ? 'bg-amber-400/[0.06] border-amber-400/25'
-                            : 'bg-amber-50/70 border-amber-200'
-                        )}
-                      >
-                        <div className="text-[10.5px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
-                          <Lightbulb className="w-3 h-3" />
-                          <span>How It Could Have Gone Better</span>
-                        </div>
+                      <div className="space-y-2 text-xs">
+                        <div className="font-medium text-zinc-500">How to sharpen it</div>
                         <p
                           className={clsx(
-                            'text-xs leading-relaxed',
-                            isDark ? 'text-stone-200' : 'text-stone-800'
+                            'leading-relaxed',
+                            isDark ? 'text-zinc-300' : 'text-zinc-700'
                           )}
                         >
                           {rev.whatToImprove}
                         </p>
 
-                        {/* Stronger Phrasing / AI Coach Rewrite */}
                         {(rev.aiRewrite || rev.strongerAnglePrompt) && (
                           <div
                             className={clsx(
-                              'p-2.5 rounded-lg border text-xs space-y-1',
-                              isDark
-                                ? 'bg-[#0B0E14]/90 border-[#262E3E] text-stone-200'
-                                : 'bg-white border-[#E5DEC9] text-stone-800'
+                              'p-3.5 rounded-xl space-y-1.5',
+                              isDark ? 'bg-[#0C0C0E]' : 'bg-zinc-50'
                             )}
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 inline-flex items-center gap-1">
-                                <Sparkles className="w-3 h-3" />
-                                {rev.aiRewrite
-                                  ? 'AI Coach Rewrite'
-                                  : `Sharper Angle${rev.strongerAngleTitle ? ` · ${rev.strongerAngleTitle}` : ''}`}
-                              </span>
+                            <div className="text-[11px] font-medium text-zinc-500">
+                              {rev.aiRewrite
+                                ? 'AI coach rewrite'
+                                : rev.strongerAngleTitle
+                                  ? `Stronger angle · ${rev.strongerAngleTitle}`
+                                  : 'Stronger angle'}
                             </div>
-                            <p className="font-editorial text-[13px] leading-snug">
+                            <p
+                              className={clsx(
+                                'font-editorial text-[14px] leading-relaxed',
+                                isDark ? 'text-zinc-200' : 'text-zinc-800'
+                              )}
+                            >
                               {rev.aiRewrite || rev.strongerAnglePrompt}
                             </p>
                             {rev.citedSource && (
@@ -530,7 +449,7 @@ export function DebateScorecardModal({
                                 href={rev.citedSource.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400 hover:underline pt-0.5"
+                                className="inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-300 pt-0.5"
                               >
                                 <ExternalLink className="w-3 h-3 shrink-0" />
                                 <span className="truncate max-w-[260px]">
@@ -541,62 +460,56 @@ export function DebateScorecardModal({
                           </div>
                         )}
 
-                        {/* Optional 1-tap AI Coach Rewrite action */}
-                        {canUseAiRewrite && !rev.aiRewrite && (
+                        <div className="flex items-center gap-4 pt-0.5">
+                          {canUseAiRewrite && !rev.aiRewrite && (
+                            <button
+                              type="button"
+                              disabled={isRewriting}
+                              onClick={() => void handleRequestRewrite(rev)}
+                              className={clsx(
+                                'inline-flex items-center gap-1.5 font-medium transition-colors disabled:opacity-45',
+                                isDark
+                                  ? 'text-zinc-200 hover:text-white'
+                                  : 'text-zinc-900 hover:text-black'
+                              )}
+                            >
+                              {isRewriting ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <span>Rewriting...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="w-3 h-3" />
+                                  <span>Rewrite with AI</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+
                           <button
                             type="button"
-                            disabled={isRewriting}
-                            onClick={() => void handleRequestRewrite(rev)}
-                            className={clsx(
-                              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-colors disabled:opacity-50',
-                              isDark
-                                ? 'bg-[#171C28] border-amber-400/35 text-amber-300 hover:bg-amber-400/15'
-                                : 'bg-white border-amber-300 text-amber-800 hover:bg-amber-50'
-                            )}
+                            onClick={() =>
+                              setExpandedOpponentTurn(opponentOpen ? null : rev.turnIndex)
+                            }
+                            className="inline-flex items-center gap-1 text-zinc-500 hover:text-zinc-300"
                           >
-                            {isRewriting ? (
-                              <>
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                <span>Drafting sharper phrasing...</span>
-                              </>
+                            {opponentOpen ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
                             ) : (
-                              <>
-                                <Wand2 className="w-3 h-3" />
-                                <span>Ask AI for Stronger Phrasing</span>
-                              </>
+                              <ChevronDown className="w-3.5 h-3.5" />
                             )}
+                            <span>{opponentOpen ? 'Hide counter' : 'Opponent’s counter'}</span>
                           </button>
-                        )}
-                        {rewriteErr && (
-                          <p className="text-[11px] text-rose-400">{rewriteErr}</p>
-                        )}
-                      </div>
+                        </div>
 
-                      {/* Expandable Opponent Counter Context */}
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedOpponentTurn(opponentOpen ? null : rev.turnIndex)
-                          }
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-stone-400 hover:text-stone-200"
-                        >
-                          {opponentOpen ? (
-                            <ChevronUp className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          )}
-                          <span>
-                            {opponentOpen ? 'Hide opponent’s counter' : 'View opponent’s counter'}
-                          </span>
-                        </button>
+                        {rewriteErr && <p className="text-rose-400">{rewriteErr}</p>}
+
                         {opponentOpen && (
                           <p
                             className={clsx(
-                              'mt-1.5 p-2.5 rounded-xl border text-xs leading-relaxed',
-                              isDark
-                                ? 'bg-[#0B0E14] border-[#222938] text-stone-300'
-                                : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-700'
+                              'pt-2 text-xs leading-relaxed',
+                              isDark ? 'text-zinc-400' : 'text-zinc-600'
                             )}
                           >
                             {rev.aiReply}
@@ -609,109 +522,65 @@ export function DebateScorecardModal({
               </div>
             </>
           ) : (
-            <>
-              {/* Editorial Verdict Hero */}
-              <div
-                className={clsx(
-                  'p-4 rounded-2xl border space-y-2',
-                  isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-                )}
-              >
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-amber-400">
-                  Chamber Verdict
-                </div>
-                <div className="font-editorial text-2xl font-semibold leading-tight">
-                  {verdict.title}
-                </div>
-                <p className="text-xs text-stone-400 leading-relaxed">{verdict.subtitle}</p>
+            <div className="space-y-5 py-1">
+              <div className="space-y-1.5">
+                <div className="font-editorial text-2xl font-medium">{verdict.title}</div>
+                <p className="text-xs text-zinc-500 leading-relaxed">{verdict.subtitle}</p>
                 <div className="pt-2">
                   <MomentumSparkline series={session.momentumSeries} isDark={isDark} height={44} />
                 </div>
               </div>
 
-              {/* Metrics Row */}
-              <div className="grid grid-cols-3 gap-2.5">
-                <div
-                  className={clsx(
-                    'p-3 rounded-xl border text-center',
-                    isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-                  )}
-                >
-                  <div className="text-[10px] uppercase tracking-wider font-semibold text-stone-400">
-                    Avg Strength
-                  </div>
-                  <div className="text-xl font-extrabold text-emerald-400 mt-0.5 font-mono tabular-nums">
+              <div
+                className={clsx(
+                  'grid grid-cols-3 py-3 border-y text-center',
+                  isDark ? 'border-white/[0.08]' : 'border-zinc-100'
+                )}
+              >
+                <div>
+                  <div className="text-[11px] text-zinc-500">Avg score</div>
+                  <div className="text-lg font-semibold font-mono tabular-nums mt-0.5">
                     {session.avgStrength}
                   </div>
                 </div>
-                <div
-                  className={clsx(
-                    'p-3 rounded-xl border text-center',
-                    isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-                  )}
-                >
-                  <div className="text-[10px] uppercase tracking-wider font-semibold text-stone-400">
-                    Peak Turn
-                  </div>
-                  <div className="text-xl font-extrabold text-amber-400 mt-0.5 font-mono tabular-nums">
+                <div>
+                  <div className="text-[11px] text-zinc-500">Peak turn</div>
+                  <div className="text-lg font-semibold font-mono tabular-nums mt-0.5">
                     {session.peakStrength}
                   </div>
                 </div>
-                <div
-                  className={clsx(
-                    'p-3 rounded-xl border text-center',
-                    isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-                  )}
-                >
-                  <div className="text-[10px] uppercase tracking-wider font-semibold text-stone-400">
-                    Nodes Hit
-                  </div>
-                  <div className="text-xl font-extrabold text-stone-200 mt-0.5 font-mono tabular-nums">
+                <div>
+                  <div className="text-[11px] text-zinc-500">Nodes hit</div>
+                  <div className="text-lg font-semibold font-mono tabular-nums mt-0.5">
                     {session.nodesEngagedCount}
                   </div>
                 </div>
               </div>
 
-              {/* Strength vs Primary Focus */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div
-                  className={clsx(
-                    'p-3 rounded-xl border space-y-1',
-                    isDark
-                      ? 'bg-emerald-500/[0.08] border-emerald-500/30'
-                      : 'bg-emerald-50 border-emerald-200'
-                  )}
-                >
-                  <div className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5" />
-                    <span>Top Strength</span>
-                  </div>
-                  <p className="text-xs font-medium">{session.topStrength}</p>
+              <div className="space-y-3 text-xs">
+                <div>
+                  <div className="text-zinc-500 mb-0.5">Top strength</div>
+                  <div className="font-medium">{session.topStrength}</div>
                 </div>
-                <div
-                  className={clsx(
-                    'p-3 rounded-xl border space-y-1',
-                    isDark
-                      ? 'bg-amber-400/[0.08] border-amber-400/30'
-                      : 'bg-amber-50 border-amber-200'
-                  )}
-                >
-                  <div className="text-[10.5px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
-                    <Target className="w-3.5 h-3.5" />
-                    <span>Next Round Focus</span>
-                  </div>
-                  <p className="text-xs font-medium">{session.primaryFocus}</p>
+                <div>
+                  <div className="text-zinc-500 mb-0.5">Next round focus</div>
+                  <div className="font-medium">{session.primaryFocus}</div>
                 </div>
               </div>
 
-              {/* Unexplored Arguments to Prep Next (when viewing active topic) */}
               {unexploredHighValue.length > 0 && onInspectNode && (
-                <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2 flex items-center gap-1.5">
-                    <Compass className="w-3.5 h-3.5 text-amber-400" />
-                    Unexplored Arguments to Prep Next
+                <div className="space-y-2 pt-1">
+                  <div className="text-xs font-medium text-zinc-500">
+                    Unexplored arguments to prep
                   </div>
-                  <div className="space-y-1.5">
+                  <div
+                    className={clsx(
+                      'divide-y border-t',
+                      isDark
+                        ? 'divide-white/[0.06] border-white/[0.06]'
+                        : 'divide-zinc-100 border-zinc-100'
+                    )}
+                  >
                     {unexploredHighValue.map((node) => (
                       <button
                         key={node.id}
@@ -720,59 +589,45 @@ export function DebateScorecardModal({
                           onInspectNode(node.id);
                           onClose();
                         }}
-                        className={clsx(
-                          'w-full text-left p-2.5 rounded-xl border transition-colors flex items-center justify-between gap-2',
-                          isDark
-                            ? 'bg-[#0E1219] border-[#222938] hover:border-amber-400/45'
-                            : 'bg-white border-[#E5DEC9] hover:border-amber-400'
-                        )}
+                        className="w-full text-left py-2.5 flex items-center justify-between gap-2 group"
                       >
                         <div className="min-w-0">
-                          <div className="text-xs font-semibold truncate">{node.title}</div>
-                          <div className="text-[11px] text-stone-400 line-clamp-1">
+                          <div className="text-xs font-medium truncate group-hover:underline">
+                            {node.title}
+                          </div>
+                          <div className="text-[11px] text-zinc-500 line-clamp-1">
                             {node.summary}
                           </div>
                         </div>
-                        <ArrowUpRight className="w-4 h-4 text-amber-400 shrink-0" />
+                        <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
-
-              <div
-                className={clsx(
-                  'p-3 rounded-xl border text-xs flex items-start gap-2',
-                  isDark
-                    ? 'bg-[#0E1219] border-[#222938] text-stone-300'
-                    : 'bg-white border-[#E5DEC9] text-stone-700'
-                )}
-              >
-                <TrendingUp className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <span>
-                  This round is automatically saved in your <strong>Performance Log</strong>. Hit{' '}
-                  <strong>Switch Sides</strong> to stress-test the opposite stance!
-                </span>
-              </div>
-            </>
+            </div>
           )}
         </div>
 
         {/* Footer */}
         <div
           className={clsx(
-            'px-4 py-3 border-t flex flex-wrap items-center justify-end gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
-            isDark ? 'border-[#222938] bg-[#0B0E14]' : 'border-[#E7E2D8] bg-[#F3EFE6]'
+            'px-5 py-3.5 border-t flex items-center justify-end gap-2 shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]',
+            isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           {isHistoricalView && onBackToLog ? (
             <button
               type="button"
               onClick={onBackToLog}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-sm"
+              className={clsx(
+                'px-4 py-2 rounded-xl text-xs font-semibold transition-colors',
+                isDark
+                  ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                  : 'bg-zinc-950 text-white hover:bg-zinc-800'
+              )}
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Performance Log</span>
+              Back to log
             </button>
           ) : (
             <>
@@ -784,14 +639,13 @@ export function DebateScorecardModal({
                     onClose();
                   }}
                   className={clsx(
-                    'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border',
+                    'px-3.5 py-2 rounded-xl text-xs font-medium transition-colors',
                     isDark
-                      ? 'bg-[#171C28] border-[#262E3E] text-stone-200 hover:bg-[#1E2534]'
-                      : 'bg-white border-[#D8D0C0] text-stone-700 hover:bg-stone-100'
+                      ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                      : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100'
                   )}
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Fresh Round</span>
+                  New round
                 </button>
               )}
               {onRematchSwitchSides && (
@@ -801,10 +655,14 @@ export function DebateScorecardModal({
                     onRematchSwitchSides();
                     onClose();
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-sm"
+                  className={clsx(
+                    'px-4 py-2 rounded-xl text-xs font-semibold transition-colors',
+                    isDark
+                      ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                      : 'bg-zinc-950 text-white hover:bg-zinc-800'
+                  )}
                 >
-                  <ArrowLeftRight className="w-3.5 h-3.5" />
-                  <span>Switch Sides &amp; Rematch</span>
+                  Switch sides
                 </button>
               )}
             </>

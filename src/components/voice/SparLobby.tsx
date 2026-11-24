@@ -1,20 +1,13 @@
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import {
-  ArrowRight,
   ChevronRight,
-  ClipboardList,
-  Compass,
-  Cpu,
+  Clock,
   Loader2,
-  Scale,
-  Server,
-  Sparkles,
-  WifiOff,
+  SlidersHorizontal,
 } from 'lucide-react';
-import { DebateGraphDataset, DebateNode, DebateTopicId } from '../../types/debate';
+import { DebateGraphDataset, DebateTopicId } from '../../types/debate';
 import {
-  DebateOpponentPersona,
   DebateSessionRecord,
   DebateUserStance,
   VoiceDebateSettings,
@@ -23,20 +16,13 @@ import { TOPIC_CATALOG } from '../../data/datasets';
 import { computeCareerStats } from '../../services/voiceDebate/performanceAnalyzer';
 import { getWebLlmPreset, isWebLlmModelCached } from '../../services/voiceDebate/webllmEngine';
 
-export type DebateRoundLength = 3 | 5 | 'open';
-
 interface SparLobbyProps {
   dataset: DebateGraphDataset;
-  nodes: DebateNode[];
   isLoadingTopic?: boolean;
   onSwitchTopic: (topicId: DebateTopicId) => void;
   onOpenTopicPicker: () => void;
   stance: DebateUserStance;
   onChangeStance: (stance: DebateUserStance) => void;
-  persona: DebateOpponentPersona;
-  onChangePersona: (persona: DebateOpponentPersona) => void;
-  roundLength: DebateRoundLength;
-  onChangeRoundLength: (len: DebateRoundLength) => void;
   settings: VoiceDebateSettings;
   onOpenSettings: () => void;
   savedLogs: DebateSessionRecord[];
@@ -52,43 +38,21 @@ const FEATURED_TOPIC_IDS: DebateTopicId[] = [
   'social-media-censorship',
   'capitalism-socialism',
   'israel-palestine',
-  'economic-policies',
 ];
 
-const STANCE_CHOICES: Array<{
-  id: DebateUserStance;
-  label: string;
-  hint: string;
-}> = [
-  { id: 'pro', label: 'Argue Pro', hint: 'Defend thesis' },
-  { id: 'con', label: 'Argue Con', hint: 'Challenge it' },
-  { id: 'switch', label: 'Switch Sides', hint: 'Steelman both' },
-];
-
-const ROUND_LENGTH_CHOICES: Array<{ id: DebateRoundLength; label: string }> = [
-  { id: 3, label: '3 Turns' },
-  { id: 5, label: '5 Turns' },
-  { id: 'open', label: 'Open' },
-];
-
-const PERSONA_CHOICES: Array<{ id: DebateOpponentPersona; label: string }> = [
-  { id: 'sparring', label: 'Partner' },
-  { id: 'oxford', label: 'Oxford' },
-  { id: 'socratic', label: 'Socratic' },
+const STANCE_OPTIONS: Array<{ id: DebateUserStance; label: string }> = [
+  { id: 'pro', label: 'Pro' },
+  { id: 'con', label: 'Con' },
+  { id: 'switch', label: 'Switch' },
 ];
 
 export function SparLobby({
   dataset,
-  nodes,
   isLoadingTopic = false,
   onSwitchTopic,
   onOpenTopicPicker,
   stance,
   onChangeStance,
-  persona,
-  onChangePersona,
-  roundLength,
-  onChangeRoundLength,
   settings,
   onOpenSettings,
   savedLogs,
@@ -113,200 +77,161 @@ export function SparLobby({
   }, [settings.backend, settings.webllmModel]);
 
   const careerStats = computeCareerStats(savedLogs);
-  const activeCatalogMeta = TOPIC_CATALOG.find((t) => t.id === dataset.id);
   const featuredTopics = FEATURED_TOPIC_IDS.map((id) =>
     TOPIC_CATALOG.find((t) => t.id === id)
   ).filter((t): t is NonNullable<typeof t> => Boolean(t));
 
   const webLlmPreset = getWebLlmPreset(settings.webllmModel);
 
-  const engineInfo = (() => {
+  const engineStatusLine = (() => {
     switch (settings.backend) {
       case 'browser-webllm':
-        return {
-          icon: Cpu,
-          title: `On-Device AI · ${webLlmPreset.label}`,
-          subtitle:
-            webLlmCached === true
-              ? 'Cached locally on your device · Works offline'
-              : `No API key needed · Downloads once (${webLlmPreset.downloadSizeLabel})`,
-          pill: webLlmCached === true ? 'Ready' : 'No Key',
-          pillTone: 'emerald' as const,
-        };
+        return webLlmCached
+          ? `${webLlmPreset.label} · On-device`
+          : `${webLlmPreset.label} · Downloads once on start`;
       case 'gemini-flash':
-        return {
-          icon: Sparkles,
-          title: 'Gemini Cloud AI',
-          subtitle:
-            settings.geminiApiKey.trim().length > 10
-              ? `Connected (${settings.geminiModel})`
-              : 'Free key required — tap Change to paste your key',
-          pill: settings.geminiApiKey.trim().length > 10 ? 'Ready' : 'Setup',
-          pillTone: settings.geminiApiKey.trim().length > 10 ? ('emerald' as const) : ('amber' as const),
-        };
+        return settings.geminiApiKey.trim().length > 10
+          ? `Gemini Cloud · ${settings.geminiModel}`
+          : 'Gemini selected · Add API key in Settings';
       case 'local-openai':
-        return {
-          icon: Server,
-          title: `Local Server · ${settings.localModel || 'Custom'}`,
-          subtitle: settings.localEndpoint,
-          pill: 'LAN',
-          pillTone: 'amber' as const,
-        };
+        return `Local server · ${settings.localModel}`;
       case 'offline-curated':
       default:
-        return {
-          icon: WifiOff,
-          title: 'Instant Offline Templates',
-          subtitle: 'Basic curated replies — upgrade to Free On-Device AI for real sparring.',
-          pill: 'Basic',
-          pillTone: 'muted' as const,
-        };
+        return 'Offline templates · Switch to free on-device AI';
     }
   })();
 
-  const EngineIcon = engineInfo.icon;
-
-  const ctaLabel =
-    roundLength === 'open'
-      ? 'Take the Floor · Open Spar'
-      : `Take the Floor · ${roundLength}-Turn Round`;
+  const startLabel =
+    settings.roundLength === 'open'
+      ? 'Start Debate'
+      : `Start ${settings.roundLength}-Turn Debate`;
 
   return (
     <div
       className={clsx(
         'flex-1 flex flex-col min-h-0 overflow-hidden',
-        isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
+        isDark ? 'bg-[#0C0C0E] text-zinc-100' : 'bg-white text-zinc-950'
       )}
     >
-      {/* Scrollable Guided Setup Canvas */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="max-w-xl mx-auto px-4 sm:px-6 py-5 sm:py-7 space-y-5">
-          {/* Editorial Intro OR Debater Record Pulse */}
-          {savedLogs.length > 0 ? (
-            <button
-              type="button"
-              onClick={onOpenPerformanceLog}
-              className={clsx(
-                'w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 group',
-                isDark
-                  ? 'bg-[#12161F] border-[#262E3E] hover:border-amber-400/50'
-                  : 'bg-white border-[#E5DEC9] hover:border-amber-500 shadow-xs'
-              )}
-            >
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-amber-400/15 border border-amber-400/35 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
-                  <ClipboardList className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
-                      Performance Log
-                    </span>
-                    <span className="font-mono text-[11px] font-semibold text-stone-300">
-                      {careerStats.totalRounds}{' '}
-                      {careerStats.totalRounds === 1 ? 'round' : 'rounds'} · Avg{' '}
-                      {careerStats.avgStrength} · {careerStats.edgeRatePct}% edge
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">
-                    Focus: {careerStats.primaryFocus}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-stone-500 group-hover:text-amber-400 transition-colors shrink-0" />
-            </button>
-          ) : (
-            <div className="space-y-1.5 pt-1">
-              <div className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                <Scale className="w-3.5 h-3.5" />
-                <span>Steelman · Sparring Chamber</span>
-              </div>
-              <h1 className="font-editorial text-[24px] sm:text-[28px] font-semibold leading-tight tracking-tight">
-                Test your best case against the strongest counter.
-              </h1>
-              <p className="text-xs sm:text-[13px] text-stone-400 leading-relaxed">
-                Pick a motion, argue a short structured round, and review turn-by-turn Game Tape on how each point landed.
-              </p>
-            </div>
-          )}
+      {/* Minimal Single-Row Header */}
+      <div
+        className={clsx(
+          'px-5 h-13 flex items-center justify-between shrink-0 border-b',
+          isDark ? 'border-white/[0.06]' : 'border-zinc-100'
+        )}
+      >
+        <span className="text-[16px] font-semibold tracking-[-0.02em]">
+          Steelman
+        </span>
 
-          {/* STEP 01: CHOOSE A MOTION */}
-          <section className="space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-400">
-                01 · Choose Motion
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={onOpenPerformanceLog}
+            aria-label="Performance history"
+            className={clsx(
+              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors',
+              isDark
+                ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
+            )}
+          >
+            <Clock className="w-4 h-4" />
+            <span>Log</span>
+            {savedLogs.length > 0 && (
+              <span
+                className={clsx(
+                  'text-[11px] font-mono tabular-nums',
+                  isDark ? 'text-zinc-500' : 'text-zinc-400'
+                )}
+              >
+                {savedLogs.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            aria-label="Settings"
+            className={clsx(
+              'p-2 rounded-lg transition-colors',
+              isDark
+                ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
+            )}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main Centered Canvas — Generous Whitespace, Zero Clutter */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+        <div className="w-full max-w-lg mx-auto px-5 py-8 sm:py-12 my-auto space-y-8">
+          {/* Motion Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span
+                className={clsx(
+                  'text-xs font-medium',
+                  isDark ? 'text-zinc-500' : 'text-zinc-400'
+                )}
+              >
+                Motion
               </span>
               <button
                 type="button"
                 onClick={onOpenTopicPicker}
-                className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                className={clsx(
+                  'text-xs font-medium inline-flex items-center gap-0.5 transition-colors',
+                  isDark
+                    ? 'text-zinc-400 hover:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-950'
+                )}
               >
-                <Compass className="w-3.5 h-3.5" />
-                <span>Browse all 22</span>
+                <span>All 22 topics</span>
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Active Motion Editorial Card */}
-            <div
-              className={clsx(
-                'p-4 rounded-2xl border space-y-2 transition-colors relative',
-                isDark
-                  ? 'bg-[#12161F] border-[#262E3E]'
-                  : 'bg-white border-[#E5DEC9] shadow-xs'
-              )}
-            >
+            <div className="space-y-2">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  {activeCatalogMeta?.category && (
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90 mb-0.5">
-                      {activeCatalogMeta.category}
-                    </div>
-                  )}
-                  <h2 className="font-editorial text-lg sm:text-xl font-semibold leading-snug">
-                    {dataset.title}
-                  </h2>
-                </div>
+                <h1 className="font-editorial text-[27px] sm:text-[32px] font-medium leading-[1.18] tracking-[-0.015em]">
+                  {dataset.title}
+                </h1>
                 {isLoadingTopic && (
-                  <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0 mt-1" />
+                  <Loader2 className="w-4 h-4 text-zinc-400 animate-spin shrink-0 mt-2" />
                 )}
               </div>
-
-              <p className="text-xs text-stone-400 leading-relaxed line-clamp-2">
+              <p
+                className={clsx(
+                  'text-[13.5px] leading-relaxed line-clamp-2',
+                  isDark ? 'text-zinc-400' : 'text-zinc-500'
+                )}
+              >
                 {dataset.subtitle}
               </p>
-
-              <div className="flex items-center justify-between gap-2 pt-1 text-[11px] text-stone-400">
-                <span className="font-mono">
-                  {nodes.length} sourced argument nodes
-                </span>
-                <button
-                  type="button"
-                  onClick={onOpenTopicPicker}
-                  className="font-semibold text-amber-400 hover:underline"
-                >
-                  Switch motion
-                </button>
-              </div>
             </div>
 
-            {/* Quick-Pick Featured Motion Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            {/* Quiet Quick-Switch Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
               {featuredTopics.map((topic) => {
-                const isSelected = topic.id === dataset.id;
+                const active = topic.id === dataset.id;
                 return (
                   <button
                     key={topic.id}
                     type="button"
                     onClick={() => onSwitchTopic(topic.id)}
                     className={clsx(
-                      'px-3 py-1.5 rounded-full text-[11.5px] font-semibold border shrink-0 transition-all',
-                      isSelected
+                      'px-3 py-1.5 rounded-full text-xs font-medium shrink-0 transition-colors',
+                      active
                         ? isDark
-                          ? 'bg-amber-400/18 border-amber-400/60 text-amber-200'
-                          : 'bg-[#181B22] border-[#181B22] text-amber-300'
+                          ? 'bg-zinc-100 text-zinc-950'
+                          : 'bg-zinc-950 text-white'
                         : isDark
-                          ? 'bg-[#12161F] border-[#222938] text-stone-400 hover:text-stone-200 hover:border-[#323C50]'
-                          : 'bg-white border-[#E5DEC9] text-stone-600 hover:border-amber-400'
+                          ? 'bg-white/[0.05] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.09]'
+                          : 'bg-zinc-100 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-200/70'
                     )}
                   >
                     {topic.shortTitle}
@@ -314,17 +239,25 @@ export function SparLobby({
                 );
               })}
             </div>
-          </section>
+          </div>
 
-          {/* STEP 02: SIDE & FORMAT */}
-          <section className="space-y-2.5">
-            <span className="block text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-400">
-              02 · Your Side &amp; Format
+          {/* Side Segmented Control */}
+          <div className="space-y-2">
+            <span
+              className={clsx(
+                'block text-xs font-medium',
+                isDark ? 'text-zinc-500' : 'text-zinc-400'
+              )}
+            >
+              Your position
             </span>
-
-            {/* 3-Choice Side Selector */}
-            <div className="grid grid-cols-3 gap-2">
-              {STANCE_CHOICES.map((opt) => {
+            <div
+              className={clsx(
+                'grid grid-cols-3 p-1 rounded-xl',
+                isDark ? 'bg-[#161619]' : 'bg-zinc-100'
+              )}
+            >
+              {STANCE_OPTIONS.map((opt) => {
                 const active = stance === opt.id;
                 return (
                   <button
@@ -332,180 +265,88 @@ export function SparLobby({
                     type="button"
                     onClick={() => onChangeStance(opt.id)}
                     className={clsx(
-                      'px-2.5 py-2.5 rounded-xl border text-left transition-all',
+                      'py-2 rounded-lg text-[13px] font-medium transition-all',
                       active
-                        ? opt.id === 'pro'
-                          ? isDark
-                            ? 'bg-emerald-500/15 border-emerald-400/65 text-emerald-200'
-                            : 'bg-emerald-50 border-emerald-500 text-emerald-950'
-                          : opt.id === 'con'
-                            ? isDark
-                              ? 'bg-rose-500/15 border-rose-400/65 text-rose-200'
-                              : 'bg-rose-50 border-rose-500 text-rose-950'
-                            : isDark
-                              ? 'bg-amber-400/15 border-amber-400/65 text-amber-200'
-                              : 'bg-amber-50 border-amber-500 text-amber-950'
+                        ? isDark
+                          ? 'bg-[#26262B] text-white shadow-xs'
+                          : 'bg-white text-zinc-950 shadow-xs'
                         : isDark
-                          ? 'bg-[#12161F] border-[#222938] text-stone-300 hover:border-[#323C50]'
-                          : 'bg-white border-[#E5DEC9] text-stone-700 hover:border-amber-400'
+                          ? 'text-zinc-400 hover:text-zinc-200'
+                          : 'text-zinc-500 hover:text-zinc-900'
                     )}
                   >
-                    <div className="text-xs font-bold leading-tight">{opt.label}</div>
-                    <div className="text-[10.5px] opacity-75 mt-0.5 leading-tight">{opt.hint}</div>
+                    {opt.label}
                   </button>
                 );
               })}
             </div>
+          </div>
 
-            {/* Compact Round Length & Opponent Style Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div
-                className={clsx(
-                  'p-2.5 rounded-xl border space-y-1.5',
-                  isDark ? 'bg-[#12161F] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-                )}
-              >
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 px-0.5">
-                  Round Length
-                </span>
-                <div className="grid grid-cols-3 gap-1">
-                  {ROUND_LENGTH_CHOICES.map((opt) => (
-                    <button
-                      key={String(opt.id)}
-                      type="button"
-                      onClick={() => onChangeRoundLength(opt.id)}
-                      className={clsx(
-                        'py-1.5 rounded-lg text-[11px] font-bold transition-colors',
-                        roundLength === opt.id
-                          ? isDark
-                            ? 'bg-amber-500 text-stone-950'
-                            : 'bg-[#181B22] text-amber-300'
-                          : isDark
-                            ? 'bg-[#0B0E14] text-stone-400 hover:text-stone-200'
-                            : 'bg-[#F5F1E8] text-stone-600 hover:text-stone-900'
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                className={clsx(
-                  'p-2.5 rounded-xl border space-y-1.5',
-                  isDark ? 'bg-[#12161F] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-                )}
-              >
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 px-0.5">
-                  Opponent Style
-                </span>
-                <div className="grid grid-cols-3 gap-1">
-                  {PERSONA_CHOICES.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onChangePersona(opt.id)}
-                      className={clsx(
-                        'py-1.5 rounded-lg text-[11px] font-bold transition-colors',
-                        persona === opt.id
-                          ? isDark
-                            ? 'bg-amber-500 text-stone-950'
-                            : 'bg-[#181B22] text-amber-300'
-                          : isDark
-                            ? 'bg-[#0B0E14] text-stone-400 hover:text-stone-200'
-                            : 'bg-[#F5F1E8] text-stone-600 hover:text-stone-900'
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* STEP 03: AI ENGINE */}
-          <section className="space-y-2">
-            <span className="block text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-400">
-              03 · AI Opponent
-            </span>
-
+          {/* Primary Action + Quiet Engine Footnote */}
+          <div className="space-y-3 pt-1">
             <button
               type="button"
-              onClick={onOpenSettings}
+              disabled={isLoadingTopic}
+              onClick={onStartRound}
               className={clsx(
-                'w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 group',
-                settings.backend === 'offline-curated'
-                  ? isDark
-                    ? 'bg-amber-400/[0.06] border-amber-400/35 hover:border-amber-400/65'
-                    : 'bg-amber-50/70 border-amber-300 hover:border-amber-500'
-                  : isDark
-                    ? 'bg-[#12161F] border-[#222938] hover:border-amber-400/45'
-                    : 'bg-white border-[#E5DEC9] hover:border-amber-400'
+                'w-full h-12 rounded-xl text-[14.5px] font-semibold transition-all active:scale-[0.99] disabled:opacity-40',
+                isDark
+                  ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                  : 'bg-zinc-950 text-white hover:bg-zinc-800'
               )}
             >
-              <div className="flex items-start gap-2.5 min-w-0">
+              {startLabel}
+            </button>
+
+            <div className="flex items-center justify-center">
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                className={clsx(
+                  'text-xs transition-colors inline-flex items-center gap-1',
+                  isDark
+                    ? 'text-zinc-500 hover:text-zinc-300'
+                    : 'text-zinc-400 hover:text-zinc-700'
+                )}
+              >
+                <span>{engineStatusLine}</span>
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+
+          {/* Subtle Performance Footnote (only when user has past rounds) */}
+          {savedLogs.length > 0 && (
+            <button
+              type="button"
+              onClick={onOpenPerformanceLog}
+              className={clsx(
+                'w-full pt-5 border-t flex items-center justify-between gap-3 text-left group',
+                isDark ? 'border-white/[0.08]' : 'border-zinc-100'
+              )}
+            >
+              <div className="min-w-0">
+                <div className="text-[13px] font-medium tabular-nums">
+                  {careerStats.totalRounds}{' '}
+                  {careerStats.totalRounds === 1 ? 'round' : 'rounds'} · Avg{' '}
+                  {careerStats.avgStrength}
+                </div>
                 <div
                   className={clsx(
-                    'w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 mt-0.5',
-                    isDark
-                      ? 'bg-[#0B0E14] border-[#262E3E] text-amber-400'
-                      : 'bg-[#FAF8F4] border-[#E5DEC9] text-amber-700'
+                    'text-xs truncate mt-0.5',
+                    isDark ? 'text-zinc-500' : 'text-zinc-400'
                   )}
                 >
-                  <EngineIcon className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold">{engineInfo.title}</span>
-                    <span
-                      className={clsx(
-                        'px-1.5 py-0.5 rounded-full text-[9.5px] font-bold',
-                        engineInfo.pillTone === 'emerald'
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : engineInfo.pillTone === 'amber'
-                            ? 'bg-amber-400/15 text-amber-400'
-                            : 'bg-stone-500/20 text-stone-400'
-                      )}
-                    >
-                      {engineInfo.pill}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-400 mt-0.5 leading-snug">
-                    {engineInfo.subtitle}
-                  </p>
+                  Focus: {careerStats.primaryFocus}
                 </div>
               </div>
-              <span className="text-[11.5px] font-bold text-amber-400 shrink-0 group-hover:underline">
-                Change
-              </span>
+              <ChevronRight
+                className={clsx(
+                  'w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5',
+                  isDark ? 'text-zinc-500' : 'text-zinc-400'
+                )}
+              />
             </button>
-          </section>
-        </div>
-      </div>
-
-      {/* Calm Sticky Primary CTA Bar */}
-      <div
-        className={clsx(
-          'px-4 py-3 border-t shrink-0',
-          isDark ? 'bg-[#0E1219]/95 border-[#222938]' : 'bg-white/95 border-[#E7E2D8]'
-        )}
-      >
-        <div className="max-w-xl mx-auto space-y-1.5">
-          <button
-            type="button"
-            disabled={isLoadingTopic}
-            onClick={onStartRound}
-            className="w-full py-3.5 px-5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-[0.99] disabled:opacity-50 text-stone-950 font-bold text-sm shadow-md shadow-amber-500/15 transition-all flex items-center justify-center gap-2"
-          >
-            <span>{ctaLabel}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          {savedLogs.length === 0 && (
-            <p className="text-center text-[10.5px] text-stone-400">
-              Dictate with your keyboard mic or type — Steelman scores every turn automatically.
-            </p>
           )}
         </div>
       </div>

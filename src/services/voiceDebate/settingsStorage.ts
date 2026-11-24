@@ -1,4 +1,9 @@
-import { VoiceAIBackend, VoiceDebateSettings } from '../../types/voiceDebate';
+import {
+  DebateOpponentPersona,
+  DebateRoundLength,
+  VoiceAIBackend,
+  VoiceDebateSettings,
+} from '../../types/voiceDebate';
 
 const SETTINGS_KEY = 'dialectica-voice-settings-v1';
 
@@ -10,6 +15,8 @@ export const DEFAULT_VOICE_SETTINGS: VoiceDebateSettings = {
   localEndpoint: 'http://localhost:11434/v1',
   localModel: 'gemma3:4b',
   localApiKey: '',
+  roundLength: 3,
+  persona: 'sparring',
 };
 
 function normalizeBackend(raw: unknown): VoiceAIBackend {
@@ -17,6 +24,16 @@ function normalizeBackend(raw: unknown): VoiceAIBackend {
   if (raw === 'gemini-flash' || raw === 'gemini-live') return 'gemini-flash';
   if (raw === 'local-openai') return 'local-openai';
   return 'offline-curated';
+}
+
+function normalizeRoundLength(raw: unknown): DebateRoundLength {
+  if (raw === 3 || raw === 5 || raw === 'open') return raw;
+  return 3;
+}
+
+function normalizePersona(raw: unknown): DebateOpponentPersona {
+  if (raw === 'sparring' || raw === 'oxford' || raw === 'socratic') return raw;
+  return 'sparring';
 }
 
 export function loadVoiceSettings(): VoiceDebateSettings {
@@ -44,6 +61,8 @@ export function loadVoiceSettings(): VoiceDebateSettings {
           ? parsed.localModel
           : DEFAULT_VOICE_SETTINGS.localModel,
       localApiKey: typeof parsed.localApiKey === 'string' ? parsed.localApiKey : '',
+      roundLength: normalizeRoundLength(parsed.roundLength),
+      persona: normalizePersona(parsed.persona),
     };
   } catch {
     return { ...DEFAULT_VOICE_SETTINGS };

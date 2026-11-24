@@ -7,7 +7,6 @@ import {
   ChevronRight,
   ExternalLink,
   Filter,
-  GraduationCap,
   MapPin,
   RefreshCw,
   RotateCcw,
@@ -305,33 +304,25 @@ export function FlashcardQuizView({
     <div
       className={clsx(
         'flex-1 flex flex-col h-full overflow-y-auto select-none transition-colors duration-150',
-        isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
+        isDark ? 'bg-[#0C0C0E] text-zinc-100' : 'bg-white text-zinc-950'
       )}
     >
       {/* Quiz Header & Filters */}
       <div
         className={clsx(
           'px-4 sm:px-6 py-3 border-b shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3',
-          isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-white border-[#E7E2D8]'
+          isDark ? 'bg-[#0C0C0E] border-white/[0.08]' : 'bg-white border-zinc-100'
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/35 text-amber-400 flex items-center justify-center shrink-0">
-            <GraduationCap className="w-4 h-4" />
-          </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-editorial text-sm sm:text-base font-bold tracking-tight">Rebuttal Flashcard Quiz</h2>
-              <span
-                className={clsx(
-                  'px-2 py-0.5 rounded-full text-[11px] font-semibold border font-mono',
-                  isDark ? 'bg-[#151A24] border-[#262E3E] text-amber-300' : 'bg-amber-50 border-amber-300 text-amber-900'
-                )}
-              >
-                {filteredCards.length} Cards
+              <h2 className="font-editorial text-base font-medium tracking-tight">Rebuttal Flashcards</h2>
+              <span className="text-xs font-mono text-zinc-500">
+                {filteredCards.length} cards
               </span>
             </div>
-            <p className={clsx('text-xs hidden sm:block', isDark ? 'text-stone-400' : 'text-stone-500')}>
+            <p className={clsx('text-xs hidden sm:block', isDark ? 'text-zinc-500' : 'text-zinc-500')}>
               Drill steelmanned counter-arguments, empirical studies, and landmark positions.
             </p>
           </div>
@@ -341,13 +332,13 @@ export function FlashcardQuizView({
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
           {/* Pillar Selector Dropdown */}
           <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-stone-400" />
+            <Filter className="w-3.5 h-3.5 text-zinc-500" />
             <select
               value={activePillarId ?? ''}
               onChange={(e) => onSelectPillar(e.target.value || null)}
               className={clsx(
-                'text-xs px-2.5 py-1.5 rounded-lg border font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/70',
-                isDark ? 'bg-[#151A24] border-[#262E3E] text-stone-200' : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-800'
+                'text-xs px-2.5 py-1.5 rounded-lg border font-medium focus:outline-none',
+                isDark ? 'bg-[#141417] border-white/[0.1] text-zinc-200' : 'bg-zinc-50 border-zinc-200 text-zinc-800'
               )}
             >
               <option value="">All Pillars ({nodes.length} nodes)</option>

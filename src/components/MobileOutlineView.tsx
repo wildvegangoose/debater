@@ -113,26 +113,28 @@ export function MobileOutlineView({
     <div
       className={clsx(
         'flex-1 flex flex-col h-full overflow-hidden transition-colors',
-        isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
+        isDark ? 'bg-[#0C0C0E] text-zinc-100' : 'bg-white text-zinc-950'
       )}
     >
       {/* Top Mobile Pillar Scrollbar */}
       <div
         className={clsx(
           'px-3 py-2.5 border-b shrink-0 overflow-x-auto flex items-center gap-1.5 no-scrollbar',
-          isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-white border-[#E7E2D8]'
+          isDark ? 'bg-[#0C0C0E] border-white/[0.08]' : 'bg-white border-zinc-100'
         )}
       >
         <button
           type="button"
           onClick={() => onSelectPillar(null)}
           className={clsx(
-            'px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0',
+            'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0',
             activePillarId === null
-              ? 'bg-amber-500 border-amber-400 text-stone-950 font-bold shadow-xs'
+              ? isDark
+                ? 'bg-white text-zinc-950'
+                : 'bg-zinc-950 text-white'
               : isDark
-              ? 'bg-[#151A24] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
-              : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700 hover:border-amber-400'
+                ? 'bg-white/[0.05] text-zinc-400 hover:text-zinc-200'
+                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-950'
           )}
         >
           All Pillars ({pillars.length})
@@ -147,12 +149,14 @@ export function MobileOutlineView({
               type="button"
               onClick={() => onSelectPillar(isSelected ? null : pillar.id)}
               className={clsx(
-                'px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 flex items-center gap-1.5',
+                'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5',
                 isSelected
-                  ? 'bg-amber-500 border-amber-400 text-stone-950 font-bold shadow-xs'
+                  ? isDark
+                    ? 'bg-white text-zinc-950'
+                    : 'bg-zinc-950 text-white'
                   : isDark
-                  ? 'bg-[#151A24] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
-                  : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700 hover:border-amber-400'
+                    ? 'bg-white/[0.05] text-zinc-400 hover:text-zinc-200'
+                    : 'bg-zinc-100 text-zinc-600 hover:text-zinc-950'
               )}
             >
               <span>{shortLabel}</span>
@@ -165,7 +169,7 @@ export function MobileOutlineView({
       <div
         className={clsx(
           'px-4 py-2 border-b shrink-0 flex items-center justify-between gap-2 text-xs flex-wrap',
-          isDark ? 'bg-[#0E1219]/70 border-[#222938] text-stone-400' : 'bg-white/80 border-[#E7E2D8] text-stone-600'
+          isDark ? 'bg-[#0C0C0E] border-white/[0.06] text-zinc-400' : 'bg-white border-zinc-100 text-zinc-600'
         )}
       >
         {/* Pro / Con / All Quick Filter */}
@@ -173,8 +177,8 @@ export function MobileOutlineView({
           <span className="text-[11px] font-medium hidden sm:inline">Filter Side:</span>
           <div
             className={clsx(
-              'inline-flex items-center p-0.5 rounded-lg border text-xs',
-              isDark ? 'bg-[#151A24] border-[#262E3E]' : 'bg-[#F3EFE6] border-[#E5DEC9]'
+              'inline-flex items-center p-0.5 rounded-lg text-xs',
+              isDark ? 'bg-[#161619]' : 'bg-zinc-100'
             )}
           >
             <button
@@ -184,9 +188,9 @@ export function MobileOutlineView({
                 'px-2 py-0.5 rounded-md font-medium transition-colors',
                 activeSideFilter === 'all'
                   ? isDark
-                    ? 'bg-amber-500 text-stone-950 font-bold'
-                    : 'bg-[#181B22] text-amber-300 shadow-xs'
-                  : 'text-stone-400 hover:text-stone-200'
+                    ? 'bg-[#26262B] text-white'
+                    : 'bg-white text-zinc-950 shadow-xs'
+                  : 'text-zinc-500 hover:text-zinc-300'
               )}
             >
               Both

@@ -2,23 +2,18 @@ import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useS
 import clsx from 'clsx';
 import {
   ArrowLeft,
-  ArrowLeftRight,
-  ArrowRight,
+  ArrowUp,
   ArrowUpRight,
   Compass,
-  Cpu,
   ExternalLink,
-  Lightbulb,
   Loader2,
-  Plus,
-  Send,
-  Trophy,
+  SlidersHorizontal,
   X,
 } from 'lucide-react';
 import { DebateGraphDataset, DebateNode, DebateTopicId } from '../types/debate';
 import {
   ArgumentTurnReview,
-  DebateOpponentPersona,
+  DebateRoundLength,
   DebateSessionRecord,
   DebateUserStance,
   LiveVisualFeedback,
@@ -56,7 +51,7 @@ import { LiveDebateHud } from './voice/LiveDebateHud';
 import { VoiceSettingsModal } from './voice/VoiceSettingsModal';
 import { DebateScorecardModal, MomentumSparkline } from './voice/DebateScorecardModal';
 import { PerformanceLogSheet } from './voice/PerformanceLogSheet';
-import { DebateRoundLength, SparLobby } from './voice/SparLobby';
+import { SparLobby } from './voice/SparLobby';
 import { TopicPickerModal } from './TopicPickerModal';
 
 interface VoiceDebateViewProps {
@@ -68,7 +63,7 @@ interface VoiceDebateViewProps {
   onSelectPillar: (pillarId: string | null) => void;
   onInspectNode: (nodeId: string) => void;
   onSwitchToGraph: (nodeId?: string) => void;
-  onActiveRoundChange?: (inActiveRound: boolean) => void;
+  onToggleTheme?: () => void;
   isDark: boolean;
 }
 
@@ -78,7 +73,7 @@ function createInitialFeedback(dataset: DebateGraphDataset): LiveVisualFeedback 
     persuasionBalance: 0,
     roundPhase: 'opening',
     latestBadges: [],
-    coachingTip: `Open with your strongest thesis on ${dataset.shortTitle} and back it with one concrete mechanism or example.`,
+    coachingTip: `Open with your strongest thesis on ${dataset.shortTitle} and one concrete example.`,
     suggestedNodeId: null,
     engagedByUserIds: [],
     engagedByAiIds: [],
@@ -96,25 +91,25 @@ function getPhaseCue(
       phaseLabel: 'Opening',
       cue:
         stance === 'con'
-          ? 'Open with your sharpest critique and one concrete mechanism or example.'
-          : 'Open with your core thesis and one concrete mechanism or real-world example.',
+          ? 'State your core critique and one concrete example.'
+          : 'State your core thesis and one concrete example.',
     };
   }
   if (targetTurns !== null && nextTurnNumber >= targetTurns) {
     return {
       phaseLabel: 'Closing',
-      cue: 'Final move: weigh why your impact outweighs the opponent’s counter-case.',
+      cue: 'Weigh why your key impact outweighs the counter-case.',
     };
   }
   if (nextTurnNumber === 2) {
     return {
       phaseLabel: 'Rebuttal',
-      cue: 'Address Steelman’s counter first, then press your strongest supporting evidence.',
+      cue: 'Address Steelman’s counter first, then press your evidence.',
     };
   }
   return {
     phaseLabel: 'Cross-Exam',
-    cue: 'Steelman one slice of their claim before exposing the deeper trade-off.',
+    cue: 'Acknowledge a nuance before exposing the deeper trade-off.',
   };
 }
 
@@ -126,15 +121,15 @@ export function VoiceDebateView({
   activePillarId,
   onInspectNode,
   onSwitchToGraph,
-  onActiveRoundChange,
+  onToggleTheme,
   isDark,
 }: VoiceDebateViewProps) {
   const [stage, setStage] = useState<'lobby' | 'active'>('lobby');
   const [settings, setSettings] = useState<VoiceDebateSettings>(() => loadVoiceSettings());
   const [stance, setStance] = useState<DebateUserStance>('pro');
-  const [persona, setPersona] = useState<DebateOpponentPersona>('sparring');
-  const [roundLength, setRoundLength] = useState<DebateRoundLength>(3);
-  const [targetTurns, setTargetTurns] = useState<number | null>(3);
+  const [targetTurns, setTargetTurns] = useState<number | null>(() =>
+    settings.roundLength === 'open' ? null : settings.roundLength
+  );
 
   const [turns, setTurns] = useState<VoiceDebateTurn[]>([]);
   const [feedback, setFeedback] = useState<LiveVisualFeedback>(() =>
@@ -212,7 +207,7 @@ export function VoiceDebateView({
       dataset,
       pillarTitle: activePillar?.title,
       stance,
-      persona,
+      persona: settings.persona,
       backend: settings.backend,
       finalBalance: feedback.persuasionBalance,
       nodesEngagedCount: totalEngagedCount,
@@ -226,13 +221,12 @@ export function VoiceDebateView({
     sessionStartedAt,
     dataset,
     stance,
-    persona,
+    settings.persona,
     settings.backend,
     feedback.persuasionBalance,
     totalEngagedCount,
   ]);
 
-  // Best single unused curated angle for the 1-tap "Angle" helper
   const suggestedAngleNode = useMemo<DebateNode | null>(() => {
     const usedIds = new Set([...feedback.engagedByUserIds, ...feedback.engagedByAiIds]);
     if (feedback.suggestedNodeId && nodeMap.has(feedback.suggestedNodeId)) {
@@ -258,24 +252,16 @@ export function VoiceDebateView({
     userTurnCount,
   ]);
 
-  // Notify parent App shell when entering/leaving active round so mobile hides redundant top bar
-  useEffect(() => {
-    onActiveRoundChange?.(stage === 'active');
-    return () => {
-      onActiveRoundChange?.(false);
-    };
-  }, [stage, onActiveRoundChange]);
-
   const startFreshRound = useCallback(
     (override?: { stance?: DebateUserStance; roundLength?: DebateRoundLength }) => {
       const nextStance = override?.stance ?? stance;
-      const nextLength = override?.roundLength ?? roundLength;
+      const nextLength = override?.roundLength ?? settingsRef.current.roundLength;
       const opening = generateOfflineOpening({
         dataset,
         nodes,
         pillarId: activePillarId,
         stance: nextStance,
-        persona,
+        persona: settingsRef.current.persona,
       });
 
       const nextSessionId = `round-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -312,10 +298,9 @@ export function VoiceDebateView({
       setShowAngleHint(false);
       setStage('active');
     },
-    [dataset, nodes, activePillarId, stance, persona, roundLength]
+    [dataset, nodes, activePillarId, stance]
   );
 
-  // If user switches topics from the desktop TopBar while in an active round, smoothly return to Lobby for the new motion
   const prevDatasetIdRef = useRef(dataset.id);
   useEffect(() => {
     if (prevDatasetIdRef.current !== dataset.id) {
@@ -421,7 +406,7 @@ export function VoiceDebateView({
         dataset,
         pillarTitle: activePillar?.title,
         stance,
-        persona,
+        persona: settingsRef.current.persona,
         backend: settingsRef.current.backend,
         finalBalance: nextBalance,
         nodesEngagedCount: engagedTotal,
@@ -429,7 +414,7 @@ export function VoiceDebateView({
       });
       setSavedLogs(upsertPerformanceLog(record));
     },
-    [nodes, activePillarId, dataset, stance, persona]
+    [nodes, activePillarId, dataset, stance]
   );
 
   const submitUserArgument = useCallback(
@@ -471,7 +456,7 @@ export function VoiceDebateView({
             nodes,
             pillarId: activePillarId,
             stance,
-            persona,
+            persona: activeSettings.persona,
             history: historySnapshot,
             userText: clean,
             usedNodeIds: usedIds,
@@ -489,7 +474,7 @@ export function VoiceDebateView({
         } else if (activeSettings.backend === 'gemini-flash') {
           if (!activeSettings.geminiApiKey.trim()) {
             throw new Error(
-              'Add your free Gemini API key in AI Settings, or switch to On-Device AI.'
+              'Add your Gemini API key in Settings, or switch to On-Device AI.'
             );
           }
           response = await generateGeminiFlashReply({
@@ -498,7 +483,7 @@ export function VoiceDebateView({
             nodes,
             pillarId: activePillarId,
             stance,
-            persona,
+            persona: activeSettings.persona,
             history: historySnapshot,
             userText: clean,
           });
@@ -509,7 +494,7 @@ export function VoiceDebateView({
             nodes,
             pillarId: activePillarId,
             stance,
-            persona,
+            persona: activeSettings.persona,
             history: historySnapshot,
             userText: clean,
           });
@@ -520,7 +505,7 @@ export function VoiceDebateView({
             nodes,
             pillarId: activePillarId,
             stance,
-            persona,
+            persona: activeSettings.persona,
             userText: clean,
             usedNodeIds: usedIds,
             userTurnCount: nextUserCount,
@@ -543,7 +528,7 @@ export function VoiceDebateView({
         }
       }
     },
-    [isThinking, dataset, nodes, activePillarId, stance, persona, applyStructuredTurnResponse]
+    [isThinking, dataset, nodes, activePillarId, stance, applyStructuredTurnResponse]
   );
 
   const handleFormSubmit = (e: FormEvent) => {
@@ -568,6 +553,9 @@ export function VoiceDebateView({
   const handleSaveSettings = (updated: VoiceDebateSettings) => {
     setSettings(updated);
     saveVoiceSettings(updated);
+    if (stage === 'lobby') {
+      setTargetTurns(updated.roundLength === 'open' ? null : updated.roundLength);
+    }
     setErrorMessage(null);
   };
 
@@ -616,23 +604,17 @@ export function VoiceDebateView({
     <div
       className={clsx(
         'flex-1 flex flex-col min-h-0 overflow-hidden relative',
-        isDark ? 'bg-[#0B0E14] text-stone-100' : 'bg-[#FAF8F4] text-stone-900'
+        isDark ? 'bg-[#0C0C0E] text-zinc-100' : 'bg-white text-zinc-950'
       )}
     >
-      {/* STAGE 1: GUIDED "TAKE THE FLOOR" LOBBY */}
       {stage === 'lobby' ? (
         <SparLobby
           dataset={dataset}
-          nodes={nodes}
           isLoadingTopic={isLoadingTopic}
           onSwitchTopic={onSwitchTopic}
           onOpenTopicPicker={() => setShowTopicPicker(true)}
           stance={stance}
           onChangeStance={setStance}
-          persona={persona}
-          onChangePersona={setPersona}
-          roundLength={roundLength}
-          onChangeRoundLength={setRoundLength}
           settings={settings}
           onOpenSettings={() => setShowSettings(true)}
           savedLogs={savedLogs}
@@ -641,72 +623,39 @@ export function VoiceDebateView({
           isDark={isDark}
         />
       ) : (
-        /* STAGE 2 & 3: DISTRACTION-FREE ACTIVE ARENA + AUTOMATIC GAME TAPE PAYOFF */
         <>
-          {/* SINGLE SLIM MATCH BAR (48px) + 3px Hairline Momentum Edge */}
+          {/* SINGLE CLEAN MATCH HEADER */}
           <div
             className={clsx(
               'shrink-0 border-b relative',
-              isDark ? 'bg-[#0E1219]/95 border-[#222938]' : 'bg-white/95 border-[#E7E2D8]'
+              isDark ? 'bg-[#0C0C0E] border-white/[0.08]' : 'bg-white border-zinc-100'
             )}
           >
-            <div className="px-3 sm:px-5 h-12 flex items-center justify-between gap-2">
+            <div className="px-3 sm:px-5 h-13 flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setStage('lobby')}
+                aria-label="Back to lobby"
                 className={clsx(
-                  'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors shrink-0',
+                  'p-2 -ml-1 rounded-lg transition-colors shrink-0',
                   isDark
-                    ? 'text-stone-300 hover:bg-[#171C28]'
-                    : 'text-stone-700 hover:bg-[#F3EFE6]'
+                    ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                    : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
                 )}
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Lobby</span>
+                <ArrowLeft className="w-4 h-4" />
               </button>
 
               <div className="min-w-0 text-center flex-1">
-                <div className="font-editorial text-[14.5px] font-semibold truncate leading-tight">
+                <div className="text-[14px] font-semibold tracking-tight truncate leading-tight">
                   {dataset.shortTitle}
                 </div>
-                <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-stone-400 leading-none mt-0.5">
-                  <span
-                    className={clsx(
-                      'font-bold uppercase',
-                      stance === 'pro'
-                        ? 'text-emerald-400'
-                        : stance === 'con'
-                          ? 'text-rose-400'
-                          : 'text-amber-400'
-                    )}
-                  >
-                    {stance}
-                  </span>
-                  <span>·</span>
-                  <span>
-                    {isRoundComplete
-                      ? 'Round Complete'
-                      : targetTurns !== null
-                        ? `Turn ${Math.min(nextTurnNumber, targetTurns)}/${targetTurns} · ${phaseGuidance.phaseLabel}`
-                        : `Turn ${nextTurnNumber} · ${phaseGuidance.phaseLabel}`}
-                  </span>
-                  {userTurnCount > 0 && (
-                    <>
-                      <span>·</span>
-                      <span
-                        className={clsx(
-                          'font-bold',
-                          userSharePct >= 52
-                            ? 'text-emerald-400'
-                            : userSharePct <= 48
-                              ? 'text-rose-400'
-                              : 'text-amber-400'
-                        )}
-                      >
-                        You {userSharePct}%
-                      </span>
-                    </>
-                  )}
+                <div className="text-[11px] text-zinc-500 leading-none mt-1 tabular-nums">
+                  {isRoundComplete
+                    ? 'Round complete'
+                    : targetTurns !== null
+                      ? `Turn ${Math.min(nextTurnNumber, targetTurns)} of ${targetTurns} · ${stance.toUpperCase()}`
+                      : `Turn ${nextTurnNumber} · ${stance.toUpperCase()}`}
                 </div>
               </div>
 
@@ -714,20 +663,15 @@ export function VoiceDebateView({
                 <button
                   type="button"
                   onClick={() => setShowHudSheet(true)}
-                  aria-label="Open argument map"
+                  aria-label="Argument map"
                   className={clsx(
-                    'lg:hidden p-2 rounded-xl border transition-colors relative',
+                    'lg:hidden p-2 rounded-lg transition-colors',
                     isDark
-                      ? 'bg-[#151A24] border-[#262E3E] text-stone-300'
-                      : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700'
+                      ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                      : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
                   )}
                 >
-                  <Compass className="w-3.5 h-3.5" />
-                  {totalEngagedCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-stone-950 font-mono text-[9px] font-bold flex items-center justify-center">
-                      {totalEngagedCount}
-                    </span>
-                  )}
+                  <Compass className="w-4 h-4" />
                 </button>
 
                 {currentLiveSessionRecord ? (
@@ -739,116 +683,128 @@ export function VoiceDebateView({
                         isHistorical: false,
                       })
                     }
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-stone-950 transition-colors"
+                    className={clsx(
+                      'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                      isDark
+                        ? 'text-zinc-200 hover:bg-white/[0.08]'
+                        : 'text-zinc-800 hover:bg-zinc-100'
+                    )}
                   >
-                    <Trophy className="w-3.5 h-3.5" />
-                    <span>{isRoundComplete ? 'Tape' : 'End'}</span>
+                    {isRoundComplete ? 'Review' : 'End'}
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowSettings(true)}
-                    aria-label="AI settings"
+                    aria-label="Settings"
                     className={clsx(
-                      'p-2 rounded-xl border transition-colors',
+                      'p-2 rounded-lg transition-colors',
                       isDark
-                        ? 'bg-[#151A24] border-[#262E3E] text-amber-400'
-                        : 'bg-[#F5F1E8] border-[#E5DEC9] text-amber-800'
+                        ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                        : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
                     )}
                   >
-                    <Cpu className="w-3.5 h-3.5" />
+                    <SlidersHorizontal className="w-4 h-4" />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Ultra-clean 3px momentum hairline (appears once Turn 1 is scored) */}
+            {/* Subtle 2px momentum hairline only once Turn 1 is scored */}
             {userTurnCount > 0 && (
-              <div className="h-[3px] w-full flex overflow-hidden">
+              <div className="h-[2px] w-full flex overflow-hidden">
                 <div
                   style={{ width: `${userSharePct}%` }}
-                  className="h-full bg-emerald-500 transition-all duration-500"
+                  className="h-full bg-emerald-500/80 transition-all duration-500"
                 />
                 <div
                   style={{ width: `${100 - userSharePct}%` }}
-                  className="h-full bg-rose-500/80 transition-all duration-500"
+                  className="h-full bg-rose-500/70 transition-all duration-500"
                 />
               </div>
             )}
           </div>
 
-          {/* Main Active Arena Layout */}
+          {/* Main Active Debate Layout */}
           <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-            {/* CONVERSATIONAL DEBATE COLUMN */}
+            {/* CONVERSATION COLUMN */}
             <div
               className={clsx(
-                'lg:col-span-7 flex flex-col min-h-0 lg:border-r',
-                isDark ? 'lg:border-[#222938]' : 'lg:border-[#E7E2D8]'
+                'lg:col-span-8 flex flex-col min-h-0 lg:border-r',
+                isDark ? 'lg:border-white/[0.08]' : 'lg:border-zinc-100'
               )}
             >
-              {/* Scrollable Debate Feed */}
-              <div className="flex-1 min-h-0 overflow-y-auto px-3.5 sm:px-5 py-4 space-y-4">
-                {turns.map((turn) => {
-                  const isUser = turn.speaker === 'user';
-                  const landing =
-                    !isUser && typeof turn.argumentStrength === 'number'
-                      ? getLandingRating(turn.argumentStrength)
-                      : null;
+              {/* Scrollable Editorial Chat Feed */}
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 space-y-6">
+                  {turns.map((turn) => {
+                    const isUser = turn.speaker === 'user';
+                    const landing =
+                      !isUser && typeof turn.argumentStrength === 'number'
+                        ? getLandingRating(turn.argumentStrength)
+                        : null;
 
-                  return (
-                    <div
-                      key={turn.id}
-                      className={clsx('flex flex-col gap-1', isUser ? 'items-end' : 'items-start')}
-                    >
-                      <div className="flex items-center gap-1.5 text-[10.5px] font-medium text-stone-400 px-1 flex-wrap">
-                        <span>{isUser ? 'You' : 'Steelman'}</span>
-                        <span>·</span>
-                        <span className="font-mono">{turn.timestamp}</span>
-                        {landing && typeof turn.argumentStrength === 'number' && (
-                          <span
-                            className={clsx(
-                              'px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono',
-                              landing.rating === 'knockout'
-                                ? 'bg-emerald-500/15 text-emerald-400'
-                                : landing.rating === 'solid'
-                                  ? 'bg-amber-400/15 text-amber-400'
-                                  : landing.rating === 'vulnerable'
-                                    ? 'bg-rose-500/15 text-rose-400'
-                                    : 'bg-stone-500/15 text-stone-300'
-                            )}
-                          >
-                            {landing.label} · {turn.argumentStrength}
-                          </span>
-                        )}
-                      </div>
-
-                      <div
-                        className={clsx(
-                          'max-w-[92%] sm:max-w-[85%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed border',
-                          isUser
-                            ? isDark
-                              ? 'bg-[#1C2333] border-amber-400/35 text-stone-50 rounded-br-sm'
-                              : 'bg-[#1D222D] border-[#1D222D] text-stone-50 rounded-br-sm'
-                            : isDark
-                              ? 'bg-[#12161F] border-[#232A39] text-stone-100 rounded-bl-sm'
-                              : 'bg-white border-[#E5DEC9] text-stone-800 rounded-bl-sm shadow-xs'
-                        )}
-                      >
-                        <p>{turn.text}</p>
-
-                        {/* Engaged Curated Argument Nodes */}
-                        {turn.engagedNodeIds && turn.engagedNodeIds.length > 0 && (
+                    if (isUser) {
+                      return (
+                        <div key={turn.id} className="flex justify-end">
                           <div
                             className={clsx(
-                              'mt-2.5 pt-2 border-t flex flex-wrap gap-1.5',
-                              isUser
-                                ? 'border-white/10'
-                                : isDark
-                                  ? 'border-[#232A39]'
-                                  : 'border-[#EFE9DD]'
+                              'max-w-[85%] rounded-2xl rounded-br-sm px-4 py-2.5 text-[15px] leading-relaxed',
+                              isDark
+                                ? 'bg-[#1F1F23] text-zinc-100'
+                                : 'bg-zinc-900 text-white'
                             )}
                           >
-                            {turn.engagedNodeIds.map((nid) => {
+                            <p>{turn.text}</p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={turn.id} className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span
+                            className={clsx(
+                              'font-semibold',
+                              isDark ? 'text-zinc-200' : 'text-zinc-900'
+                            )}
+                          >
+                            Steelman
+                          </span>
+                          {landing && typeof turn.argumentStrength === 'number' && (
+                            <span
+                              className={clsx(
+                                'font-mono text-[11px] font-medium tabular-nums',
+                                landing.rating === 'knockout'
+                                  ? 'text-emerald-500'
+                                  : landing.rating === 'vulnerable'
+                                    ? 'text-rose-500'
+                                    : isDark
+                                      ? 'text-zinc-400'
+                                      : 'text-zinc-500'
+                              )}
+                            >
+                              · {landing.label} ({turn.argumentStrength})
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Borderless clean prose like Claude / Perplexity */}
+                        <p
+                          className={clsx(
+                            'text-[15.5px] leading-[1.68]',
+                            isDark ? 'text-zinc-200' : 'text-zinc-800'
+                          )}
+                        >
+                          {turn.text}
+                        </p>
+
+                        {/* Quiet inline references */}
+                        {((turn.engagedNodeIds && turn.engagedNodeIds.length > 0) ||
+                          turn.citedSource) && (
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
+                            {turn.engagedNodeIds?.map((nid) => {
                               const node = nodeMap.get(nid);
                               if (!node) return null;
                               return (
@@ -857,383 +813,358 @@ export function VoiceDebateView({
                                   type="button"
                                   onClick={() => onInspectNode(nid)}
                                   className={clsx(
-                                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border transition-colors',
-                                    isUser
-                                      ? 'bg-white/10 border-white/20 text-stone-100 hover:bg-white/20'
-                                      : isDark
-                                        ? 'bg-[#0B0E14] border-[#2A3244] text-amber-300 hover:border-amber-400/60'
-                                        : 'bg-[#FAF8F4] border-[#E5DEC9] text-amber-900 hover:border-amber-500'
+                                    'inline-flex items-center gap-1 text-xs transition-colors',
+                                    isDark
+                                      ? 'text-zinc-400 hover:text-zinc-100'
+                                      : 'text-zinc-500 hover:text-zinc-950'
                                   )}
                                 >
                                   <span
                                     className={clsx(
                                       'w-1.5 h-1.5 rounded-full shrink-0',
                                       node.kind === 'pro'
-                                        ? 'bg-emerald-400'
+                                        ? 'bg-emerald-500'
                                         : node.kind === 'con'
-                                          ? 'bg-rose-400'
-                                          : 'bg-amber-400'
+                                          ? 'bg-rose-500'
+                                          : 'bg-zinc-400'
                                     )}
                                   />
-                                  <span className="truncate max-w-[200px]">{node.title}</span>
-                                  <ArrowUpRight className="w-2.5 h-2.5 shrink-0" />
+                                  <span className="truncate max-w-[220px] underline decoration-zinc-500/40 underline-offset-2">
+                                    {node.title}
+                                  </span>
+                                  <ArrowUpRight className="w-3 h-3 shrink-0 opacity-60" />
                                 </button>
                               );
                             })}
+
+                            {turn.citedSource && (
+                              <a
+                                href={turn.citedSource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={clsx(
+                                  'inline-flex items-center gap-1 text-xs transition-colors',
+                                  isDark
+                                    ? 'text-zinc-500 hover:text-zinc-200'
+                                    : 'text-zinc-400 hover:text-zinc-800'
+                                )}
+                              >
+                                <ExternalLink className="w-3 h-3 shrink-0" />
+                                <span className="truncate max-w-[220px]">
+                                  {turn.citedSource.title}
+                                </span>
+                              </a>
+                            )}
                           </div>
                         )}
-
-                        {turn.citedSource && (
-                          <a
-                            href={turn.citedSource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={clsx(
-                              'mt-2 inline-flex items-center gap-1 text-[11.5px] font-medium hover:underline',
-                              isDark ? 'text-amber-400/90' : 'text-amber-800'
-                            )}
-                          >
-                            <ExternalLink className="w-3 h-3 shrink-0" />
-                            <span className="truncate max-w-[250px]">{turn.citedSource.title}</span>
-                          </a>
-                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
 
-                {/* Model Download / Live Streaming / Thinking indicator */}
-                {isThinking && modelLoadStatus ? (
-                  <div className="flex items-start">
-                    <div
-                      className={clsx(
-                        'w-full max-w-[92%] sm:max-w-[80%] px-3.5 py-3 rounded-2xl rounded-bl-sm border space-y-2',
-                        isDark
-                          ? 'bg-[#12161F] border-amber-400/40 text-stone-200'
-                          : 'bg-white border-amber-300 text-stone-800 shadow-xs'
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2 text-xs font-semibold">
-                        <span className="inline-flex items-center gap-1.5 text-amber-400 truncate">
-                          <Cpu className="w-3.5 h-3.5 animate-pulse shrink-0" />
-                          <span className="truncate">{modelLoadStatus.text}</span>
-                        </span>
-                        <span className="font-mono text-[11px] shrink-0">
+                  {/* Model Download / Live Streaming / Thinking */}
+                  {isThinking && modelLoadStatus ? (
+                    <div className="space-y-2 max-w-sm">
+                      <div className="flex items-center justify-between text-xs text-zinc-400">
+                        <span className="truncate pr-2">{modelLoadStatus.text}</span>
+                        <span className="font-mono shrink-0">
                           {Math.round(modelLoadStatus.progress * 100)}%
                         </span>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-stone-800 overflow-hidden">
+                      <div
+                        className={clsx(
+                          'h-1 w-full rounded-full overflow-hidden',
+                          isDark ? 'bg-zinc-800' : 'bg-zinc-200'
+                        )}
+                      >
                         <div
                           style={{
                             width: `${Math.max(5, Math.round(modelLoadStatus.progress * 100))}%`,
                           }}
-                          className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300"
-                        />
-                      </div>
-                      <p className="text-[10.5px] text-stone-400">
-                        One-time download cached locally on your device for future offline sparring.
-                      </p>
-                    </div>
-                  </div>
-                ) : isThinking && streamingReply ? (
-                  <div className="flex flex-col gap-1 items-start">
-                    <div className="flex items-center gap-1.5 text-[10.5px] font-medium text-amber-400 px-1">
-                      <Cpu className="w-3 h-3 animate-pulse" />
-                      <span>Steelman · Generating on device...</span>
-                    </div>
-                    <div
-                      className={clsx(
-                        'max-w-[92%] sm:max-w-[85%] rounded-2xl rounded-bl-sm px-4 py-3 text-[14.5px] leading-relaxed border',
-                        isDark
-                          ? 'bg-[#12161F] border-amber-400/35 text-stone-100'
-                          : 'bg-white border-amber-300 text-stone-800 shadow-xs'
-                      )}
-                    >
-                      <p>
-                        {streamingReply}
-                        <span className="inline-block w-1.5 h-4 ml-0.5 align-middle bg-amber-400 animate-pulse rounded-xs" />
-                      </p>
-                    </div>
-                  </div>
-                ) : isThinking ? (
-                  <div className="flex items-start">
-                    <div
-                      className={clsx(
-                        'inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl rounded-bl-sm border text-xs font-medium',
-                        isDark
-                          ? 'bg-[#12161F] border-[#232A39] text-stone-300'
-                          : 'bg-white border-[#E5DEC9] text-stone-600'
-                      )}
-                    >
-                      <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-                      <span>Crafting counter-argument...</span>
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* Error Alert */}
-                {errorMessage && (
-                  <div className="px-3.5 py-2.5 rounded-2xl border border-rose-500/40 bg-rose-500/10 text-rose-300 text-xs flex items-center justify-between gap-2">
-                    <span>{errorMessage}</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowSettings(true)}
-                      className="shrink-0 underline font-semibold text-rose-200"
-                    >
-                      Settings
-                    </button>
-                  </div>
-                )}
-
-                {/* STAGE 3: AUTOMATIC INLINE ROUND COMPLETE & GAME TAPE PAYOFF */}
-                {isRoundComplete && currentLiveSessionRecord && completedVerdict && (
-                  <div
-                    className={clsx(
-                      'p-4 rounded-2xl border space-y-3.5 mt-2',
-                      isDark
-                        ? 'bg-[#12161F] border-amber-400/45 shadow-lg shadow-black/30'
-                        : 'bg-white border-amber-400 shadow-sm'
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                          Round Complete · Saved to Log
-                        </div>
-                        <h3
                           className={clsx(
-                            'font-editorial text-xl font-semibold mt-0.5',
-                            completedVerdict.tone === 'emerald'
-                              ? 'text-emerald-400'
-                              : completedVerdict.tone === 'rose'
-                                ? 'text-rose-400'
-                                : 'text-amber-400'
+                            'h-full transition-all duration-300',
+                            isDark ? 'bg-white' : 'bg-zinc-950'
                           )}
-                        >
-                          {completedVerdict.title}
-                        </h3>
-                        <p className="text-xs text-stone-400 mt-0.5">
-                          Avg Strength{' '}
-                          <strong className="font-mono text-stone-200">
-                            {currentLiveSessionRecord.avgStrength}/100
-                          </strong>{' '}
-                          · {currentLiveSessionRecord.turnCount} turns logged
-                        </p>
-                      </div>
-                      <div className="w-24 shrink-0 pt-1">
-                        <MomentumSparkline
-                          series={currentLiveSessionRecord.momentumSeries}
-                          isDark={isDark}
-                          height={32}
                         />
                       </div>
                     </div>
+                  ) : isThinking && streamingReply ? (
+                    <div className="space-y-2">
+                      <div className="text-xs font-semibold text-zinc-400">Steelman</div>
+                      <p
+                        className={clsx(
+                          'text-[15.5px] leading-[1.68]',
+                          isDark ? 'text-zinc-200' : 'text-zinc-800'
+                        )}
+                      >
+                        {streamingReply}
+                        <span
+                          className={clsx(
+                            'inline-block w-1.5 h-4 ml-1 align-middle animate-pulse',
+                            isDark ? 'bg-zinc-300' : 'bg-zinc-800'
+                          )}
+                        />
+                      </p>
+                    </div>
+                  ) : isThinking ? (
+                    <div className="inline-flex items-center gap-2 text-xs text-zinc-500">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Thinking...</span>
+                    </div>
+                  ) : null}
 
+                  {/* Error Alert */}
+                  {errorMessage && (
                     <div
                       className={clsx(
-                        'p-2.5 rounded-xl border text-xs space-y-1',
+                        'px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between gap-2',
                         isDark
-                          ? 'bg-[#0B0E14] border-[#222938] text-stone-300'
-                          : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-700'
+                          ? 'bg-rose-500/10 text-rose-400'
+                          : 'bg-rose-50 text-rose-700'
                       )}
                     >
-                      <div>
-                        <span className="text-emerald-400 font-semibold">Strength:</span>{' '}
-                        {currentLiveSessionRecord.topStrength}
-                      </div>
-                      <div>
-                        <span className="text-amber-400 font-semibold">Next focus:</span>{' '}
-                        {currentLiveSessionRecord.primaryFocus}
-                      </div>
+                      <span>{errorMessage}</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowSettings(true)}
+                        className="shrink-0 underline font-medium"
+                      >
+                        Settings
+                      </button>
                     </div>
+                  )}
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setReviewingSession({
-                          session: currentLiveSessionRecord,
-                          isHistorical: false,
-                        })
-                      }
-                      className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5"
+                  {/* STAGE 3: CLEAN ROUND COMPLETE VERDICT CARD */}
+                  {isRoundComplete && currentLiveSessionRecord && completedVerdict && (
+                    <div
+                      className={clsx(
+                        'p-5 rounded-2xl border space-y-4',
+                        isDark
+                          ? 'bg-[#141417] border-white/[0.08]'
+                          : 'bg-zinc-50 border-zinc-200'
+                      )}
                     >
-                      <Trophy className="w-4 h-4" />
-                      <span>Review Turn-by-Turn Game Tape</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="text-xs text-zinc-500">Round complete · Saved to log</div>
+                          <h3 className="font-editorial text-2xl font-medium tracking-tight">
+                            {completedVerdict.title}
+                          </h3>
+                          <p className="text-xs text-zinc-500 tabular-nums">
+                            Avg score {currentLiveSessionRecord.avgStrength}/100 ·{' '}
+                            {currentLiveSessionRecord.turnCount} arguments
+                          </p>
+                        </div>
+                        <div className="w-24 shrink-0 pt-2">
+                          <MomentumSparkline
+                            series={currentLiveSessionRecord.momentumSeries}
+                            isDark={isDark}
+                            height={30}
+                          />
+                        </div>
+                      </div>
 
-                    <div className="grid grid-cols-3 gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setTargetTurns((prev) => (prev ?? userTurnCount) + 2)}
+                      <div
                         className={clsx(
-                          'py-2 px-2 rounded-xl text-[11px] font-semibold border inline-flex items-center justify-center gap-1',
-                          isDark
-                            ? 'bg-[#0B0E14] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
-                            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-700'
+                          'pt-3 border-t text-xs space-y-1',
+                          isDark ? 'border-white/[0.06] text-zinc-400' : 'border-zinc-200 text-zinc-600'
                         )}
                       >
-                        <Plus className="w-3 h-3" />
-                        <span>2 Turns</span>
-                      </button>
+                        <div>
+                          <span className={isDark ? 'text-zinc-200 font-medium' : 'text-zinc-900 font-medium'}>
+                            Strength:
+                          </span>{' '}
+                          {currentLiveSessionRecord.topStrength}
+                        </div>
+                        <div>
+                          <span className={isDark ? 'text-zinc-200 font-medium' : 'text-zinc-900 font-medium'}>
+                            Next focus:
+                          </span>{' '}
+                          {currentLiveSessionRecord.primaryFocus}
+                        </div>
+                      </div>
+
                       <button
                         type="button"
-                        onClick={handleRematchSwitchSides}
+                        onClick={() =>
+                          setReviewingSession({
+                            session: currentLiveSessionRecord,
+                            isHistorical: false,
+                          })
+                        }
                         className={clsx(
-                          'py-2 px-2 rounded-xl text-[11px] font-semibold border inline-flex items-center justify-center gap-1',
+                          'w-full h-11 rounded-xl text-[13.5px] font-semibold transition-colors',
                           isDark
-                            ? 'bg-[#0B0E14] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
-                            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-700'
+                            ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                            : 'bg-zinc-950 text-white hover:bg-zinc-800'
                         )}
                       >
-                        <ArrowLeftRight className="w-3 h-3" />
-                        <span>Switch</span>
+                        Review Game Tape
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setStage('lobby')}
-                        className={clsx(
-                          'py-2 px-2 rounded-xl text-[11px] font-semibold border inline-flex items-center justify-center gap-1',
-                          isDark
-                            ? 'bg-[#0B0E14] border-[#262E3E] text-stone-300 hover:border-amber-400/40'
-                            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-700'
-                        )}
-                      >
-                        <span>New Topic</span>
-                      </button>
+
+                      <div className="flex items-center justify-center gap-5 text-xs font-medium text-zinc-500">
+                        <button
+                          type="button"
+                          onClick={() => setTargetTurns((prev) => (prev ?? userTurnCount) + 2)}
+                          className={isDark ? 'hover:text-zinc-200' : 'hover:text-zinc-900'}
+                        >
+                          +2 turns
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRematchSwitchSides}
+                          className={isDark ? 'hover:text-zinc-200' : 'hover:text-zinc-900'}
+                        >
+                          Switch sides
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStage('lobby')}
+                          className={isDark ? 'hover:text-zinc-200' : 'hover:text-zinc-900'}
+                        >
+                          New motion
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div ref={feedEndRef} />
+                  <div ref={feedEndRef} />
+                </div>
               </div>
 
-              {/* Phase-Aware Guidance Strip + Optional 1-Tap Angle Helper */}
+              {/* Clean Minimal Composer */}
               {!isRoundComplete && (
-                <div
-                  className={clsx(
-                    'border-t shrink-0',
-                    isDark ? 'bg-[#0E1219] border-[#222938]' : 'bg-white border-[#E7E2D8]'
-                  )}
-                >
-                  {/* Collapsible Suggested Angle Card */}
-                  {showAngleHint && suggestedAngleNode && (
-                    <div
-                      className={clsx(
-                        'mx-3 mt-2.5 p-3 rounded-xl border text-xs space-y-1.5',
-                        isDark
-                          ? 'bg-amber-400/[0.07] border-amber-400/30 text-stone-200'
-                          : 'bg-amber-50/90 border-amber-300 text-stone-800'
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 inline-flex items-center gap-1">
-                          <Lightbulb className="w-3 h-3" />
-                          <span>Suggested Angle · {suggestedAngleNode.title}</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowAngleHint(false)}
-                          className="text-stone-400 hover:text-stone-200"
-                          aria-label="Hide angle suggestion"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <p className="text-[11.5px] leading-snug opacity-90 line-clamp-2">
-                        {suggestedAngleNode.summary}
-                      </p>
-                      <div className="flex items-center gap-2 pt-0.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const firstSent = suggestedAngleNode.summary.split('.')[0];
-                            setDraftText(
-                              `A stronger point here is ${suggestedAngleNode.title.toLowerCase()}: ${firstSent}.`
-                            );
-                            setShowAngleHint(false);
-                            textareaRef.current?.focus();
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-[11px]"
-                        >
-                          Use as starter
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onInspectNode(suggestedAngleNode.id)}
-                          className="text-[11px] font-semibold text-amber-400 hover:underline inline-flex items-center gap-0.5"
-                        >
-                          <span>Read sources</span>
-                          <ArrowUpRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 1-Line Phase Coaching Cue + Angle Button */}
-                  <div className="px-3.5 pt-2 pb-1 flex items-center justify-between gap-2">
-                    <p className="text-[11px] text-stone-400 truncate">
-                      <span className="font-semibold text-amber-400/95">
-                        {phaseGuidance.phaseLabel}:
-                      </span>{' '}
-                      {phaseGuidance.cue}
-                    </p>
-                    {suggestedAngleNode && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAngleHint((v) => !v)}
+                <div className="shrink-0 px-3.5 sm:px-6 pb-3 pt-1">
+                  <div className="max-w-2xl mx-auto space-y-2">
+                    {/* Optional Suggested Angle popover */}
+                    {showAngleHint && suggestedAngleNode && (
+                      <div
                         className={clsx(
-                          'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold border shrink-0 transition-colors',
-                          showAngleHint
-                            ? 'bg-amber-500 border-amber-400 text-stone-950'
-                            : isDark
-                              ? 'bg-[#151A24] border-[#262E3E] text-amber-300 hover:border-amber-400/50'
-                              : 'bg-[#FAF8F4] border-[#E5DEC9] text-amber-800 hover:border-amber-500'
+                          'p-3.5 rounded-xl border text-xs space-y-2',
+                          isDark
+                            ? 'bg-[#141417] border-white/[0.1] text-zinc-300'
+                            : 'bg-zinc-50 border-zinc-200 text-zinc-700'
                         )}
                       >
-                        <Lightbulb className="w-3 h-3" />
-                        <span>Angle</span>
-                      </button>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-zinc-100 dark:text-zinc-100">
+                            {suggestedAngleNode.title}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowAngleHint(false)}
+                            className="text-zinc-500 hover:text-zinc-300"
+                            aria-label="Close hint"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-zinc-400 leading-relaxed line-clamp-2">
+                          {suggestedAngleNode.summary}
+                        </p>
+                        <div className="flex items-center gap-3 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const firstSent = suggestedAngleNode.summary.split('.')[0];
+                              setDraftText(
+                                `A key consideration is ${suggestedAngleNode.title.toLowerCase()}: ${firstSent}.`
+                              );
+                              setShowAngleHint(false);
+                              textareaRef.current?.focus();
+                            }}
+                            className={clsx(
+                              'font-medium underline underline-offset-2',
+                              isDark ? 'text-white' : 'text-zinc-950'
+                            )}
+                          >
+                            Insert starter
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onInspectNode(suggestedAngleNode.id)}
+                            className="text-zinc-500 hover:text-zinc-300"
+                          >
+                            Inspect source
+                          </button>
+                        </div>
+                      </div>
                     )}
-                  </div>
 
-                  {/* Medium-Sized Multi-Line Dictation & Text Composer */}
-                  <form onSubmit={handleFormSubmit} className="px-3 sm:px-4 pb-2.5 pt-1">
-                    <div className="flex items-end gap-2">
+                    {/* Quiet 1-line Phase Guidance + Hint toggle */}
+                    <div className="flex items-center justify-between gap-2 px-1">
+                      <p className="text-[11.5px] text-zinc-500 truncate">
+                        <span className={isDark ? 'text-zinc-300 font-medium' : 'text-zinc-700 font-medium'}>
+                          {phaseGuidance.phaseLabel}
+                        </span>{' '}
+                        · {phaseGuidance.cue}
+                      </p>
+                      {suggestedAngleNode && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAngleHint((v) => !v)}
+                          className={clsx(
+                            'text-[11.5px] font-medium shrink-0 transition-colors',
+                            showAngleHint
+                              ? isDark
+                                ? 'text-white'
+                                : 'text-zinc-950'
+                              : 'text-zinc-500 hover:text-zinc-300'
+                          )}
+                        >
+                          {showAngleHint ? 'Hide hint' : 'Hint'}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Unified Claude/ChatGPT-style Multi-Line Dictation Box */}
+                    <form
+                      onSubmit={handleFormSubmit}
+                      className={clsx(
+                        'rounded-2xl border p-2 pl-3.5 flex items-end gap-2 transition-colors',
+                        isDark
+                          ? 'bg-[#141417] border-white/[0.1] focus-within:border-white/[0.22]'
+                          : 'bg-zinc-50 border-zinc-200 focus-within:border-zinc-400'
+                      )}
+                    >
                       <textarea
                         ref={textareaRef}
                         rows={3}
                         value={draftText}
                         onChange={(e) => setDraftText(e.target.value)}
                         onKeyDown={handleTextareaKeyDown}
-                        placeholder="Tap your keyboard mic to dictate, or type your argument..."
+                        placeholder="Dictate with your keyboard mic, or type your argument..."
                         className={clsx(
-                          'flex-1 min-h-[76px] max-h-[150px] resize-none px-3.5 py-2.5 rounded-2xl text-[14px] leading-snug border focus:outline-none focus:ring-2 focus:ring-amber-400/70 transition-colors',
+                          'flex-1 min-h-[72px] max-h-[150px] resize-none bg-transparent py-1.5 text-[15px] leading-snug focus:outline-none',
                           isDark
-                            ? 'bg-[#0B0E14] border-[#262E3E] text-stone-100 placeholder:text-stone-500'
-                            : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-900 placeholder:text-stone-400'
+                            ? 'text-zinc-100 placeholder:text-zinc-500'
+                            : 'text-zinc-950 placeholder:text-zinc-400'
                         )}
                       />
                       <button
                         type="submit"
                         disabled={!draftText.trim() || isThinking}
                         aria-label="Send argument"
-                        className="h-12 w-12 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-95 disabled:opacity-35 text-stone-950 flex items-center justify-center shadow-md shadow-amber-500/15 transition-all shrink-0"
+                        className={clsx(
+                          'h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-95 disabled:opacity-25 mb-0.5',
+                          isDark
+                            ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                            : 'bg-zinc-950 text-white hover:bg-zinc-800'
+                        )}
                       >
                         {isThinking ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Send className="w-5 h-5" />
+                          <ArrowUp className="w-4 h-4 stroke-[2.5]" />
                         )}
                       </button>
-                    </div>
-                  </form>
+                    </form>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* DESKTOP RIGHT COLUMN: Live Visual Feedback HUD */}
-            <div className="hidden lg:block lg:col-span-5 overflow-y-auto p-4">
+            {/* DESKTOP RIGHT COLUMN: Quiet Argument Map */}
+            <div className="hidden lg:block lg:col-span-4 overflow-y-auto p-5">
               <LiveDebateHud
                 feedback={feedback}
                 nodes={nodes}
@@ -1247,43 +1178,41 @@ export function VoiceDebateView({
         </>
       )}
 
-      {/* Mobile Argument Map Slide-Up Sheet */}
+      {/* Mobile Argument Map Sheet */}
       {showHudSheet && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs"
           onClick={() => setShowHudSheet(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             className={clsx(
-              'w-full max-w-lg max-h-[82vh] rounded-t-3xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
+              'w-full max-w-lg max-h-[82vh] rounded-t-2xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
               isDark
-                ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
-                : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-900'
+                ? 'bg-[#141417] border-white/[0.08] text-zinc-100'
+                : 'bg-white border-zinc-200 text-zinc-950'
             )}
           >
+            <div className="pt-2.5 pb-1 flex justify-center sm:hidden shrink-0">
+              <span className="w-9 h-1 rounded-full bg-zinc-500/35" />
+            </div>
             <div
               className={clsx(
-                'pt-2.5 pb-3 px-4 border-b flex flex-col items-center gap-2 shrink-0',
-                isDark ? 'border-[#222938]' : 'border-[#E7E2D8]'
+                'px-5 py-3 border-b flex items-center justify-between shrink-0',
+                isDark ? 'border-white/[0.08]' : 'border-zinc-100'
               )}
             >
-              <span className="w-10 h-1 rounded-full bg-stone-500/40 sm:hidden" />
-              <div className="w-full flex items-center justify-between">
-                <h3 className="font-editorial text-base font-semibold">
-                  Live Coach &amp; Argument Map
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setShowHudSheet(false)}
-                  aria-label="Close panel"
-                  className="p-1.5 rounded-full text-stone-400 hover:bg-stone-500/15"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+              <h3 className="text-[15px] font-semibold">Argument Map</h3>
+              <button
+                type="button"
+                onClick={() => setShowHudSheet(false)}
+                aria-label="Close argument map"
+                className="p-1.5 rounded-lg text-zinc-400 hover:bg-white/[0.06]"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <div className="p-4 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="p-5 overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]">
               <LiveDebateHud
                 feedback={feedback}
                 nodes={nodes}
@@ -1303,7 +1232,7 @@ export function VoiceDebateView({
         </div>
       )}
 
-      {/* 22-Motion Topic Picker (opened from Lobby) */}
+      {/* 22-Motion Topic Picker */}
       <TopicPickerModal
         isOpen={showTopicPicker}
         onClose={() => setShowTopicPicker(false)}
@@ -1312,13 +1241,14 @@ export function VoiceDebateView({
         isDark={isDark}
       />
 
-      {/* AI Opponent Settings Modal */}
+      {/* Unified Settings Sheet */}
       <VoiceSettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         settings={settings}
         onSave={handleSaveSettings}
         isDark={isDark}
+        onToggleTheme={onToggleTheme}
       />
 
       {/* Performance Log Sheet */}
@@ -1334,7 +1264,7 @@ export function VoiceDebateView({
         isDark={isDark}
       />
 
-      {/* Turn-by-Turn Game Tape & Round Verdict Sheet */}
+      {/* Turn-by-Turn Game Tape Review Sheet */}
       <DebateScorecardModal
         isOpen={Boolean(reviewingSession)}
         onClose={() => setReviewingSession(null)}

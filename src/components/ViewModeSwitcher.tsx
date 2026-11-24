@@ -27,8 +27,8 @@ export function ViewModeSwitcher({
       role="tablist"
       aria-label="Debate view mode"
       className={clsx(
-        'inline-flex items-center p-1 rounded-xl border shadow-xs transition-colors shrink-0',
-        isDark ? 'bg-[#12161F] border-[#262E3E]' : 'bg-[#F3EFE6] border-[#E5DEC9]',
+        'inline-flex items-center p-1 rounded-xl transition-colors shrink-0',
+        isDark ? 'bg-[#161619]' : 'bg-zinc-100',
         className
       )}
     >
@@ -43,14 +43,14 @@ export function ViewModeSwitcher({
             aria-selected={active}
             onClick={() => onChangeViewMode(tab.id)}
             className={clsx(
-              'inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
+              'inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
               active
                 ? isDark
-                  ? 'bg-amber-500 text-stone-950 shadow-xs'
-                  : 'bg-[#181B22] text-amber-300 shadow-xs'
+                  ? 'bg-[#26262B] text-white shadow-xs'
+                  : 'bg-white text-zinc-950 shadow-xs'
                 : isDark
-                  ? 'text-stone-400 hover:text-stone-200'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'text-zinc-400 hover:text-zinc-200'
+                  : 'text-zinc-500 hover:text-zinc-900'
             )}
           >
             <Icon className="w-3.5 h-3.5" />

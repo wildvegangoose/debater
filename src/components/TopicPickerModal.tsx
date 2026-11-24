@@ -23,7 +23,6 @@ import {
   Scale,
   Search,
   Shield,
-  Sparkles,
   TrendingUp,
   Vote,
   X,
@@ -168,42 +167,37 @@ export function TopicPickerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         className={clsx(
-          'w-full max-w-4xl max-h-[90vh] rounded-t-3xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden transition-all',
+          'w-full max-w-4xl max-h-[90vh] rounded-t-2xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden transition-all',
           isDark
-            ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
-            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-900'
+            ? 'bg-[#141417] border-white/[0.08] text-zinc-100'
+            : 'bg-white border-zinc-200 text-zinc-950'
         )}
       >
         {/* Header */}
         <div
           className={clsx(
             'p-4 sm:p-5 border-b flex items-start justify-between gap-4 shrink-0',
-            isDark ? 'border-[#222938] bg-[#0E1219]' : 'border-[#E7E2D8] bg-white'
+            isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           <div>
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-amber-400/15 border border-amber-400/35 text-amber-400 shadow-xs">
-                <Sparkles className="w-4 h-4" />
-              </span>
-              <h2 className="font-editorial text-lg sm:text-xl font-bold tracking-tight">
-                22 Curated Debate Motions
-              </h2>
-            </div>
-            <p className={clsx('text-xs sm:text-sm mt-1', isDark ? 'text-stone-400' : 'text-stone-600')}>
-              Steelmanned arguments sourced from Munk Debates, Oxford Union, Open to Debate, and primary studies.
+            <h2 className="font-editorial text-lg sm:text-xl font-medium tracking-tight">
+              Choose a Motion
+            </h2>
+            <p className={clsx('text-xs mt-1', isDark ? 'text-zinc-400' : 'text-zinc-500')}>
+              22 researched debate topics sourced from Munk Debates, Oxford Union, and primary studies.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className={clsx(
-              'p-2 rounded-xl transition-colors shrink-0',
-              isDark ? 'hover:bg-[#1A202D] text-stone-400 hover:text-stone-200' : 'hover:bg-stone-200 text-stone-500 hover:text-stone-900'
+              'p-2 rounded-lg transition-colors shrink-0',
+              isDark ? 'hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-100' : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
             )}
             title="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -211,30 +205,30 @@ export function TopicPickerModal({
         <div
           className={clsx(
             'px-4 sm:px-5 py-3 border-b flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between shrink-0',
-            isDark ? 'border-[#222938] bg-[#0B0E14]/60' : 'border-[#E7E2D8] bg-[#F5F1E8]/60'
+            isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
             <input
               ref={searchInputRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search motions, thinkers, debates (AI risk, UBI, Nuclear, Free Speech)..."
+              placeholder="Search motions, thinkers, debates..."
               className={clsx(
-                'w-full pl-9 pr-8 py-2 rounded-xl text-xs sm:text-sm border transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/70',
+                'w-full pl-9 pr-8 py-2 rounded-xl text-xs sm:text-sm border transition-colors focus:outline-none',
                 isDark
-                  ? 'bg-[#12161F] border-[#262E3E] text-stone-100 placeholder:text-stone-500'
-                  : 'bg-white border-[#DCD4C4] text-stone-900 placeholder:text-stone-400'
+                  ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-100 placeholder:text-zinc-500 focus:border-white/25'
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-950 placeholder:text-zinc-400 focus:border-zinc-400'
               )}
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-200"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -247,12 +241,14 @@ export function TopicPickerModal({
               type="button"
               onClick={() => setSelectedCategory('ALL')}
               className={clsx(
-                'px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
+                'px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all',
                 selectedCategory === 'ALL'
-                  ? 'bg-amber-500 text-stone-950 font-bold shadow-xs'
+                  ? isDark
+                    ? 'bg-white text-zinc-950'
+                    : 'bg-zinc-950 text-white'
                   : isDark
-                    ? 'text-stone-400 hover:text-stone-200 hover:bg-[#1A202D]'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+                    ? 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]'
+                    : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
               )}
             >
               All (22)

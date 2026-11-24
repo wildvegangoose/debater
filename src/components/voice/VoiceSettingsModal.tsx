@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import {
+  Check,
   CheckCircle2,
-  Cpu,
   Download,
   ExternalLink,
-  HardDrive,
-  KeyRound,
   Loader2,
-  Server,
-  Sparkles,
   Trash2,
-  WifiOff,
   X,
   XCircle,
 } from 'lucide-react';
-import { VoiceAIBackend, VoiceDebateSettings } from '../../types/voiceDebate';
+import {
+  DebateOpponentPersona,
+  DebateRoundLength,
+  VoiceAIBackend,
+  VoiceDebateSettings,
+} from '../../types/voiceDebate';
 import { testVoiceBackendConnection } from '../../services/voiceDebate/llmDebateEngine';
 import {
   WEBLLM_MODEL_PRESETS,
@@ -34,43 +34,51 @@ interface VoiceSettingsModalProps {
   settings: VoiceDebateSettings;
   onSave: (updated: VoiceDebateSettings) => void;
   isDark: boolean;
+  onToggleTheme?: () => void;
 }
 
-const BACKEND_CARDS: Array<{
+const BACKEND_OPTIONS: Array<{
   id: VoiceAIBackend;
   title: string;
   subtitle: string;
-  badge: string;
-  icon: typeof Sparkles;
+  tag: string;
 }> = [
   {
     id: 'browser-webllm',
-    title: 'On-Device Browser AI (WebLLM)',
-    subtitle: 'Real AI model running privately on your phone via WebGPU. One-time download, then works offline.',
-    badge: 'No Key · Free',
-    icon: Cpu,
+    title: 'On-Device AI',
+    subtitle: 'Runs privately in Chrome via WebGPU. Free, no API key.',
+    tag: 'Free',
   },
   {
     id: 'gemini-flash',
-    title: 'Gemini AI (Cloud)',
-    subtitle: 'Fastest & sharpest cloud sparring with Google AI Studio free tier.',
-    badge: 'Free Key',
-    icon: Sparkles,
+    title: 'Gemini Cloud',
+    subtitle: 'Fastest responses using your Google AI Studio key.',
+    tag: 'API Key',
   },
   {
     id: 'local-openai',
-    title: 'Local / Self-Hosted AI',
-    subtitle: 'Connect to Ollama, LM Studio, or any OpenAI-compatible server on your Wi-Fi.',
-    badge: 'LAN Server',
-    icon: Server,
+    title: 'Local Server',
+    subtitle: 'Ollama, LM Studio, or OpenAI-compatible LAN endpoint.',
+    tag: 'Custom',
   },
   {
     id: 'offline-curated',
-    title: 'Offline Curated Templates',
-    subtitle: 'Instant zero-download fallback using Steelman’s 22 built-in debate graphs.',
-    badge: 'Instant',
-    icon: WifiOff,
+    title: 'Offline Templates',
+    subtitle: 'Instant built-in graph replies without downloading a model.',
+    tag: 'Basic',
   },
+];
+
+const ROUND_LENGTH_OPTIONS: Array<{ id: DebateRoundLength; label: string }> = [
+  { id: 3, label: '3 turns' },
+  { id: 5, label: '5 turns' },
+  { id: 'open', label: 'Open' },
+];
+
+const PERSONA_OPTIONS: Array<{ id: DebateOpponentPersona; label: string }> = [
+  { id: 'sparring', label: 'Partner' },
+  { id: 'oxford', label: 'Oxford' },
+  { id: 'socratic', label: 'Socratic' },
 ];
 
 export function VoiceSettingsModal({
@@ -79,12 +87,12 @@ export function VoiceSettingsModal({
   settings,
   onSave,
   isDark,
+  onToggleTheme,
 }: VoiceSettingsModalProps) {
   const [draft, setDraft] = useState<VoiceDebateSettings>(settings);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
 
-  // WebLLM state
   const [gpuSupport, setGpuSupport] = useState<WebGpuSupportResult | null>(null);
   const [cachedModels, setCachedModels] = useState<Record<string, boolean>>({});
   const [downloading, setDownloading] = useState(false);
@@ -156,7 +164,7 @@ export function VoiceSettingsModal({
       setLoadedModel(getLoadedWebLlmModelId());
       setTestResult({
         ok: true,
-        message: `${selectedPreset.label} is downloaded & loaded on your device. Tap Save to start sparring!`,
+        message: `${selectedPreset.label} is ready on your device.`,
       });
     } catch (err) {
       setTestResult({
@@ -198,132 +206,269 @@ export function VoiceSettingsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/75 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-xs"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         className={clsx(
-          'w-full max-w-lg max-h-[88vh] rounded-t-3xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
+          'w-full max-w-md max-h-[88vh] rounded-t-2xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden',
           isDark
-            ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
-            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-900'
+            ? 'bg-[#141417] border-white/[0.08] text-zinc-100'
+            : 'bg-white border-zinc-200 text-zinc-950'
         )}
       >
-        <div className="pt-2 pb-0.5 flex justify-center sm:hidden shrink-0">
-          <span className="w-10 h-1 rounded-full bg-stone-500/40" />
+        <div className="pt-2.5 pb-1 flex justify-center sm:hidden shrink-0">
+          <span className="w-9 h-1 rounded-full bg-zinc-500/35" />
         </div>
 
         {/* Header */}
         <div
           className={clsx(
-            'px-4 py-3 border-b flex items-center justify-between gap-3 shrink-0',
-            isDark ? 'border-[#222938]' : 'border-[#E7E2D8]'
+            'px-5 py-3.5 border-b flex items-center justify-between shrink-0',
+            isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/35 flex items-center justify-center text-amber-400">
-              <Cpu className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-editorial text-base font-semibold leading-tight">
-                AI Opponent Settings
-              </h2>
-              <p className="text-[11px] text-stone-400">
-                Choose on-device AI (no key) or cloud/local models.
-              </p>
-            </div>
-          </div>
+          <h2 className="text-[15px] font-semibold tracking-tight">Settings</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            className="p-1.5 rounded-full text-stone-400 hover:bg-stone-500/15"
+            className={clsx(
+              'p-1.5 rounded-lg transition-colors',
+              isDark ? 'text-zinc-400 hover:bg-white/[0.06]' : 'text-zinc-500 hover:bg-zinc-100'
+            )}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-4 overflow-y-auto space-y-4">
-          <div className="space-y-2">
-            {BACKEND_CARDS.map((card) => {
-              const Icon = card.icon;
-              const active = draft.backend === card.id;
-              return (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => {
-                    setDraft((d) => ({ ...d, backend: card.id }));
-                    setTestResult(null);
-                  }}
+        <div className="px-5 py-4 overflow-y-auto space-y-6">
+          {/* 1. Debate Format & Appearance */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label
+                className={clsx(
+                  'block text-xs font-medium',
+                  isDark ? 'text-zinc-400' : 'text-zinc-500'
+                )}
+              >
+                Round length
+              </label>
+              <div
+                className={clsx(
+                  'grid grid-cols-3 p-1 rounded-xl',
+                  isDark ? 'bg-[#0C0C0E]' : 'bg-zinc-100'
+                )}
+              >
+                {ROUND_LENGTH_OPTIONS.map((opt) => (
+                  <button
+                    key={String(opt.id)}
+                    type="button"
+                    onClick={() => setDraft((d) => ({ ...d, roundLength: opt.id }))}
+                    className={clsx(
+                      'py-1.5 rounded-lg text-xs font-medium transition-all',
+                      draft.roundLength === opt.id
+                        ? isDark
+                          ? 'bg-[#26262B] text-white shadow-xs'
+                          : 'bg-white text-zinc-950 shadow-xs'
+                        : isDark
+                          ? 'text-zinc-400 hover:text-zinc-200'
+                          : 'text-zinc-500 hover:text-zinc-900'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                className={clsx(
+                  'block text-xs font-medium',
+                  isDark ? 'text-zinc-400' : 'text-zinc-500'
+                )}
+              >
+                Opponent style
+              </label>
+              <div
+                className={clsx(
+                  'grid grid-cols-3 p-1 rounded-xl',
+                  isDark ? 'bg-[#0C0C0E]' : 'bg-zinc-100'
+                )}
+              >
+                {PERSONA_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setDraft((d) => ({ ...d, persona: opt.id }))}
+                    className={clsx(
+                      'py-1.5 rounded-lg text-xs font-medium transition-all',
+                      draft.persona === opt.id
+                        ? isDark
+                          ? 'bg-[#26262B] text-white shadow-xs'
+                          : 'bg-white text-zinc-950 shadow-xs'
+                        : isDark
+                          ? 'text-zinc-400 hover:text-zinc-200'
+                          : 'text-zinc-500 hover:text-zinc-900'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {onToggleTheme && (
+              <div className="flex items-center justify-between pt-1">
+                <span
                   className={clsx(
-                    'w-full text-left p-3 rounded-xl border transition-all',
-                    active
-                      ? isDark
-                        ? 'bg-amber-400/12 border-amber-400/60 text-stone-50'
-                        : 'bg-amber-50 border-amber-500 text-amber-950'
-                      : isDark
-                        ? 'bg-[#0B0E14] border-[#222938] text-stone-300 hover:border-[#323C50]'
-                        : 'bg-white border-[#E5DEC9] text-stone-700 hover:border-amber-400'
+                    'text-xs font-medium',
+                    isDark ? 'text-zinc-400' : 'text-zinc-500'
                   )}
                 >
-                  <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold">
-                      <Icon className="w-3.5 h-3.5 text-amber-400" />
-                      {card.title}
-                    </span>
-                    <span
-                      className={clsx(
-                        'px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                        active
-                          ? 'bg-amber-500 text-stone-950'
-                          : isDark
-                            ? 'bg-[#1A202D] text-stone-400'
-                            : 'bg-[#F3EFE6] text-stone-600'
-                      )}
-                    >
-                      {card.badge}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-400 leading-snug">{card.subtitle}</p>
-                </button>
-              );
-            })}
+                  Appearance
+                </span>
+                <div
+                  className={clsx(
+                    'inline-grid grid-cols-2 p-0.5 rounded-lg',
+                    isDark ? 'bg-[#0C0C0E]' : 'bg-zinc-100'
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isDark) onToggleTheme();
+                    }}
+                    className={clsx(
+                      'px-3 py-1 rounded-md text-xs font-medium transition-all',
+                      isDark ? 'bg-[#26262B] text-white' : 'text-zinc-500'
+                    )}
+                  >
+                    Dark
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isDark) onToggleTheme();
+                    }}
+                    className={clsx(
+                      'px-3 py-1 rounded-md text-xs font-medium transition-all',
+                      !isDark ? 'bg-white text-zinc-950 shadow-xs' : 'text-zinc-400'
+                    )}
+                  >
+                    Light
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* On-Device WebLLM Settings */}
-          {draft.backend === 'browser-webllm' && (
-            <div
+          <hr className={isDark ? 'border-white/[0.08]' : 'border-zinc-100'} />
+
+          {/* 2. AI Engine Selection */}
+          <div className="space-y-2.5">
+            <label
               className={clsx(
-                'p-3.5 rounded-xl border space-y-3',
-                isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
+                'block text-xs font-medium',
+                isDark ? 'text-zinc-400' : 'text-zinc-500'
               )}
             >
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold">
-                  <HardDrive className="w-3.5 h-3.5 text-amber-400" />
-                  Select On-Device Model
-                </span>
+              AI engine
+            </label>
+
+            <div
+              className={clsx(
+                'rounded-xl border divide-y overflow-hidden',
+                isDark
+                  ? 'bg-[#0C0C0E] border-white/[0.08] divide-white/[0.06]'
+                  : 'bg-zinc-50/60 border-zinc-200 divide-zinc-200/70'
+              )}
+            >
+              {BACKEND_OPTIONS.map((opt) => {
+                const active = draft.backend === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setDraft((d) => ({ ...d, backend: opt.id }));
+                      setTestResult(null);
+                    }}
+                    className={clsx(
+                      'w-full text-left px-3.5 py-3 flex items-center justify-between gap-3 transition-colors',
+                      active
+                        ? isDark
+                          ? 'bg-white/[0.05]'
+                          : 'bg-white'
+                        : isDark
+                          ? 'hover:bg-white/[0.02]'
+                          : 'hover:bg-white/60'
+                    )}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium">{opt.title}</span>
+                        <span
+                          className={clsx(
+                            'text-[10.5px] font-medium',
+                            isDark ? 'text-zinc-500' : 'text-zinc-400'
+                          )}
+                        >
+                          {opt.tag}
+                        </span>
+                      </div>
+                      <p
+                        className={clsx(
+                          'text-[11.5px] mt-0.5 leading-snug',
+                          isDark ? 'text-zinc-500' : 'text-zinc-500'
+                        )}
+                      >
+                        {opt.subtitle}
+                      </p>
+                    </div>
+
+                    <span
+                      className={clsx(
+                        'w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-colors',
+                        active
+                          ? isDark
+                            ? 'bg-white border-white text-zinc-950'
+                            : 'bg-zinc-950 border-zinc-950 text-white'
+                          : isDark
+                            ? 'border-zinc-700'
+                            : 'border-zinc-300'
+                      )}
+                    >
+                      {active && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* On-Device WebLLM Sub-section */}
+          {draft.backend === 'browser-webllm' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className={isDark ? 'text-zinc-400' : 'text-zinc-500'}>Model</span>
                 {gpuSupport && (
                   <span
                     className={clsx(
-                      'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border',
-                      gpuSupport.supported
-                        ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
-                        : 'bg-rose-500/15 border-rose-500/35 text-rose-300'
+                      'text-[11px] font-medium',
+                      gpuSupport.supported ? 'text-emerald-500' : 'text-rose-500'
                     )}
                   >
-                    {gpuSupport.supported ? 'WebGPU Ready' : 'WebGPU Unavailable'}
+                    {gpuSupport.supported ? 'WebGPU ready' : 'WebGPU unavailable'}
                   </span>
                 )}
               </div>
 
               {gpuSupport && !gpuSupport.supported && (
-                <div className="px-3 py-2 rounded-lg bg-rose-500/15 border border-rose-500/35 text-rose-300 text-[11px] leading-snug">
-                  {gpuSupport.reason}
-                </div>
+                <p className="text-xs text-rose-400 leading-snug">{gpuSupport.reason}</p>
               )}
 
               <div className="space-y-1.5">
@@ -340,73 +485,82 @@ export function VoiceSettingsModal({
                         setTestResult(null);
                       }}
                       className={clsx(
-                        'w-full text-left px-3 py-2.5 rounded-xl border transition-all disabled:opacity-60',
+                        'w-full text-left px-3 py-2.5 rounded-xl border transition-colors disabled:opacity-50',
                         selected
                           ? isDark
-                            ? 'bg-amber-400/12 border-amber-400/60 text-stone-50'
-                            : 'bg-amber-50 border-amber-500 text-amber-950'
+                            ? 'bg-white/[0.06] border-white/25 text-white'
+                            : 'bg-zinc-50 border-zinc-900 text-zinc-950'
                           : isDark
-                            ? 'bg-[#12161F] border-[#222938] text-stone-300 hover:border-[#323C50]'
-                            : 'bg-[#FAF8F4] border-[#E5DEC9] text-stone-700 hover:border-amber-400'
+                            ? 'bg-transparent border-white/[0.08] text-zinc-300 hover:border-white/15'
+                            : 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300'
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold flex items-center gap-1.5">
-                          <span>{preset.label}</span>
+                        <span className="text-xs font-medium">
+                          {preset.label}
                           {preset.recommended && (
-                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-400/20 text-amber-300">
-                              Recommended
+                            <span
+                              className={clsx(
+                                'ml-1.5 text-[10.5px]',
+                                isDark ? 'text-zinc-400' : 'text-zinc-500'
+                              )}
+                            >
+                              · Default
                             </span>
                           )}
                         </span>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {cached && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-500/20 text-emerald-300">
-                              Cached
-                            </span>
-                          )}
-                          <span className="text-[10.5px] font-mono text-stone-400">
-                            {preset.downloadSizeLabel}
-                          </span>
-                        </div>
+                        <span className="text-[11px] font-mono text-zinc-500 shrink-0">
+                          {cached ? 'Cached · ' : ''}
+                          {preset.downloadSizeLabel}
+                        </span>
                       </div>
-                      <p className="text-[11px] text-stone-400 mt-0.5 leading-snug">
-                        {preset.tagline} ({preset.vramLabel})
-                      </p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">{preset.tagline}</p>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Download Progress Bar */}
               {downloading && downloadProgress && (
-                <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between text-[11px] font-medium">
-                    <span className="text-amber-300 truncate pr-2">{downloadProgress.text}</span>
-                    <span className="text-stone-300 font-mono shrink-0">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                    <span className="truncate pr-2">{downloadProgress.text}</span>
+                    <span className="font-mono shrink-0">
                       {Math.round(downloadProgress.progress * 100)}%
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-stone-800 overflow-hidden">
+                  <div
+                    className={clsx(
+                      'h-1.5 w-full rounded-full overflow-hidden',
+                      isDark ? 'bg-zinc-800' : 'bg-zinc-200'
+                    )}
+                  >
                     <div
-                      style={{ width: `${Math.max(4, Math.round(downloadProgress.progress * 100))}%` }}
-                      className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300"
+                      style={{
+                        width: `${Math.max(4, Math.round(downloadProgress.progress * 100))}%`,
+                      }}
+                      className={clsx(
+                        'h-full transition-all duration-300',
+                        isDark ? 'bg-white' : 'bg-zinc-950'
+                      )}
                     />
                   </div>
                 </div>
               )}
 
-              {/* Pre-Download & Cache Controls */}
-              <div className="flex items-center gap-2 pt-1 flex-wrap">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleDownloadAndLoad}
                   disabled={downloading || (gpuSupport !== null && !gpuSupport.supported)}
                   className={clsx(
-                    'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors disabled:opacity-50',
+                    'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors disabled:opacity-45',
                     isSelectedLoaded
-                      ? 'bg-emerald-600/20 border border-emerald-500/40 text-emerald-300'
-                      : 'bg-amber-500 hover:bg-amber-400 text-stone-950'
+                      ? isDark
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                      : isDark
+                        ? 'bg-white/[0.08] border-white/[0.12] text-white hover:bg-white/[0.12]'
+                        : 'bg-zinc-100 border-zinc-200 text-zinc-950 hover:bg-zinc-200/80'
                   )}
                 >
                   {downloading ? (
@@ -417,12 +571,12 @@ export function VoiceSettingsModal({
                   ) : isSelectedLoaded ? (
                     <>
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Model Loaded &amp; Ready</span>
+                      <span>Loaded &amp; ready</span>
                     </>
                   ) : (
                     <>
                       <Download className="w-3.5 h-3.5" />
-                      <span>{selectedModelCached ? 'Load Cached Model' : 'Download & Load Model'}</span>
+                      <span>{selectedModelCached ? 'Load from cache' : 'Download model'}</span>
                     </>
                   )}
                 </button>
@@ -432,12 +586,11 @@ export function VoiceSettingsModal({
                     type="button"
                     onClick={handleClearCache}
                     disabled={clearingCache || downloading}
-                    title="Delete cached model weights from browser storage"
                     className={clsx(
-                      'inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50',
+                      'inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium border transition-colors disabled:opacity-45',
                       isDark
-                        ? 'bg-[#12161F] border-[#262E3E] text-stone-300 hover:text-rose-300 hover:border-rose-500/40'
-                        : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-700 hover:text-rose-600'
+                        ? 'border-white/[0.08] text-zinc-400 hover:text-rose-400'
+                        : 'border-zinc-200 text-zinc-500 hover:text-rose-600'
                     )}
                   >
                     {clearingCache ? (
@@ -449,33 +602,24 @@ export function VoiceSettingsModal({
                   </button>
                 )}
               </div>
-
-              <p className="text-[10.5px] text-stone-400 leading-snug">
-                Downloads once over Wi-Fi and saves in Chrome storage. You can also just tap Save and it will auto-download on your first message.
-              </p>
             </div>
           )}
 
-          {/* Gemini Settings */}
+          {/* Gemini Sub-section */}
           {draft.backend === 'gemini-flash' && (
-            <div
-              className={clsx(
-                'p-3.5 rounded-xl border space-y-3',
-                isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-              )}
-            >
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <label className="inline-flex items-center gap-1.5 text-xs font-bold">
-                  <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                  Google Gemini API Key
-                </label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-zinc-400">Google Gemini API Key</label>
                 <a
                   href="https://aistudio.google.com/apikey"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:underline"
+                  className={clsx(
+                    'inline-flex items-center gap-1 text-xs font-medium hover:underline',
+                    isDark ? 'text-zinc-300' : 'text-zinc-700'
+                  )}
                 >
-                  <span>Get Free Key</span>
+                  <span>Get key</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -485,42 +629,35 @@ export function VoiceSettingsModal({
                 onChange={(e) => setDraft((d) => ({ ...d, geminiApiKey: e.target.value }))}
                 placeholder="AIzaSy..."
                 className={clsx(
-                  'w-full px-3 py-2.5 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-amber-400/70',
+                  'w-full px-3 py-2.5 rounded-xl text-xs font-mono border focus:outline-none',
                   isDark
-                    ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
-                    : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-900'
+                    ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-100 focus:border-white/30'
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-950 focus:border-zinc-400'
                 )}
               />
               <div>
-                <label className="block text-[11px] font-semibold text-stone-400 mb-1">
-                  Model
-                </label>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Model</label>
                 <input
                   type="text"
                   value={draft.geminiModel}
                   onChange={(e) => setDraft((d) => ({ ...d, geminiModel: e.target.value }))}
                   className={clsx(
-                    'w-full px-3 py-2 rounded-xl text-xs font-mono border',
+                    'w-full px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none',
                     isDark
-                      ? 'bg-[#12161F] border-[#262E3E] text-stone-200'
-                      : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-800'
+                      ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 focus:border-white/30'
+                      : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-zinc-400'
                   )}
                 />
               </div>
             </div>
           )}
 
-          {/* Local OpenAI-Compatible Server Settings */}
+          {/* Local Server Sub-section */}
           {draft.backend === 'local-openai' && (
-            <div
-              className={clsx(
-                'p-3.5 rounded-xl border space-y-3',
-                isDark ? 'bg-[#0B0E14] border-[#222938]' : 'bg-white border-[#E5DEC9]'
-              )}
-            >
+            <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold mb-1">
-                  OpenAI-Compatible Server URL
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  Server URL
                 </label>
                 <input
                   type="url"
@@ -528,34 +665,32 @@ export function VoiceSettingsModal({
                   onChange={(e) => setDraft((d) => ({ ...d, localEndpoint: e.target.value }))}
                   placeholder="http://192.168.1.50:11434/v1"
                   className={clsx(
-                    'w-full px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-amber-400/70',
+                    'w-full px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none',
                     isDark
-                      ? 'bg-[#12161F] border-[#262E3E] text-stone-100'
-                      : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-900'
+                      ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-100 focus:border-white/30'
+                      : 'bg-zinc-50 border-zinc-200 text-zinc-950 focus:border-zinc-400'
                   )}
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-semibold text-stone-400 mb-1">
-                    Model Name
-                  </label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Model</label>
                   <input
                     type="text"
                     value={draft.localModel}
                     onChange={(e) => setDraft((d) => ({ ...d, localModel: e.target.value }))}
                     placeholder="gemma3:4b"
                     className={clsx(
-                      'w-full px-2.5 py-2 rounded-xl text-xs font-mono border',
+                      'w-full px-2.5 py-2 rounded-xl text-xs font-mono border focus:outline-none',
                       isDark
-                        ? 'bg-[#12161F] border-[#262E3E] text-stone-200'
-                        : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-800'
+                        ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 focus:border-white/30'
+                        : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-zinc-400'
                     )}
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-stone-400 mb-1">
-                    Optional Bearer Token
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                    Bearer Token
                   </label>
                   <input
                     type="password"
@@ -563,10 +698,10 @@ export function VoiceSettingsModal({
                     onChange={(e) => setDraft((d) => ({ ...d, localApiKey: e.target.value }))}
                     placeholder="Optional"
                     className={clsx(
-                      'w-full px-2.5 py-2 rounded-xl text-xs font-mono border',
+                      'w-full px-2.5 py-2 rounded-xl text-xs font-mono border focus:outline-none',
                       isDark
-                        ? 'bg-[#12161F] border-[#262E3E] text-stone-200'
-                        : 'bg-[#FAF8F4] border-[#DCD4C4] text-stone-800'
+                        ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 focus:border-white/30'
+                        : 'bg-zinc-50 border-zinc-200 text-zinc-800 focus:border-zinc-400'
                     )}
                   />
                 </div>
@@ -574,14 +709,17 @@ export function VoiceSettingsModal({
             </div>
           )}
 
-          {/* Connection Test Feedback */}
           {testResult && (
             <div
               className={clsx(
-                'px-3 py-2.5 rounded-xl border text-xs flex items-start gap-2',
+                'px-3 py-2.5 rounded-xl text-xs flex items-start gap-2',
                 testResult.ok
-                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                  : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+                  ? isDark
+                    ? 'bg-emerald-500/10 text-emerald-400'
+                    : 'bg-emerald-50 text-emerald-700'
+                  : isDark
+                    ? 'bg-rose-500/10 text-rose-400'
+                    : 'bg-rose-50 text-rose-700'
               )}
             >
               {testResult.ok ? (
@@ -597,8 +735,8 @@ export function VoiceSettingsModal({
         {/* Footer */}
         <div
           className={clsx(
-            'px-4 py-3 border-t flex items-center justify-between gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
-            isDark ? 'border-[#222938] bg-[#0B0E14]' : 'border-[#E7E2D8] bg-[#F3EFE6]'
+            'px-5 py-3.5 border-t flex items-center justify-between gap-2 shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]',
+            isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           <button
@@ -606,32 +744,28 @@ export function VoiceSettingsModal({
             onClick={handleTest}
             disabled={testing || downloading}
             className={clsx(
-              'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50',
+              'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors disabled:opacity-45',
               isDark
-                ? 'bg-[#171C28] border-[#262E3E] text-stone-200 hover:bg-[#1E2534]'
-                : 'bg-white border-[#D8D0C0] text-stone-700 hover:bg-stone-100'
+                ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
             )}
           >
             {testing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            <span>Test</span>
+            <span>Test connection</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3 py-2 rounded-xl text-xs font-semibold text-stone-400 hover:text-stone-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-sm"
-            >
-              Save
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleSave}
+            className={clsx(
+              'px-5 py-2 rounded-xl text-xs font-semibold transition-colors',
+              isDark
+                ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                : 'bg-zinc-950 text-white hover:bg-zinc-800'
+            )}
+          >
+            Done
+          </button>
         </div>
       </div>
     </div>

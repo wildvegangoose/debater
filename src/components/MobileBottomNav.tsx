@@ -28,10 +28,10 @@ export function MobileBottomNav({
     <nav
       aria-label="Primary app navigation"
       className={clsx(
-        'md:hidden border-t shrink-0 grid grid-cols-4 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] transition-colors z-30',
+        'md:hidden border-t shrink-0 grid grid-cols-4 px-2 pt-2 pb-[max(0.55rem,env(safe-area-inset-bottom))] transition-colors z-30',
         isDark
-          ? 'bg-[#0E1219]/95 border-[#222938] text-stone-400'
-          : 'bg-white/95 border-[#E7E2D8] text-stone-500'
+          ? 'bg-[#0C0C0E] border-white/[0.08] text-zinc-500'
+          : 'bg-white border-zinc-100 text-zinc-400'
       )}
     >
       {NAV_ITEMS.map((item) => {
@@ -43,30 +43,19 @@ export function MobileBottomNav({
             type="button"
             onClick={() => onChangeViewMode(item.id)}
             aria-current={active ? 'page' : undefined}
-            className="flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-colors"
+            className={clsx(
+              'flex flex-col items-center justify-center gap-1 py-0.5 transition-colors',
+              active
+                ? isDark
+                  ? 'text-white'
+                  : 'text-zinc-950'
+                : isDark
+                  ? 'hover:text-zinc-300'
+                  : 'hover:text-zinc-700'
+            )}
           >
-            <span
-              className={clsx(
-                'flex items-center justify-center w-12 h-7 rounded-full transition-all',
-                active
-                  ? isDark
-                    ? 'bg-amber-400/18 text-amber-300'
-                    : 'bg-amber-500/15 text-amber-800'
-                  : 'text-current'
-              )}
-            >
-              <Icon className={clsx('w-4 h-4', active && 'stroke-[2.3]')} />
-            </span>
-            <span
-              className={clsx(
-                'text-[10.5px] font-semibold leading-none',
-                active
-                  ? isDark
-                    ? 'text-amber-300'
-                    : 'text-amber-900'
-                  : ''
-              )}
-            >
+            <Icon className={clsx('w-[18px] h-[18px]', active && 'stroke-[2.25]')} />
+            <span className={clsx('text-[10.5px] leading-none', active ? 'font-semibold' : 'font-medium')}>
               {item.label}
             </span>
           </button>

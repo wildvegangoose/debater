@@ -132,56 +132,37 @@ export function TopBar({
     <header
       className={clsx(
         'z-30 border-b shrink-0 transition-colors',
-        isDark ? 'bg-[#0E1219]/95 border-[#222938] text-stone-100' : 'bg-white/95 border-[#E7E2D8] text-stone-900'
+        isDark ? 'bg-[#0C0C0E] border-white/[0.08] text-zinc-100' : 'bg-white border-zinc-100 text-zinc-950'
       )}
     >
-      {/* Mobile / Android Native-Style Single-Row App Bar (< md) */}
-      <div className="md:hidden px-3 h-13 flex items-center justify-between gap-2">
+      {/* Mobile / Android Native-Style Single-Row App Bar (< md, used for Outline/Quiz/Graph) */}
+      <div className="md:hidden px-4 h-13 flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setShowTopicModal(true)}
-          className="flex items-center gap-2.5 min-w-0 flex-1 text-left py-1 rounded-xl active:opacity-80"
+          className="flex items-center gap-2 min-w-0 flex-1 text-left py-1 active:opacity-80"
         >
-          <div
-            className={clsx(
-              'w-8 h-8 rounded-xl border flex items-center justify-center shadow-xs shrink-0',
-              isDark
-                ? 'bg-[#161C27] border-amber-400/40 text-amber-400'
-                : 'bg-[#181B22] border-amber-500/40 text-amber-300'
-            )}
-          >
-            {dataset.id === 'economic-policies' ? (
-              <Landmark className="w-4 h-4" />
-            ) : (
-              <Scale className="w-4 h-4" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1 min-w-0">
-              <span className="font-editorial text-[15.5px] font-semibold truncate">
-                {dataset.shortTitle}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-            </div>
-            <div className="text-[9.5px] font-bold uppercase tracking-widest text-amber-400/85 leading-none mt-0.5">
-              Steelman · 22 Topics
-            </div>
-          </div>
+          <span className="font-editorial text-[16px] font-medium truncate">
+            {dataset.shortTitle}
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
         </button>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           {!isVoiceMode && viewMode !== 'flashcards' && (
             <button
               type="button"
               onClick={() => setMobileSearchOpen((v) => !v)}
               aria-label="Search arguments"
               className={clsx(
-                'p-2 rounded-xl border transition-colors',
+                'p-2 rounded-lg transition-colors',
                 mobileSearchOpen
-                  ? 'bg-amber-500 border-amber-400 text-stone-950'
+                  ? isDark
+                    ? 'bg-white text-zinc-950'
+                    : 'bg-zinc-950 text-white'
                   : isDark
-                    ? 'bg-[#151A24] border-[#262E3E] text-stone-300'
-                    : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700'
+                    ? 'text-zinc-400 hover:bg-white/[0.06]'
+                    : 'text-zinc-500 hover:bg-zinc-100'
               )}
             >
               <Search className="w-4 h-4" />
@@ -192,13 +173,13 @@ export function TopBar({
             onClick={onToggleTheme}
             aria-label="Toggle theme"
             className={clsx(
-              'p-2 rounded-xl border transition-colors',
+              'p-2 rounded-lg transition-colors',
               isDark
-                ? 'bg-[#151A24] border-[#262E3E] text-stone-300'
-                : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-700'
+                ? 'text-zinc-400 hover:bg-white/[0.06]'
+                : 'text-zinc-500 hover:bg-zinc-100'
             )}
           >
-            {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-stone-700" />}
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -272,25 +253,25 @@ export function TopBar({
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className={clsx(
-                'w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs shrink-0',
+                'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
                 isDark
-                  ? 'bg-[#161C27] border-amber-400/40 text-amber-400'
-                  : 'bg-[#181B22] border-amber-500/40 text-amber-300'
+                  ? 'bg-white text-zinc-950'
+                  : 'bg-zinc-950 text-white'
               )}
             >
               {dataset.id === 'economic-policies' ? (
-                <Landmark className="w-5 h-5" />
+                <Landmark className="w-4 h-4" />
               ) : (
-                <Scale className="w-5 h-5" />
+                <Scale className="w-4 h-4" />
               )}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/90 hidden xl:inline">
+                <span className="text-sm font-semibold tracking-tight hidden xl:inline">
                   Steelman
                 </span>
-                <span className="text-stone-600 hidden xl:inline">·</span>
-                <h1 className="font-editorial text-lg font-semibold tracking-tight truncate">
+                <span className="text-zinc-600 hidden xl:inline">/</span>
+                <h1 className="font-editorial text-[17px] font-medium tracking-tight truncate">
                   {dataset.title}
                 </h1>
                 {!isVoiceMode && (
@@ -298,24 +279,24 @@ export function TopBar({
                     className={clsx(
                       'hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
                       isDark
-                        ? 'bg-[#151A24] border-[#262E3E] text-stone-300'
-                        : 'bg-[#F5F1E8] border-[#E5DEC9] text-stone-600'
+                        ? 'bg-[#141417] border-white/[0.08] text-zinc-400'
+                        : 'bg-zinc-50 border-zinc-200 text-zinc-500'
                     )}
                   >
                     <span>{stats.totalNodes} nodes</span>
-                    <span className="text-emerald-400">+{stats.proCount}</span>
-                    <span className="text-rose-400">−{stats.conCount}</span>
+                    <span className="text-emerald-500">+{stats.proCount}</span>
+                    <span className="text-rose-500">−{stats.conCount}</span>
                   </span>
                 )}
                 {hasSandboxChanges && !isVoiceMode && (
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-400/15 text-amber-300 border border-amber-400/30">
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/[0.08] text-zinc-300">
                     <Sparkles className="w-3 h-3" />
                     Sandbox
                   </span>
                 )}
               </div>
               {!isVoiceMode && (
-                <p className={clsx('text-[11.5px] hidden lg:block truncate', isDark ? 'text-stone-400' : 'text-stone-500')}>
+                <p className={clsx('text-[11.5px] hidden lg:block truncate', isDark ? 'text-zinc-500' : 'text-zinc-500')}>
                   {dataset.subtitle}
                 </p>
               )}
@@ -328,24 +309,15 @@ export function TopBar({
               type="button"
               onClick={() => setShowTopicModal(true)}
               className={clsx(
-                'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-xs font-semibold shadow-xs',
+                'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-xs font-medium',
                 isDark
-                  ? 'bg-[#151A24] border-amber-400/40 text-amber-200 hover:bg-[#1C2332] hover:border-amber-400'
-                  : 'bg-white border-amber-400/60 text-amber-900 hover:bg-amber-50 hover:border-amber-500'
+                  ? 'bg-[#141417] border-white/[0.1] text-zinc-200 hover:bg-[#1E1E22] hover:border-white/20'
+                  : 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300'
               )}
             >
-              <Compass className="w-3.5 h-3.5 text-amber-400" />
+              <Compass className="w-3.5 h-3.5 text-zinc-400" />
               <span>{dataset.shortTitle}</span>
-              <span
-                className={clsx(
-                  'px-1.5 py-0.5 rounded-md text-[10px] font-bold border',
-                  isDark
-                    ? 'bg-amber-400/15 border-amber-400/30 text-amber-300'
-                    : 'bg-amber-50 border-amber-200 text-amber-900'
-                )}
-              >
-                22 Topics
-              </span>
+              <span className="text-[10.5px] text-zinc-500 font-mono">22</span>
               <ChevronDown className="w-3.5 h-3.5 opacity-60" />
             </button>
           </div>
