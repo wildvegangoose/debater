@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy — Steelman</title>
+    <style>
+      :root {
+        color-scheme: dark light;
+      }
+      body {
+        margin: 0;
+        padding: 40px 20px 64px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #0c0c0e;
+        color: #f4f4f5;
+        line-height: 1.65;
+      }
+      main {
+        max-width: 680px;
+        margin: 0 auto;
+      }
+      a {
+        color: #f4f4f5;
+        text-underline-offset: 3px;
+      }
+      h1 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 32px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        margin: 0 0 8px;
+      }
+      .meta {
+        font-size: 13px;
+        color: #a1a1aa;
+        margin-bottom: 32px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      h2 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 28px 0 8px;
+        color: #ffffff;
+      }
+      p,
+      li {
+        font-size: 14.5px;
+        color: #d4d4d8;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+      .back {
+        display: inline-block;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: #a1a1aa;
+        text-decoration: none;
+      }
+      .back:hover {
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="./">&larr; Back to Steelman</a>
+      <h1>Privacy Policy</h1>
+      <div class="meta">Steelman (io.dialectica.debater) · Effective November 26, 2026</div>
+
+      <p>
+        Steelman is an argument-mapping and debate sparring application designed with local-first
+        privacy. No account or sign-in is required to use the app.
+      </p>
+
+      <h2>1. Data Stored Locally on Your Device</h2>
+      <ul>
+        <li>
+          <strong>Debate history &amp; Performance Logs:</strong> Your sparring transcripts, scores,
+          deep critiques, custom sandbox nodes, and settings are stored locally in your device&rsquo;s
+          browser/app storage (<code>localStorage</code>) and are never uploaded to Steelman servers.
+        </li>
+        <li>
+          <strong>API keys:</strong> If you choose to connect your own Google Gemini API key or
+          local OpenAI-compatible server, those credentials remain solely on your device and are
+          sent only to the AI endpoint you configure.
+        </li>
+        <li>
+          <strong>On-Device AI (WebLLM):</strong> When enabled, open-weight model files are cached
+          locally on your device so inference runs privately without sending prompts to external
+          servers.
+        </li>
+      </ul>
+
+      <h2>2. Product Analytics &amp; Feedback</h2>
+      <p>
+        Steelman uses <strong>PostHog</strong> to collect anonymized product usage metrics (such as
+        which screens, topics, and features are used, round completion counts, and error types) so we
+        can improve the app.
+      </p>
+      <ul>
+        <li>
+          We do <strong>not</strong> send your private debate arguments, transcripts, or API keys to
+          PostHog. Text inputs and user debate bubbles are masked in session replays.
+        </li>
+        <li>
+          If you voluntarily submit a note through the in-app <strong>Feedback</strong> modal, the
+          sentiment, category, message text, and active screen/topic are sent to PostHog so we can
+          review and act on your suggestion.
+        </li>
+      </ul>
+
+      <h2>3. Device Permissions (Android)</h2>
+      <ul>
+        <li>
+          <strong>Microphone (<code>RECORD_AUDIO</code>):</strong> Optional, used only when you
+          actively dictate arguments. Audio is processed by your device&rsquo;s speech recognition
+          service and is not stored by Steelman.
+        </li>
+        <li>
+          <strong>Internet:</strong> Used to load app updates, optional cloud AI responses (if you
+          configure Gemini or a LAN server), and anonymized analytics.
+        </li>
+      </ul>
+
+      <h2>4. Data Deletion</h2>
+      <p>
+        Because Steelman does not maintain user accounts or cloud databases for your debates, you
+        can delete all local data at any time by clearing the app&rsquo;s storage in Android
+        Settings (or browser site data), or by deleting individual rounds in the Performance Log.
+      </p>
+
+      <h2>5. Contact</h2>
+      <p>
+        Questions or privacy requests can be opened at
+        <a href="https://github.com/wildvegangoose/debater/issues" target="_blank" rel="noopener noreferrer"
+          >github.com/wildvegangoose/debater/issues</a
+        >.
+      </p>
+    </main>
+  </body>
+</html>

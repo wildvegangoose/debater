@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: true,
-    backgroundColor: '#020617',
+    backgroundColor: '#0C0C0E',
     captureInput: true,
     webContentsDebuggingEnabled: false,
   },
@@ -18,7 +18,7 @@ const config: CapacitorConfig = {
     StatusBar: {
       overlaysWebView: false,
       style: 'DARK',
-      backgroundColor: '#020617',
+      backgroundColor: '#0C0C0E',
     },
   },
 };

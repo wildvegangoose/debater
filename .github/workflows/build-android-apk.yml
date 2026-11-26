@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android App (APK & Play Store AAB)
 
 on:
   push:
@@ -6,16 +6,21 @@ on:
   pull_request:
     branches: ['main']
   workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Release versionName (e.g. 1.0.0)'
+        required: false
+        default: '1.0.0'
 
 permissions:
   contents: write
 
 concurrency:
-  group: android-apk-${{ github.ref }}
+  group: android-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-android-apk:
+  build-android:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -41,6 +46,11 @@ jobs:
 
       - name: Build web bundle & sync Capacitor Android
         run: npm run cap:sync
+        env:
+          VITE_CF_ANALYTICS_TOKEN: ${{ vars.VITE_CF_ANALYTICS_TOKEN }}
+          VITE_GOATCOUNTER_CODE: ${{ vars.VITE_GOATCOUNTER_CODE }}
+          VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST }}
 
       - name: Ensure gradlew is executable
         run: chmod +x android/gradlew
@@ -52,14 +62,39 @@ jobs:
       - name: Prepare APK artifact
         run: |
           mkdir -p release-apk
-          cp android/app/build/outputs/apk/debug/app-debug.apk release-apk/Dialectica-Debate-Android.apk
-          ls -lh release-apk/Dialectica-Debate-Android.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk release-apk/Steelman-Android.apk
+          ls -lh release-apk/Steelman-Android.apk
 
       - name: Upload APK workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Dialectica-Debate-Android-APK
-          path: release-apk/Dialectica-Debate-Android.apk
+          name: Steelman-Android-APK
+          path: release-apk/Steelman-Android.apk
+          retention-days: 90
+
+      - name: Build Signed Play Store App Bundle (.aab)
+        if: ${{ github.event_name != 'pull_request' && secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_VERSION_NAME: ${{ github.event.inputs.version_name || '1.0.0' }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/steelman-upload.jks
+          export ANDROID_KEYSTORE_PATH="/tmp/steelman-upload.jks"
+          ./gradlew bundleRelease
+          rm -f /tmp/steelman-upload.jks
+          ls -lh app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload Play Store AAB artifact
+        if: ${{ github.event_name != 'pull_request' && secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Steelman-PlayStore-AAB
+          path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 90
 
       - name: Publish downloadable APK to GitHub Releases
@@ -68,23 +103,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="android-latest"
-          TITLE="Dialectica Debate — Android App (Latest APK)"
-          NOTES="Download \`Dialectica-Debate-Android.apk\` directly on your Android phone and tap to install (enable *Install unknown apps* if prompted).
+          TITLE="Steelman — Android App (Latest APK)"
+          NOTES="Download \`Steelman-Android.apk\` directly on your Android phone and tap to install (enable *Install unknown apps* if prompted).
 
           ### What's inside
-          - **Voice Debate Arena (4th Tab):** Conversational AI voice sparring with real-time audio visualizer, live Debate Momentum gauge, rhetoric feedback badges, tactical coaching tips, and live argument-graph coverage tracking across all 22 topics.
-          - **4 AI & Voice Modes:**
-            1. **Gemini Live Voice** (real-time bidirectional voice + live visual HUD tool calls — bring your own free key from Google AI Studio)
-            2. **Gemini Flash Coach** (native Android Speech-to-Text & Text-to-Speech + structured coaching every turn)
-            3. **Local / Self-Hosted AI** (connect to Ollama, LM Studio, or any OpenAI-compatible endpoint over Wi-Fi)
-            4. **Offline Curated Sparring** (works immediately with zero setup or API key using all 22 curated Dialectica graphs)
-          - **Full Dialectica Suite:** Interactive Graph Canvas, Mobile Outline Feed, and Flashcard Quiz Mode."
+          - **Spar Arena:** 5-turn or open sparring with Partner, Oxford, and Socratic styles, live momentum tracking, and automatic Game Tape debriefs.
+          - **Deep Critique & Performance Log:** Turn-by-turn strengths, weaknesses, before-to-after proposed revisions, and cross-round Coach Insights.
+          - **4 AI Engines:** On-Device AI (WebLLM via WebGPU), Gemini Cloud, Local Server (Ollama/LM Studio), and Offline Templates.
+          - **Full Steelman Suite:** Interactive Argument Graph, Outline Feed, and Rebuttal Flashcards across 22 landmark motions."
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" release-apk/Dialectica-Debate-Android.apk --clobber
+            gh release upload "$TAG" release-apk/Steelman-Android.apk --clobber
             gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --target "${{ github.sha }}"
           else
-            gh release create "$TAG" release-apk/Dialectica-Debate-Android.apk \
+            gh release create "$TAG" release-apk/Steelman-Android.apk \
               --title "$TITLE" \
               --notes "$NOTES" \
               --target "${{ github.sha }}"
