@@ -40,55 +40,55 @@ interface NodeInspectorDrawerProps {
 const KIND_HEADER_BADGE: Record<DebateNodeKind, { label: string; dark: string; light: string }> = {
   root: {
     label: 'Central Inquiry',
-    dark: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30',
-    light: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    dark: 'bg-white/[0.08] text-zinc-100 border-white/[0.14]',
+    light: 'bg-zinc-950 text-white border-zinc-950',
   },
   pillar: {
     label: 'Debate Pillar',
-    dark: 'bg-sky-500/20 text-sky-300 border-sky-400/30',
-    light: 'bg-sky-50 text-sky-700 border-sky-200',
+    dark: 'bg-white/[0.06] text-zinc-300 border-white/[0.1]',
+    light: 'bg-zinc-100 text-zinc-700 border-zinc-200',
   },
   thesis: {
     label: 'Contested Thesis',
-    dark: 'bg-amber-500/20 text-amber-300 border-amber-400/30',
-    light: 'bg-amber-50 text-amber-800 border-amber-200',
+    dark: 'bg-white/[0.04] text-zinc-300 border-white/[0.08]',
+    light: 'bg-zinc-50 text-zinc-600 border-zinc-200',
   },
   pro: {
-    label: '+ Supports Parent Claim',
-    dark: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30',
+    label: '+ Supports Claim',
+    dark: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
     light: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   },
   con: {
-    label: '− Challenges Parent Claim',
-    dark: 'bg-rose-500/20 text-rose-300 border-rose-400/30',
+    label: '− Challenges Claim',
+    dark: 'bg-rose-500/10 text-rose-400 border-rose-500/25',
     light: 'bg-rose-50 text-rose-700 border-rose-200',
   },
 };
 
-const SOURCE_CATEGORY_COLORS: Record<SourceCategory, { dark: string; light: string }> = {
+const SOURCE_CATEGORY_BADGE: Record<SourceCategory, { dark: string; light: string }> = {
   'Primary Text / Treaty': {
-    dark: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/30',
-    light: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    dark: 'bg-white/[0.05] text-zinc-400 border-white/[0.08]',
+    light: 'bg-zinc-100 text-zinc-600 border-zinc-200',
   },
   'Watchdog / NGO': {
-    dark: 'bg-amber-500/15 text-amber-300 border-amber-400/30',
-    light: 'bg-amber-50 text-amber-800 border-amber-200',
+    dark: 'bg-white/[0.05] text-zinc-400 border-white/[0.08]',
+    light: 'bg-zinc-100 text-zinc-600 border-zinc-200',
   },
   'Empirical / Economic Study': {
-    dark: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30',
-    light: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    dark: 'bg-white/[0.05] text-zinc-400 border-white/[0.08]',
+    light: 'bg-zinc-100 text-zinc-600 border-zinc-200',
   },
   'Court / Official Record': {
-    dark: 'bg-sky-500/15 text-sky-300 border-sky-400/30',
-    light: 'bg-sky-50 text-sky-700 border-sky-200',
+    dark: 'bg-white/[0.05] text-zinc-400 border-white/[0.08]',
+    light: 'bg-zinc-100 text-zinc-600 border-zinc-200',
   },
   'Debate / Broadcast': {
-    dark: 'bg-violet-500/15 text-violet-300 border-violet-400/30',
-    light: 'bg-violet-50 text-violet-700 border-violet-200',
+    dark: 'bg-white/[0.05] text-zinc-400 border-white/[0.08]',
+    light: 'bg-zinc-100 text-zinc-600 border-zinc-200',
   },
   Scholarship: {
-    dark: 'bg-slate-700/60 text-slate-200 border-slate-600',
-    light: 'bg-slate-100 text-slate-700 border-slate-300',
+    dark: 'bg-white/[0.05] text-zinc-400 border-white/[0.08]',
+    light: 'bg-zinc-100 text-zinc-600 border-zinc-200',
   },
 };
 
@@ -103,7 +103,7 @@ function renderRichText(text: string, isDark: boolean): ReactNode {
     if (!part) return null;
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={idx} className={clsx('font-semibold', isDark ? 'text-slate-50' : 'text-slate-900')}>
+        <strong key={idx} className={clsx('font-semibold', isDark ? 'text-white' : 'text-zinc-950')}>
           {part.slice(2, -2)}
         </strong>
       );
@@ -121,7 +121,7 @@ function renderRichText(text: string, isDark: boolean): ReactNode {
           key={idx}
           className={clsx(
             'font-mono-code text-[12px] px-1.5 py-0.5 rounded',
-            isDark ? 'bg-slate-800 text-indigo-300' : 'bg-slate-200/70 text-indigo-700'
+            isDark ? 'bg-white/[0.08] text-zinc-200' : 'bg-zinc-100 text-zinc-800'
           )}
         >
           {part.slice(1, -1)}
@@ -138,11 +138,13 @@ function renderRichText(text: string, isDark: boolean): ReactNode {
           rel="noopener noreferrer"
           className={clsx(
             'underline underline-offset-2 font-medium inline-flex items-center gap-0.5',
-            isDark ? 'text-indigo-300 hover:text-indigo-200' : 'text-indigo-600 hover:text-indigo-800'
+            isDark
+              ? 'text-zinc-200 decoration-zinc-500 hover:text-white'
+              : 'text-zinc-900 decoration-zinc-400 hover:text-black'
           )}
         >
           {linkMatch[1]}
-          <ExternalLink className="w-3 h-3 inline" />
+          <ExternalLink className="w-3 h-3 inline opacity-70" />
         </a>
       );
     }
@@ -209,20 +211,22 @@ export function NodeInspectorDrawer({
       className={clsx(
         'fixed inset-0 z-50 sm:relative sm:inset-auto sm:z-30 w-full h-full border-l flex flex-col shrink-0 shadow-2xl transition-all duration-200',
         isExpandedWidth ? 'sm:w-[640px] lg:w-[740px]' : 'sm:w-[490px] lg:w-[550px]',
-        isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+        isDark
+          ? 'bg-[#141417] border-white/[0.08] text-zinc-100'
+          : 'bg-white border-zinc-200 text-zinc-950'
       )}
     >
       {/* Top Bar */}
       <div
         className={clsx(
-          'px-4 py-3 border-b flex items-center justify-between gap-2',
-          isDark ? 'border-slate-800 bg-slate-950/50' : 'border-slate-200 bg-slate-50/80'
+          'px-4 py-3 border-b flex items-center justify-between gap-2 shrink-0',
+          isDark ? 'border-white/[0.08] bg-[#0C0C0E]' : 'border-zinc-100 bg-white'
         )}
       >
         <div className="flex items-center gap-2 min-w-0">
           <span
             className={clsx(
-              'px-2.5 py-0.5 rounded-md text-xs font-semibold border truncate',
+              'px-2.5 py-0.5 rounded-md text-[11.5px] font-medium border truncate',
               isDark ? badge.dark : badge.light
             )}
           >
@@ -231,8 +235,8 @@ export function NodeInspectorDrawer({
           {selectedNode.era && (
             <span
               className={clsx(
-                'text-xs font-mono-code px-2 py-0.5 rounded whitespace-nowrap shrink-0',
-                isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-200/70 text-slate-700'
+                'text-[11.5px] font-mono-code tabular-nums px-2 py-0.5 rounded whitespace-nowrap shrink-0',
+                isDark ? 'bg-white/[0.06] text-zinc-400' : 'bg-zinc-100 text-zinc-600'
               )}
             >
               {selectedNode.era}
@@ -248,8 +252,8 @@ export function NodeInspectorDrawer({
             className={clsx(
               'hidden sm:inline-flex p-1.5 rounded-lg text-xs font-medium transition-colors',
               isDark
-                ? 'hover:bg-slate-800 text-slate-300 hover:text-indigo-300'
-                : 'hover:bg-slate-200/70 text-slate-600 hover:text-indigo-600'
+                ? 'hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-100'
+                : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
             )}
           >
             {isExpandedWidth ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -261,8 +265,8 @@ export function NodeInspectorDrawer({
             className={clsx(
               'p-1.5 rounded-lg text-xs font-medium transition-colors',
               isDark
-                ? 'hover:bg-slate-800 text-slate-300 hover:text-indigo-300'
-                : 'hover:bg-slate-200/70 text-slate-600 hover:text-indigo-600'
+                ? 'hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-100'
+                : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
             )}
           >
             <Crosshair className="w-4 h-4" />
@@ -274,11 +278,11 @@ export function NodeInspectorDrawer({
             className={clsx(
               'p-1.5 rounded-lg text-xs font-medium transition-colors',
               isDark
-                ? 'hover:bg-slate-800 text-slate-300 hover:text-indigo-300'
-                : 'hover:bg-slate-200/70 text-slate-600 hover:text-indigo-600'
+                ? 'hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-100'
+                : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
             )}
           >
-            {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Link2 className="w-4 h-4" />}
+            {copiedLink ? <Check className="w-4 h-4 text-emerald-500" /> : <Link2 className="w-4 h-4" />}
           </button>
           <button
             type="button"
@@ -286,7 +290,9 @@ export function NodeInspectorDrawer({
             title="Edit argument in local sandbox"
             className={clsx(
               'p-1.5 rounded-lg transition-colors',
-              isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-200/70 text-slate-600'
+              isDark
+                ? 'hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-100'
+                : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
             )}
           >
             <Edit3 className="w-4 h-4" />
@@ -298,7 +304,9 @@ export function NodeInspectorDrawer({
               title="Remove node from local sandbox"
               className={clsx(
                 'p-1.5 rounded-lg transition-colors',
-                isDark ? 'hover:bg-rose-500/20 text-rose-400' : 'hover:bg-rose-50 text-rose-600'
+                isDark
+                  ? 'text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10'
+                  : 'text-zinc-400 hover:text-rose-600 hover:bg-rose-50'
               )}
             >
               <Trash2 className="w-4 h-4" />
@@ -310,7 +318,9 @@ export function NodeInspectorDrawer({
             title="Close inspector (Esc)"
             className={clsx(
               'p-1.5 rounded-lg transition-colors',
-              isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-200/70 text-slate-500'
+              isDark
+                ? 'hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-100'
+                : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
             )}
           >
             <X className="w-4 h-4" />
@@ -319,18 +329,18 @@ export function NodeInspectorDrawer({
       </div>
 
       {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {selectedNode.isCommunity && (
           <div
             className={clsx(
               'px-3.5 py-2.5 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-xs',
               isDark
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
-                : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                ? 'bg-[#0C0C0E] border-white/[0.08] text-zinc-200'
+                : 'bg-zinc-50 border-zinc-200 text-zinc-800'
             )}
           >
             <div className="flex items-center gap-2 font-medium">
-              <GitPullRequest className="w-4 h-4 text-emerald-400 shrink-0" />
+              <GitPullRequest className="w-4 h-4 text-emerald-500 shrink-0" />
               <span>
                 Community Contributed{selectedNode.contributor ? ` by ${selectedNode.contributor}` : ''}
               </span>
@@ -340,7 +350,7 @@ export function NodeInspectorDrawer({
                 href={`https://github.com/wildvegangoose/debater/issues/${selectedNode.issueNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 underline underline-offset-2 font-semibold hover:opacity-80"
+                className="inline-flex items-center gap-1 underline underline-offset-2 font-medium hover:opacity-80"
               >
                 Review #{selectedNode.issueNumber}
                 <ExternalLink className="w-3 h-3" />
@@ -354,13 +364,13 @@ export function NodeInspectorDrawer({
             className={clsx(
               'px-3.5 py-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs',
               isDark
-                ? 'bg-indigo-500/10 border-indigo-400/35 text-indigo-200'
-                : 'bg-indigo-50 border-indigo-200 text-indigo-900'
+                ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200'
+                : 'bg-zinc-50 border-zinc-200 text-zinc-800'
             )}
           >
             <div>
-              <div className="font-semibold">Local Sandbox Argument</div>
-              <div className="opacity-80 text-[11px] mt-0.5">
+              <div className="font-medium">Local Sandbox Argument</div>
+              <div className="text-zinc-500 text-[11px] mt-0.5">
                 Saved only in your browser. Propose it to the public Steelman graph via GitHub.
               </div>
             </div>
@@ -383,7 +393,12 @@ export function NodeInspectorDrawer({
                   era: selectedNode.era,
                 });
               }}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500 transition-colors shrink-0"
+              className={clsx(
+                'inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0',
+                isDark
+                  ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                  : 'bg-zinc-950 text-white hover:bg-zinc-800'
+              )}
             >
               <GitPullRequest className="w-3.5 h-3.5" />
               Submit to Public Map
@@ -394,7 +409,7 @@ export function NodeInspectorDrawer({
         {/* Logical Lineage Breadcrumbs */}
         {ancestors.length > 0 && (
           <div className="space-y-1.5">
-            <div className={clsx('text-[11px] uppercase tracking-wider font-semibold', isDark ? 'text-slate-400' : 'text-slate-500')}>
+            <div className="text-[11px] uppercase tracking-wider font-medium text-zinc-500">
               Dialectical Lineage
             </div>
             <div className="flex flex-wrap items-center gap-1 text-xs">
@@ -406,13 +421,13 @@ export function NodeInspectorDrawer({
                     className={clsx(
                       'px-2 py-0.5 rounded transition-colors truncate max-w-[195px] font-medium',
                       isDark
-                        ? 'bg-slate-800/80 text-slate-300 hover:bg-indigo-500/25 hover:text-indigo-200'
-                        : 'bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
+                        ? 'bg-white/[0.05] text-zinc-300 hover:bg-white/[0.1] hover:text-white'
+                        : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200/70 hover:text-zinc-950'
                     )}
                   >
                     {anc.title}
                   </button>
-                  <ChevronRight className="w-3 h-3 text-slate-500 shrink-0" />
+                  <ChevronRight className="w-3 h-3 text-zinc-500 shrink-0" />
                 </div>
               ))}
             </div>
@@ -421,7 +436,7 @@ export function NodeInspectorDrawer({
 
         {/* Headline, Executive Summary & Tags */}
         <div>
-          <h2 className="font-editorial text-[23px] sm:text-[25px] font-semibold leading-snug tracking-tight">
+          <h2 className="font-editorial text-[24px] sm:text-[26px] font-medium leading-[1.2] tracking-[-0.015em]">
             {selectedNode.title}
           </h2>
 
@@ -431,33 +446,41 @@ export function NodeInspectorDrawer({
               type="button"
               onClick={() => onSelectAndZoom(immediateParent.id, false)}
               className={clsx(
-                'mt-2.5 w-full text-left px-3 py-2 rounded-lg border text-xs flex items-center justify-between gap-2 transition-colors',
-                selectedNode.kind === 'pro'
-                  ? isDark
-                    ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-200 hover:border-emerald-400/60'
-                    : 'bg-emerald-50/80 border-emerald-200 text-emerald-900 hover:border-emerald-400'
-                  : isDark
-                    ? 'bg-rose-950/25 border-rose-500/30 text-rose-200 hover:border-rose-400/60'
-                    : 'bg-rose-50/80 border-rose-200 text-rose-900 hover:border-rose-400'
+                'mt-3 w-full text-left px-3 py-2 rounded-lg border border-l-2 text-xs flex items-center justify-between gap-2 transition-colors',
+                isDark
+                  ? 'bg-[#0C0C0E] border-white/[0.08] text-zinc-200 hover:border-white/20'
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:border-zinc-300',
+                selectedNode.kind === 'pro' ? 'border-l-emerald-500/80' : 'border-l-rose-500/80'
               )}
             >
               <span className="truncate">
-                <strong className="font-semibold">
+                <strong
+                  className={clsx(
+                    'font-medium',
+                    selectedNode.kind === 'pro'
+                      ? isDark
+                        ? 'text-emerald-400'
+                        : 'text-emerald-700'
+                      : isDark
+                        ? 'text-rose-400'
+                        : 'text-rose-700'
+                  )}
+                >
                   {selectedNode.kind === 'pro' ? 'Supports claim:' : 'Challenges claim:'}
                 </strong>{' '}
                 {immediateParent.title}
               </span>
-              <ArrowUpRight className="w-3.5 h-3.5 shrink-0 opacity-75" />
+              <ArrowUpRight className="w-3.5 h-3.5 shrink-0 text-zinc-500" />
             </button>
           )}
 
           {/* Executive Summary */}
           <div
             className={clsx(
-              'mt-3 p-3.5 rounded-xl border-l-4 text-[14px] leading-relaxed',
+              'mt-3 p-3.5 rounded-xl border border-l-2 text-[13.5px] leading-relaxed',
               isDark
-                ? 'bg-slate-800/45 border-l-indigo-400 text-slate-200'
-                : 'bg-slate-50 border-l-indigo-500 text-slate-800'
+                ? 'bg-[#0C0C0E] border-white/[0.08] border-l-white/40 text-zinc-200'
+                : 'bg-zinc-50 border-zinc-200 border-l-zinc-900 text-zinc-800'
             )}
           >
             {renderRichText(selectedNode.summary, isDark)}
@@ -471,8 +494,8 @@ export function NodeInspectorDrawer({
                 className={clsx(
                   'px-2.5 py-0.5 rounded-full text-[11px] font-medium border',
                   isDark
-                    ? 'bg-slate-800/90 border-slate-700 text-slate-300'
-                    : 'bg-slate-100 border-slate-200 text-slate-700'
+                    ? 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-600'
                 )}
               >
                 {tag}
@@ -483,35 +506,34 @@ export function NodeInspectorDrawer({
 
         {/* Rich Multi-Section Deep-Dive Analysis */}
         {selectedNode.sections && selectedNode.sections.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-indigo-400" />
-              <h3 className={clsx('text-xs font-bold uppercase tracking-wider', isDark ? 'text-slate-300' : 'text-slate-600')}>
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-1.5 text-zinc-500">
+              <FileText className="w-3.5 h-3.5" />
+              <h3 className="text-[11px] font-medium uppercase tracking-wider">
                 In-Depth Background &amp; Analysis
               </h3>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {selectedNode.sections.map((sec, sIdx) => (
                 <section
                   key={sIdx}
                   className={clsx(
                     'p-4 rounded-xl border space-y-2.5',
-                    isDark ? 'bg-slate-950/65 border-slate-800/90' : 'bg-white border-slate-200 shadow-2xs'
+                    isDark ? 'bg-[#0C0C0E] border-white/[0.08]' : 'bg-zinc-50/50 border-zinc-200'
                   )}
                 >
                   <h4
                     className={clsx(
-                      'text-[13.5px] font-semibold tracking-tight flex items-center gap-2',
-                      isDark ? 'text-indigo-300' : 'text-indigo-700'
+                      'font-editorial text-[15.5px] font-medium tracking-tight',
+                      isDark ? 'text-zinc-100' : 'text-zinc-950'
                     )}
                   >
-                    <span className="w-1.5 h-4 rounded-full bg-indigo-500 shrink-0" />
                     {sec.heading}
                   </h4>
                   <div className="space-y-2.5 text-[13.5px] leading-[1.68]">
                     {sec.paragraphs.map((para, pIdx) => (
-                      <p key={pIdx} className={isDark ? 'text-slate-300' : 'text-slate-700'}>
+                      <p key={pIdx} className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
                         {renderRichText(para, isDark)}
                       </p>
                     ))}
@@ -527,17 +549,22 @@ export function NodeInspectorDrawer({
           <div
             className={clsx(
               'p-4 rounded-xl border space-y-2.5',
-              isDark ? 'bg-slate-950/45 border-slate-800' : 'bg-slate-50/90 border-slate-200/80'
+              isDark ? 'bg-[#0C0C0E] border-white/[0.08]' : 'bg-zinc-50/60 border-zinc-200'
             )}
           >
-            <h3 className={clsx('text-xs font-bold uppercase tracking-wider', isDark ? 'text-slate-400' : 'text-slate-500')}>
+            <h3 className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
               Key Evidence &amp; Data Takeaways
             </h3>
             <ul className="space-y-2.5 text-[13px] leading-relaxed">
               {selectedNode.details.map((bullet, idx) => (
                 <li key={idx} className="flex gap-2.5">
-                  <span className="mt-2 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
-                  <span className={isDark ? 'text-slate-200' : 'text-slate-700'}>
+                  <span
+                    className={clsx(
+                      'mt-2 w-1.5 h-1.5 rounded-full shrink-0',
+                      isDark ? 'bg-zinc-600' : 'bg-zinc-400'
+                    )}
+                  />
+                  <span className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
                     {renderRichText(bullet, isDark)}
                   </span>
                 </li>
@@ -550,23 +577,18 @@ export function NodeInspectorDrawer({
         {(hasStructuredSources || plainFallbackRefs.length > 0) && (
           <div className="space-y-2.5">
             <div>
-              <h3
-                className={clsx(
-                  'text-xs font-bold uppercase tracking-wider flex items-center gap-1.5',
-                  isDark ? 'text-slate-300' : 'text-slate-600'
-                )}
-              >
-                <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+              <h3 className="text-[11px] font-medium uppercase tracking-wider flex items-center gap-1.5 text-zinc-500">
+                <BookOpen className="w-3.5 h-3.5" />
                 Original Sources, Documents &amp; Studies
               </h3>
-              <p className={clsx('text-[11px] mt-0.5 leading-snug', isDark ? 'text-slate-400' : 'text-slate-500')}>
+              <p className="text-[11px] mt-1 leading-snug text-zinc-500">
                 {epistemologyNote}
               </p>
             </div>
 
             <div className="space-y-2">
               {selectedNode.sources?.map((src, idx) => {
-                const catStyle = src.category ? SOURCE_CATEGORY_COLORS[src.category] : null;
+                const catStyle = src.category ? SOURCE_CATEGORY_BADGE[src.category] : null;
                 return (
                   <a
                     key={idx}
@@ -574,40 +596,33 @@ export function NodeInspectorDrawer({
                     target="_blank"
                     rel="noopener noreferrer"
                     className={clsx(
-                      'group block p-3 rounded-xl border transition-all',
+                      'group block p-3 rounded-xl border transition-colors',
                       isDark
-                        ? 'bg-slate-800/45 border-slate-700/80 hover:border-indigo-400/70 hover:bg-slate-800/80'
-                        : 'bg-slate-50/80 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30'
+                        ? 'bg-[#0C0C0E] border-white/[0.08] hover:border-white/25'
+                        : 'bg-zinc-50/60 border-zinc-200 hover:border-zinc-400'
                     )}
                   >
                     <div className="flex items-start justify-between gap-2.5">
                       <span
                         className={clsx(
-                          'text-xs font-semibold leading-snug group-hover:underline underline-offset-2',
-                          isDark ? 'text-slate-100 group-hover:text-indigo-200' : 'text-slate-900 group-hover:text-indigo-700'
+                          'text-xs font-medium leading-snug group-hover:underline underline-offset-2',
+                          isDark ? 'text-zinc-100' : 'text-zinc-900'
                         )}
                       >
                         {src.title}
                       </span>
-                      <ExternalLink
-                        className={clsx(
-                          'w-3.5 h-3.5 shrink-0 mt-0.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5',
-                          isDark ? 'text-indigo-400' : 'text-indigo-600'
-                        )}
-                      />
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-0.5 text-zinc-500 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </div>
 
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10.5px]">
                       {src.publisher && (
-                        <span className={clsx('font-medium', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                        <span className="font-medium text-zinc-500">
                           {src.publisher}
                           {src.year ? ` (${src.year})` : ''}
                         </span>
                       )}
                       {!src.publisher && src.year && (
-                        <span className={clsx('font-medium', isDark ? 'text-slate-400' : 'text-slate-600')}>
-                          {src.year}
-                        </span>
+                        <span className="font-medium text-zinc-500">{src.year}</span>
                       )}
                       {src.category && catStyle && (
                         <span
@@ -634,14 +649,14 @@ export function NodeInspectorDrawer({
                       target="_blank"
                       rel="noopener noreferrer"
                       className={clsx(
-                        'px-3 py-2 rounded-lg text-xs border font-medium flex items-center justify-between gap-2',
+                        'px-3 py-2 rounded-lg text-xs border font-medium flex items-center justify-between gap-2 transition-colors',
                         isDark
-                          ? 'bg-slate-800/50 border-slate-800 text-indigo-300 hover:border-indigo-400'
-                          : 'bg-slate-50 border-slate-200 text-indigo-700 hover:border-indigo-400'
+                          ? 'bg-[#0C0C0E] border-white/[0.08] text-zinc-200 hover:border-white/25'
+                          : 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:border-zinc-400'
                       )}
                     >
                       <span className="truncate">{ref}</span>
-                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0 text-zinc-500" />
                     </a>
                   );
                 }
@@ -651,8 +666,8 @@ export function NodeInspectorDrawer({
                     className={clsx(
                       'px-3 py-2 rounded-lg text-xs border font-medium',
                       isDark
-                        ? 'bg-slate-800/50 border-slate-800 text-slate-300'
-                        : 'bg-slate-50 border-slate-200/70 text-slate-700'
+                        ? 'bg-[#0C0C0E] border-white/[0.08] text-zinc-300'
+                        : 'bg-zinc-50 border-zinc-200 text-zinc-700'
                     )}
                   >
                     {ref}
@@ -669,7 +684,12 @@ export function NodeInspectorDrawer({
             <button
               type="button"
               onClick={() => onOpenAddChild(selectedNode, 'thesis')}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
+              className={clsx(
+                'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors',
+                isDark
+                  ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 hover:border-white/25 hover:bg-white/[0.04]'
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:border-zinc-400 hover:bg-zinc-100'
+              )}
             >
               <PlusCircle className="w-3.5 h-3.5" />
               Add Contested Thesis
@@ -679,17 +699,27 @@ export function NodeInspectorDrawer({
               <button
                 type="button"
                 onClick={() => onOpenAddChild(selectedNode, 'pro')}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors"
+                className={clsx(
+                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors',
+                  isDark
+                    ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 hover:border-emerald-500/40'
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:border-emerald-400'
+                )}
               >
-                <PlusCircle className="w-3.5 h-3.5" />
+                <PlusCircle className="w-3.5 h-3.5 text-emerald-500" />
                 Add Supporting (+)
               </button>
               <button
                 type="button"
                 onClick={() => onOpenAddChild(selectedNode, 'con')}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 transition-colors"
+                className={clsx(
+                  'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors',
+                  isDark
+                    ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 hover:border-rose-500/40'
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-800 hover:border-rose-400'
+                )}
               >
-                <MinusCircle className="w-3.5 h-3.5" />
+                <MinusCircle className="w-3.5 h-3.5 text-rose-500" />
                 Add Counter (−)
               </button>
             </>
@@ -707,21 +737,26 @@ export function NodeInspectorDrawer({
               })
             }
             className={clsx(
-              'w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors',
+              'w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors',
               isDark
-                ? 'bg-slate-800/50 border-slate-700/80 text-slate-300 hover:border-emerald-500/45 hover:text-emerald-300'
-                : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-700'
+                ? 'bg-[#0C0C0E] border-white/[0.08] text-zinc-400 hover:border-white/20 hover:text-zinc-100'
+                : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:text-zinc-950'
             )}
           >
-            <GitPullRequest className="w-3.5 h-3.5 text-emerald-400" />
+            <GitPullRequest className="w-3.5 h-3.5" />
             Suggest missing response or source on GitHub
           </button>
         )}
 
         {/* Structural Children (Pillars or Theses) */}
         {structuralChildren.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-slate-500/20">
-            <h3 className={clsx('text-xs font-bold uppercase tracking-wider', isDark ? 'text-sky-400' : 'text-sky-700')}>
+          <div
+            className={clsx(
+              'space-y-2 pt-4 border-t',
+              isDark ? 'border-white/[0.08]' : 'border-zinc-100'
+            )}
+          >
+            <h3 className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
               Sub-Branches ({structuralChildren.length})
             </h3>
             <div className="space-y-2">
@@ -731,19 +766,19 @@ export function NodeInspectorDrawer({
                   type="button"
                   onClick={() => onSelectAndZoom(child.id, true)}
                   className={clsx(
-                    'w-full text-left p-3 rounded-lg border transition-colors flex items-start justify-between gap-2',
+                    'w-full text-left p-3 rounded-xl border transition-colors flex items-start justify-between gap-2',
                     isDark
-                      ? 'bg-slate-800/50 border-slate-700/80 hover:border-sky-400/60'
-                      : 'bg-slate-50 border-slate-200 hover:border-sky-400'
+                      ? 'bg-[#0C0C0E] border-white/[0.08] hover:border-white/25'
+                      : 'bg-zinc-50/60 border-zinc-200 hover:border-zinc-400'
                   )}
                 >
                   <div>
-                    <div className="text-xs font-semibold">{child.title}</div>
-                    <p className={clsx('text-[11px] line-clamp-2 mt-0.5', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                    <div className="font-editorial text-[14px] font-medium leading-snug">{child.title}</div>
+                    <p className={clsx('text-[11.5px] line-clamp-2 mt-0.5', isDark ? 'text-zinc-400' : 'text-zinc-500')}>
                       {child.summary}
                     </p>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 shrink-0 text-sky-400 mt-0.5" />
+                  <ArrowUpRight className="w-4 h-4 shrink-0 text-zinc-500 mt-0.5" />
                 </button>
               ))}
             </div>
@@ -752,8 +787,13 @@ export function NodeInspectorDrawer({
 
         {/* Supporting Arguments (+ Pro) */}
         {supportingChildren.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-slate-500/20">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+          <div
+            className={clsx(
+              'space-y-2 pt-4 border-t',
+              isDark ? 'border-white/[0.08]' : 'border-zinc-100'
+            )}
+          >
+            <h3 className="text-[11px] font-medium uppercase tracking-wider text-emerald-500">
               + Supporting Arguments ({supportingChildren.length})
             </h3>
             <div className="space-y-2">
@@ -763,19 +803,19 @@ export function NodeInspectorDrawer({
                   type="button"
                   onClick={() => onSelectAndZoom(child.id, false)}
                   className={clsx(
-                    'w-full text-left p-3 rounded-lg border-l-4 border-l-emerald-500 border transition-colors flex items-start justify-between gap-2',
+                    'w-full text-left p-3 rounded-xl border border-l-2 border-l-emerald-500/80 transition-colors flex items-start justify-between gap-2',
                     isDark
-                      ? 'bg-emerald-950/20 border-emerald-500/25 hover:border-emerald-400/60'
-                      : 'bg-emerald-50/50 border-emerald-200 hover:border-emerald-400'
+                      ? 'bg-[#0C0C0E] border-white/[0.08] hover:border-white/20'
+                      : 'bg-zinc-50/60 border-zinc-200 hover:border-zinc-300'
                   )}
                 >
                   <div>
-                    <div className="text-xs font-semibold">{child.title}</div>
-                    <p className={clsx('text-[11px] line-clamp-2 mt-0.5', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                    <div className="font-editorial text-[14px] font-medium leading-snug">{child.title}</div>
+                    <p className={clsx('text-[11.5px] line-clamp-2 mt-0.5', isDark ? 'text-zinc-400' : 'text-zinc-500')}>
                       {child.summary}
                     </p>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+                  <ArrowUpRight className="w-4 h-4 shrink-0 text-zinc-500 mt-0.5" />
                 </button>
               ))}
             </div>
@@ -784,8 +824,13 @@ export function NodeInspectorDrawer({
 
         {/* Counter-Arguments (- Con) */}
         {challengingChildren.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-slate-500/20">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400">
+          <div
+            className={clsx(
+              'space-y-2 pt-4 border-t',
+              isDark ? 'border-white/[0.08]' : 'border-zinc-100'
+            )}
+          >
+            <h3 className="text-[11px] font-medium uppercase tracking-wider text-rose-500">
               − Counter-Arguments &amp; Rebuttals ({challengingChildren.length})
             </h3>
             <div className="space-y-2">
@@ -795,19 +840,19 @@ export function NodeInspectorDrawer({
                   type="button"
                   onClick={() => onSelectAndZoom(child.id, false)}
                   className={clsx(
-                    'w-full text-left p-3 rounded-lg border-l-4 border-l-rose-500 border transition-colors flex items-start justify-between gap-2',
+                    'w-full text-left p-3 rounded-xl border border-l-2 border-l-rose-500/80 transition-colors flex items-start justify-between gap-2',
                     isDark
-                      ? 'bg-rose-950/20 border-rose-500/25 hover:border-rose-400/60'
-                      : 'bg-rose-50/50 border-rose-200 hover:border-rose-400'
+                      ? 'bg-[#0C0C0E] border-white/[0.08] hover:border-white/20'
+                      : 'bg-zinc-50/60 border-zinc-200 hover:border-zinc-300'
                   )}
                 >
                   <div>
-                    <div className="text-xs font-semibold">{child.title}</div>
-                    <p className={clsx('text-[11px] line-clamp-2 mt-0.5', isDark ? 'text-slate-400' : 'text-slate-600')}>
+                    <div className="font-editorial text-[14px] font-medium leading-snug">{child.title}</div>
+                    <p className={clsx('text-[11.5px] line-clamp-2 mt-0.5', isDark ? 'text-zinc-400' : 'text-zinc-500')}>
                       {child.summary}
                     </p>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                  <ArrowUpRight className="w-4 h-4 shrink-0 text-zinc-500 mt-0.5" />
                 </button>
               ))}
             </div>
@@ -816,8 +861,13 @@ export function NodeInspectorDrawer({
 
         {/* Cross-Branch Connections */}
         {relatedNodes.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-slate-500/20">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
+          <div
+            className={clsx(
+              'space-y-2 pt-4 border-t',
+              isDark ? 'border-white/[0.08]' : 'border-zinc-100'
+            )}
+          >
+            <h3 className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
               <GitBranch className="w-3.5 h-3.5" />
               Cross-Branch Connections ({relatedNodes.length})
             </h3>
@@ -830,12 +880,12 @@ export function NodeInspectorDrawer({
                   className={clsx(
                     'w-full text-left px-3 py-2 rounded-lg border border-dashed transition-colors flex items-center justify-between gap-2',
                     isDark
-                      ? 'bg-violet-950/20 border-violet-500/40 hover:border-violet-400 text-slate-200'
-                      : 'bg-violet-50/60 border-violet-300 hover:border-violet-500 text-slate-800'
+                      ? 'bg-[#0C0C0E] border-white/[0.15] hover:border-white/35 text-zinc-200'
+                      : 'bg-zinc-50/60 border-zinc-300 hover:border-zinc-500 text-zinc-800'
                   )}
                 >
                   <span className="text-xs font-medium truncate">{rel.title}</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0 text-violet-400" />
+                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0 text-zinc-500" />
                 </button>
               ))}
             </div>

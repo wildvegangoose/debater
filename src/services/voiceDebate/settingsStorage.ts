@@ -15,7 +15,7 @@ export const DEFAULT_VOICE_SETTINGS: VoiceDebateSettings = {
   localEndpoint: 'http://localhost:11434/v1',
   localModel: 'gemma3:4b',
   localApiKey: '',
-  roundLength: 3,
+  roundLength: 5,
   persona: 'sparring',
 };
 
@@ -28,7 +28,7 @@ function normalizeBackend(raw: unknown): VoiceAIBackend {
 
 function normalizeRoundLength(raw: unknown): DebateRoundLength {
   if (raw === 3 || raw === 5 || raw === 'open') return raw;
-  return 3;
+  return 5;
 }
 
 function normalizePersona(raw: unknown): DebateOpponentPersona {

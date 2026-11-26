@@ -75,10 +75,26 @@ const ROUND_LENGTH_OPTIONS: Array<{ id: DebateRoundLength; label: string }> = [
   { id: 'open', label: 'Open' },
 ];
 
-const PERSONA_OPTIONS: Array<{ id: DebateOpponentPersona; label: string }> = [
-  { id: 'sparring', label: 'Partner' },
-  { id: 'oxford', label: 'Oxford' },
-  { id: 'socratic', label: 'Socratic' },
+const PERSONA_OPTIONS: Array<{
+  id: DebateOpponentPersona;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: 'sparring',
+    label: 'Partner',
+    description: 'Conversational back-and-forth that concedes strong points before countering.',
+  },
+  {
+    id: 'oxford',
+    label: 'Oxford',
+    description: 'Formal, structured rebuttals grounded in empirical studies, treaties, and precedent.',
+  },
+  {
+    id: 'socratic',
+    label: 'Socratic',
+    description: 'Probing follow-up questions that expose hidden trade-offs and assumptions.',
+  },
 ];
 
 export function VoiceSettingsModal({
@@ -295,29 +311,59 @@ export function VoiceSettingsModal({
               </label>
               <div
                 className={clsx(
-                  'grid grid-cols-3 p-1 rounded-xl',
-                  isDark ? 'bg-[#0C0C0E]' : 'bg-zinc-100'
+                  'rounded-xl border divide-y overflow-hidden',
+                  isDark
+                    ? 'bg-[#0C0C0E] border-white/[0.08] divide-white/[0.06]'
+                    : 'bg-zinc-50/60 border-zinc-200 divide-zinc-200/70'
                 )}
               >
-                {PERSONA_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setDraft((d) => ({ ...d, persona: opt.id }))}
-                    className={clsx(
-                      'py-1.5 rounded-lg text-xs font-medium transition-all',
-                      draft.persona === opt.id
-                        ? isDark
-                          ? 'bg-[#26262B] text-white shadow-xs'
-                          : 'bg-white text-zinc-950 shadow-xs'
-                        : isDark
-                          ? 'text-zinc-400 hover:text-zinc-200'
-                          : 'text-zinc-500 hover:text-zinc-900'
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                {PERSONA_OPTIONS.map((opt) => {
+                  const active = draft.persona === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setDraft((d) => ({ ...d, persona: opt.id }))}
+                      className={clsx(
+                        'w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 transition-colors',
+                        active
+                          ? isDark
+                            ? 'bg-white/[0.05]'
+                            : 'bg-white'
+                          : isDark
+                            ? 'hover:bg-white/[0.02]'
+                            : 'hover:bg-white/60'
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-medium">{opt.label}</div>
+                        <p
+                          className={clsx(
+                            'text-[11.5px] mt-0.5 leading-snug',
+                            isDark ? 'text-zinc-500' : 'text-zinc-500'
+                          )}
+                        >
+                          {opt.description}
+                        </p>
+                      </div>
+
+                      <span
+                        className={clsx(
+                          'w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-colors',
+                          active
+                            ? isDark
+                              ? 'bg-white border-white text-zinc-950'
+                              : 'bg-zinc-950 border-zinc-950 text-white'
+                            : isDark
+                              ? 'border-zinc-700'
+                              : 'border-zinc-300'
+                        )}
+                      >
+                        {active && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

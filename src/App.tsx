@@ -918,16 +918,21 @@ function DebateGraphWorkspace() {
             className={clsx(
               'hidden md:flex px-4 py-2 border-b flex-wrap items-center justify-between gap-2 text-xs shrink-0',
               isDark
-                ? 'bg-indigo-950/55 border-indigo-500/30 text-indigo-100'
-                : 'bg-indigo-50 border-indigo-200 text-indigo-950'
+                ? 'bg-[#141417] border-white/[0.08] text-zinc-200'
+                : 'bg-zinc-50 border-zinc-200 text-zinc-800'
             )}
           >
             <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <span className="inline-flex items-center gap-1 font-semibold text-indigo-400 shrink-0">
-                <Sparkles className="w-3.5 h-3.5" />
+              <span
+                className={clsx(
+                  'inline-flex items-center gap-1 font-medium shrink-0',
+                  isDark ? 'text-zinc-100' : 'text-zinc-950'
+                )}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-zinc-400" />
                 22 Landmark Debates:
               </span>
-              <span className={clsx('hidden md:inline', isDark ? 'text-slate-300' : 'text-slate-700')}>
+              <span className={clsx('hidden md:inline', isDark ? 'text-zinc-400' : 'text-zinc-500')}>
                 Explore steelmanned argument trees, switch topics anytime, or practice live:
               </span>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -947,10 +952,12 @@ function DebateGraphWorkspace() {
                     className={clsx(
                       'px-2 py-0.5 rounded-md font-medium transition-colors border',
                       topicId === item.id
-                        ? 'bg-indigo-600 border-indigo-500 text-white'
+                        ? isDark
+                          ? 'bg-white border-white text-zinc-950'
+                          : 'bg-zinc-950 border-zinc-950 text-white'
                         : isDark
-                          ? 'bg-slate-900/70 border-slate-700 text-slate-300 hover:border-indigo-400'
-                          : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-400'
+                          ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-300 hover:border-white/25'
+                          : 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-400'
                     )}
                   >
                     {item.label}
@@ -960,10 +967,10 @@ function DebateGraphWorkspace() {
                   type="button"
                   onClick={() => handleViewModeChange('voice')}
                   className={clsx(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border transition-colors',
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium border transition-colors',
                     isDark
-                      ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300 hover:bg-emerald-500/30'
-                      : 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                      ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 hover:border-white/25'
+                      : 'bg-white border-zinc-200 text-zinc-800 hover:border-zinc-400'
                   )}
                 >
                   <Mic className="w-3 h-3" />
@@ -973,10 +980,10 @@ function DebateGraphWorkspace() {
                   type="button"
                   onClick={() => handleViewModeChange('flashcards')}
                   className={clsx(
-                    'px-2 py-0.5 rounded-md font-semibold border transition-colors',
+                    'px-2 py-0.5 rounded-md font-medium border transition-colors',
                     isDark
-                      ? 'bg-amber-500/15 border-amber-400/35 text-amber-300 hover:bg-amber-500/25'
-                      : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+                      ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 hover:border-white/25'
+                      : 'bg-white border-zinc-200 text-zinc-800 hover:border-zinc-400'
                   )}
                 >
                   Quiz Mode
@@ -985,10 +992,10 @@ function DebateGraphWorkspace() {
                   type="button"
                   onClick={() => handleOpenSuggestModal(null)}
                   className={clsx(
-                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border transition-colors',
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium border transition-colors',
                     isDark
-                      ? 'bg-emerald-500/15 border-emerald-400/35 text-emerald-300 hover:bg-emerald-500/25'
-                      : 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100'
+                      ? 'bg-[#0C0C0E] border-white/[0.1] text-zinc-200 hover:border-white/25'
+                      : 'bg-white border-zinc-200 text-zinc-800 hover:border-zinc-400'
                   )}
                 >
                   <GitPullRequest className="w-3 h-3" />
@@ -1002,7 +1009,7 @@ function DebateGraphWorkspace() {
               aria-label="Dismiss welcome banner"
               className={clsx(
                 'p-1 rounded-md transition-colors shrink-0',
-                isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-indigo-100 text-slate-500'
+                isDark ? 'hover:bg-white/[0.06] text-zinc-400' : 'hover:bg-zinc-200/70 text-zinc-500'
               )}
             >
               <X className="w-3.5 h-3.5" />
@@ -1015,10 +1022,15 @@ function DebateGraphWorkspace() {
           {viewMode === 'graph' && (
             <div className="flex-1 h-full relative">
               {isLoadingTopic && (
-                <div className="absolute inset-0 z-40 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-3 text-slate-100 animate-in fade-in duration-150">
-                  <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-                  <p className="text-sm font-semibold tracking-wide">Loading Landmark Debate...</p>
-                  <p className="text-xs text-slate-400">Fetching curated nodes &amp; primary evidence dossiers</p>
+                <div
+                  className={clsx(
+                    'absolute inset-0 z-40 backdrop-blur-xs flex flex-col items-center justify-center gap-2.5',
+                    isDark ? 'bg-[#0C0C0E]/80 text-zinc-100' : 'bg-white/80 text-zinc-950'
+                  )}
+                >
+                  <Loader2 className="w-6 h-6 text-zinc-400 animate-spin" />
+                  <p className="text-sm font-medium tracking-tight">Loading motion...</p>
+                  <p className="text-xs text-zinc-500">Fetching curated nodes &amp; primary evidence dossiers</p>
                 </div>
               )}
               <ReactFlow<DebateFlowNode>
@@ -1041,8 +1053,8 @@ function DebateGraphWorkspace() {
                 <Background
                   variant={BackgroundVariant.Dots}
                   gap={24}
-                  size={1.35}
-                  color={isDark ? '#334155' : '#cbd5e1'}
+                  size={1.25}
+                  color={isDark ? '#27272A' : '#E4E4E7'}
                 />
 
                 <MiniMap
@@ -1050,18 +1062,18 @@ function DebateGraphWorkspace() {
                   zoomable
                   position="bottom-right"
                   style={{
-                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.92)',
-                    border: isDark ? '1px solid rgba(51, 65, 85, 0.8)' : '1px solid rgba(203, 213, 225, 0.9)',
+                    backgroundColor: isDark ? 'rgba(20, 20, 23, 0.94)' : 'rgba(255, 255, 255, 0.94)',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(228, 228, 231, 0.9)',
                   }}
-                  maskColor={isDark ? 'rgba(2, 6, 23, 0.62)' : 'rgba(241, 245, 249, 0.65)'}
+                  maskColor={isDark ? 'rgba(12, 12, 14, 0.68)' : 'rgba(244, 244, 245, 0.68)'}
                   nodeColor={(n) => {
                     const kind = (n.data as DebateFlowNode['data'])?.node?.kind;
-                    if (kind === 'root') return '#6366f1';
-                    if (kind === 'pillar') return '#38bdf8';
-                    if (kind === 'thesis') return '#f59e0b';
+                    if (kind === 'root') return isDark ? '#fafafa' : '#09090b';
+                    if (kind === 'pillar') return isDark ? '#a1a1aa' : '#52525b';
+                    if (kind === 'thesis') return isDark ? '#71717a' : '#a1a1aa';
                     if (kind === 'pro') return '#10b981';
                     if (kind === 'con') return '#f43f5e';
-                    return '#94a3b8';
+                    return '#71717a';
                   }}
                 />
 

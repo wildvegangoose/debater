@@ -63,57 +63,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Award,
 };
 
-const CATEGORY_COLORS: Record<
-  DebateTopicCategory,
-  { bgLight: string; bgDark: string; borderLight: string; borderDark: string; textLight: string; textDark: string; iconGradient: string }
-> = {
-  'Geopolitics & Conflict': {
-    bgLight: 'bg-blue-50/70 hover:bg-blue-100/80',
-    bgDark: 'bg-blue-950/20 hover:bg-blue-950/40',
-    borderLight: 'border-blue-200',
-    borderDark: 'border-blue-800/40',
-    textLight: 'text-blue-700',
-    textDark: 'text-blue-400',
-    iconGradient: 'from-blue-500 to-indigo-600',
-  },
-  'Technology & AI': {
-    bgLight: 'bg-purple-50/70 hover:bg-purple-100/80',
-    bgDark: 'bg-purple-950/20 hover:bg-purple-950/40',
-    borderLight: 'border-purple-200',
-    borderDark: 'border-purple-800/40',
-    textLight: 'text-purple-700',
-    textDark: 'text-purple-400',
-    iconGradient: 'from-purple-500 to-pink-600',
-  },
-  'Economics & Labor': {
-    bgLight: 'bg-emerald-50/70 hover:bg-emerald-100/80',
-    bgDark: 'bg-emerald-950/20 hover:bg-emerald-950/40',
-    borderLight: 'border-emerald-200',
-    borderDark: 'border-emerald-800/40',
-    textLight: 'text-emerald-700',
-    textDark: 'text-emerald-400',
-    iconGradient: 'from-emerald-500 to-teal-600',
-  },
-  'Energy & Climate': {
-    bgLight: 'bg-amber-50/70 hover:bg-amber-100/80',
-    bgDark: 'bg-amber-950/20 hover:bg-amber-950/40',
-    borderLight: 'border-amber-200',
-    borderDark: 'border-amber-800/40',
-    textLight: 'text-amber-700',
-    textDark: 'text-amber-400',
-    iconGradient: 'from-amber-500 to-orange-600',
-  },
-  'Law & Society': {
-    bgLight: 'bg-rose-50/70 hover:bg-rose-100/80',
-    bgDark: 'bg-rose-950/20 hover:bg-rose-950/40',
-    borderLight: 'border-rose-200',
-    borderDark: 'border-rose-800/40',
-    textLight: 'text-rose-700',
-    textDark: 'text-rose-400',
-    iconGradient: 'from-rose-500 to-red-600',
-  },
-};
-
 export function TopicPickerModal({
   isOpen,
   onClose,
@@ -164,8 +113,12 @@ export function TopicPickerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-5 bg-black/60 backdrop-blur-xs"
+      onClick={onClose}
+    >
       <div
+        onClick={(e) => e.stopPropagation()}
         className={clsx(
           'w-full max-w-4xl max-h-[90vh] rounded-t-2xl sm:rounded-2xl border shadow-2xl flex flex-col overflow-hidden transition-all',
           isDark
@@ -173,15 +126,19 @@ export function TopicPickerModal({
             : 'bg-white border-zinc-200 text-zinc-950'
         )}
       >
+        <div className="pt-2.5 pb-1 flex justify-center sm:hidden shrink-0">
+          <span className="w-9 h-1 rounded-full bg-zinc-500/35" />
+        </div>
+
         {/* Header */}
         <div
           className={clsx(
-            'p-4 sm:p-5 border-b flex items-start justify-between gap-4 shrink-0',
+            'px-5 py-4 border-b flex items-start justify-between gap-4 shrink-0',
             isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           <div>
-            <h2 className="font-editorial text-lg sm:text-xl font-medium tracking-tight">
+            <h2 className="font-editorial text-lg sm:text-xl font-medium tracking-[-0.015em]">
               Choose a Motion
             </h2>
             <p className={clsx('text-xs mt-1', isDark ? 'text-zinc-400' : 'text-zinc-500')}>
@@ -192,7 +149,7 @@ export function TopicPickerModal({
             type="button"
             onClick={onClose}
             className={clsx(
-              'p-2 rounded-lg transition-colors shrink-0',
+              'p-1.5 rounded-lg transition-colors shrink-0',
               isDark ? 'hover:bg-white/[0.06] text-zinc-400 hover:text-zinc-100' : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-950'
             )}
             title="Close"
@@ -204,13 +161,13 @@ export function TopicPickerModal({
         {/* Filter Controls: Search & Category Tabs */}
         <div
           className={clsx(
-            'px-4 sm:px-5 py-3 border-b flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between shrink-0',
+            'px-5 py-3 border-b flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between shrink-0',
             isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             <input
               ref={searchInputRef}
               type="text"
@@ -259,12 +216,14 @@ export function TopicPickerModal({
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
                 className={clsx(
-                  'px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
+                  'px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all',
                   selectedCategory === cat
-                    ? 'bg-indigo-600 text-white shadow-xs'
+                    ? isDark
+                      ? 'bg-white text-zinc-950'
+                      : 'bg-zinc-950 text-white'
                     : isDark
-                      ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      ? 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]'
+                      : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
                 )}
               >
                 {cat}
@@ -276,25 +235,27 @@ export function TopicPickerModal({
         {/* Topic Grid */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           {filteredTopics.length === 0 ? (
-            <div className="py-12 text-center text-slate-400">
-              <p className="text-sm font-medium">No debate topics matched "{search}"</p>
+            <div className="py-12 text-center text-zinc-500">
+              <p className="text-sm font-medium">No debate topics matched &ldquo;{search}&rdquo;</p>
               <button
                 type="button"
                 onClick={() => {
                   setSearch('');
                   setSelectedCategory('ALL');
                 }}
-                className="mt-2 text-xs text-indigo-400 hover:underline"
+                className={clsx(
+                  'mt-2 text-xs font-medium underline underline-offset-2',
+                  isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-zinc-950'
+                )}
               >
                 Clear filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {filteredTopics.map((topic) => {
                 const isActive = topic.id === activeTopicId;
                 const IconComponent = ICON_MAP[topic.iconName] ?? Scale;
-                const colors = CATEGORY_COLORS[topic.category];
 
                 return (
                   <button
@@ -308,58 +269,82 @@ export function TopicPickerModal({
                       'text-left p-3.5 rounded-xl border transition-all flex items-start gap-3 relative group',
                       isActive
                         ? isDark
-                          ? 'border-indigo-500 bg-indigo-950/40 ring-1 ring-indigo-500/50'
-                          : 'border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500/50'
+                          ? 'border-white/30 bg-white/[0.06]'
+                          : 'border-zinc-900 bg-zinc-50'
                         : isDark
-                          ? 'border-slate-800/90 bg-slate-900/60 hover:bg-slate-900 hover:border-slate-700'
-                          : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300'
+                          ? 'border-white/[0.08] bg-[#0C0C0E] hover:bg-white/[0.03] hover:border-white/[0.16]'
+                          : 'border-zinc-200 bg-white hover:bg-zinc-50/80 hover:border-zinc-300'
                     )}
                   >
-                    {/* Category Icon */}
+                    {/* Monochrome Icon Tile */}
                     <div
                       className={clsx(
-                        'w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white shrink-0 shadow-sm',
-                        colors.iconGradient
+                        'w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 transition-colors',
+                        isActive
+                          ? isDark
+                            ? 'bg-white text-zinc-950 border-white'
+                            : 'bg-zinc-950 text-white border-zinc-950'
+                          : isDark
+                            ? 'bg-[#141417] border-white/[0.08] text-zinc-400 group-hover:text-zinc-200'
+                            : 'bg-zinc-100 border-zinc-200 text-zinc-600 group-hover:text-zinc-950'
                       )}
                     >
-                      <IconComponent className="w-5 h-5" />
+                      <IconComponent className="w-4 h-4" />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0 pr-6">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="font-editorial font-bold text-sm tracking-tight">
+                        <span className="font-editorial font-medium text-[15px] tracking-tight">
                           {topic.shortTitle}
                         </span>
                         <span
                           className={clsx(
                             'text-[10.5px] px-2 py-0.5 rounded-full font-medium border shrink-0',
-                            isDark ? colors.borderDark : colors.borderLight,
-                            isDark ? colors.textDark : colors.textLight
+                            isDark
+                              ? 'border-white/[0.08] text-zinc-400 bg-white/[0.03]'
+                              : 'border-zinc-200 text-zinc-500 bg-zinc-50'
                           )}
                         >
                           {topic.badge ?? topic.category}
                         </span>
                       </div>
 
-                      <p className={clsx('text-xs font-medium mb-1 line-clamp-1', isDark ? 'text-slate-300' : 'text-slate-700')}>
+                      <p
+                        className={clsx(
+                          'text-xs font-medium mb-1 line-clamp-1',
+                          isDark ? 'text-zinc-200' : 'text-zinc-800'
+                        )}
+                      >
                         {topic.title}
                       </p>
 
-                      <p className={clsx('text-[11.5px] line-clamp-2', isDark ? 'text-slate-400' : 'text-slate-500')}>
+                      <p
+                        className={clsx(
+                          'text-[11.5px] leading-snug line-clamp-2',
+                          isDark ? 'text-zinc-500' : 'text-zinc-500'
+                        )}
+                      >
                         {topic.subtitle}
                       </p>
 
-                      <div className="mt-2 flex items-center gap-1.5 text-[10.5px] text-slate-400">
-                        <span className="font-medium text-indigo-400">Debate:</span>
+                      <div className="mt-2 flex items-center gap-1.5 text-[10.5px] text-zinc-500">
+                        <span className={clsx('font-medium', isDark ? 'text-zinc-400' : 'text-zinc-600')}>
+                          Reference:
+                        </span>
                         <span className="truncate">{topic.landmarkDebate}</span>
                       </div>
                     </div>
 
                     {/* Active Checkmark */}
                     {isActive && (
-                      <div className="absolute right-3.5 top-3.5 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <div
+                        className={clsx(
+                          'absolute right-3.5 top-3.5 w-5 h-5 rounded-full flex items-center justify-center',
+                          isDark ? 'bg-white text-zinc-950' : 'bg-zinc-950 text-white'
+                        )}
+                      >
+                        <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     )}
                   </button>
@@ -372,12 +357,18 @@ export function TopicPickerModal({
         {/* Footer */}
         <div
           className={clsx(
-            'p-3 px-5 border-t flex items-center justify-between text-xs shrink-0',
-            isDark ? 'border-slate-800 bg-slate-900/60 text-slate-400' : 'border-slate-100 bg-slate-50/80 text-slate-500'
+            'px-5 py-3 border-t flex items-center justify-between text-xs shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
+            isDark
+              ? 'border-white/[0.08] bg-[#0C0C0E]/60 text-zinc-500'
+              : 'border-zinc-100 bg-zinc-50/70 text-zinc-500'
           )}
         >
-          <span>Showing {filteredTopics.length} of {TOPIC_CATALOG.length} landmark debate topics</span>
-          <span className="hidden sm:inline">Tip: Use <b>?topic=&lt;id&gt;</b> in URL to share direct links</span>
+          <span className="tabular-nums">
+            Showing {filteredTopics.length} of {TOPIC_CATALOG.length} landmark motions
+          </span>
+          <span className="hidden sm:inline">
+            Share direct link via <code className="font-mono text-[11px]">?topic=&lt;id&gt;</code>
+          </span>
         </div>
       </div>
     </div>

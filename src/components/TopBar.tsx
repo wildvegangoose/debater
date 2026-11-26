@@ -188,12 +188,12 @@ export function TopBar({
       {mobileSearchOpen && !isVoiceMode && (
         <div
           className={clsx(
-            'md:hidden px-3 pb-2.5 border-t pt-2',
-            isDark ? 'border-slate-800/80' : 'border-slate-200'
+            'md:hidden px-4 pb-3 border-t pt-2.5',
+            isDark ? 'border-white/[0.08]' : 'border-zinc-100'
           )}
         >
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             <input
               type="text"
               autoFocus
@@ -201,17 +201,17 @@ export function TopBar({
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={dataset.searchPlaceholder}
               className={clsx(
-                'w-full pl-8 pr-8 py-2 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                'w-full pl-8 pr-8 py-2 rounded-xl text-xs border focus:outline-none',
                 isDark
-                  ? 'bg-slate-900 border-slate-700 text-slate-100'
-                  : 'bg-slate-100 border-slate-300 text-slate-900'
+                  ? 'bg-[#141417] border-white/[0.1] text-zinc-100 placeholder:text-zinc-500 focus:border-white/25'
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-950 placeholder:text-zinc-400 focus:border-zinc-400'
               )}
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => onSearchChange('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -221,7 +221,7 @@ export function TopBar({
             <div
               className={clsx(
                 'mt-1.5 rounded-xl border shadow-xl overflow-hidden max-h-60 overflow-y-auto',
-                isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+                isDark ? 'bg-[#141417] border-white/[0.1]' : 'bg-white border-zinc-200'
               )}
             >
               {searchDropdownResults.map((item) => (
@@ -234,11 +234,11 @@ export function TopBar({
                   }}
                   className={clsx(
                     'w-full text-left px-3 py-2 border-b last:border-b-0 flex flex-col gap-0.5',
-                    isDark ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'
+                    isDark ? 'border-white/[0.06] hover:bg-white/[0.05]' : 'border-zinc-100 hover:bg-zinc-50'
                   )}
                 >
-                  <span className="text-xs font-semibold truncate">{item.title}</span>
-                  <span className="text-[11px] text-slate-400 line-clamp-1">{item.summary}</span>
+                  <span className="text-xs font-medium truncate">{item.title}</span>
+                  <span className="text-[11px] text-zinc-500 line-clamp-1">{item.summary}</span>
                 </button>
               ))}
             </div>
@@ -338,7 +338,7 @@ export function TopBar({
           <>
           {/* Instant Search Input */}
           <div className="relative w-56 lg:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             <input
               ref={searchInputRef}
               type="text"
@@ -348,17 +348,17 @@ export function TopBar({
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={dataset.searchPlaceholder}
               className={clsx(
-                'w-full pl-8 pr-7 py-1.5 rounded-lg text-xs border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                'w-full pl-8 pr-7 py-1.5 rounded-lg text-xs border transition-colors focus:outline-none',
                 isDark
-                  ? 'bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-500'
-                  : 'bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-400'
+                  ? 'bg-[#141417] border-white/[0.1] text-zinc-100 placeholder:text-zinc-500 focus:border-white/25'
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-950 placeholder:text-zinc-400 focus:border-zinc-400'
               )}
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => onSearchChange('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -369,7 +369,7 @@ export function TopBar({
               <div
                 className={clsx(
                   'absolute left-0 right-0 mt-1.5 rounded-xl border shadow-2xl overflow-hidden z-50 max-h-80 overflow-y-auto',
-                  isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+                  isDark ? 'bg-[#141417] border-white/[0.1]' : 'bg-white border-zinc-200'
                 )}
               >
                 {searchDropdownResults.map((item) => (
@@ -380,26 +380,24 @@ export function TopBar({
                     className={clsx(
                       'w-full text-left px-3 py-2.5 border-b last:border-b-0 transition-colors flex flex-col gap-0.5',
                       isDark
-                        ? 'border-slate-800 hover:bg-slate-800/80'
-                        : 'border-slate-100 hover:bg-slate-50'
+                        ? 'border-white/[0.06] hover:bg-white/[0.05]'
+                        : 'border-zinc-100 hover:bg-zinc-50'
                     )}
                   >
                     <div className="flex items-center gap-1.5">
                       <span
                         className={clsx(
-                          'w-2 h-2 rounded-full shrink-0',
+                          'w-1.5 h-1.5 rounded-full shrink-0',
                           item.kind === 'pro'
-                            ? 'bg-emerald-400'
+                            ? 'bg-emerald-500'
                             : item.kind === 'con'
-                              ? 'bg-rose-400'
-                              : item.kind === 'thesis'
-                                ? 'bg-amber-400'
-                                : 'bg-sky-400'
+                              ? 'bg-rose-500'
+                              : 'bg-zinc-400'
                         )}
                       />
-                      <span className="text-xs font-semibold truncate">{item.title}</span>
+                      <span className="text-xs font-medium truncate">{item.title}</span>
                     </div>
-                    <span className={clsx('text-[11px] line-clamp-1 pl-3.5', isDark ? 'text-slate-400' : 'text-slate-500')}>
+                    <span className="text-[11px] line-clamp-1 pl-3 text-zinc-500">
                       {item.summary}
                     </span>
                   </button>
@@ -416,10 +414,12 @@ export function TopBar({
               className={clsx(
                 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
                 activeTag
-                  ? 'bg-indigo-600 text-white border-indigo-500'
+                  ? isDark
+                    ? 'bg-white text-zinc-950 border-white'
+                    : 'bg-zinc-950 text-white border-zinc-950'
                   : isDark
-                    ? 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
-                    : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70'
+                    ? 'bg-[#141417] border-white/[0.1] text-zinc-300 hover:bg-white/[0.06]'
+                    : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
               )}
             >
               <Filter className="w-3.5 h-3.5" />
@@ -430,7 +430,7 @@ export function TopBar({
               <div
                 className={clsx(
                   'absolute right-0 mt-1.5 w-52 rounded-xl border shadow-xl p-1.5 z-50 max-h-96 overflow-y-auto',
-                  isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+                  isDark ? 'bg-[#141417] border-white/[0.1]' : 'bg-white border-zinc-200'
                 )}
               >
                 <button
@@ -442,10 +442,12 @@ export function TopBar({
                   className={clsx(
                     'w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
                     activeTag === null
-                      ? 'bg-indigo-600 text-white'
+                      ? isDark
+                        ? 'bg-white text-zinc-950'
+                        : 'bg-zinc-950 text-white'
                       : isDark
-                        ? 'text-slate-300 hover:bg-slate-800'
-                        : 'text-slate-700 hover:bg-slate-100'
+                        ? 'text-zinc-300 hover:bg-white/[0.06]'
+                        : 'text-zinc-700 hover:bg-zinc-100'
                   )}
                 >
                   All Lenses
@@ -461,10 +463,12 @@ export function TopBar({
                     className={clsx(
                       'w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
                       activeTag === tag
-                        ? 'bg-indigo-600 text-white'
+                        ? isDark
+                          ? 'bg-white text-zinc-950'
+                          : 'bg-zinc-950 text-white'
                         : isDark
-                          ? 'text-slate-300 hover:bg-slate-800'
-                          : 'text-slate-700 hover:bg-slate-100'
+                          ? 'text-zinc-300 hover:bg-white/[0.06]'
+                          : 'text-zinc-700 hover:bg-zinc-100'
                     )}
                   >
                     {tag}
@@ -482,8 +486,8 @@ export function TopBar({
             className={clsx(
               'hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
               isDark
-                ? 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
-                : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70'
+                ? 'bg-[#141417] border-white/[0.1] text-zinc-300 hover:bg-white/[0.06]'
+                : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
             )}
           >
             <Download className="w-3.5 h-3.5" />
@@ -508,8 +512,8 @@ export function TopBar({
             className={clsx(
               'hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
               isDark
-                ? 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
-                : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70'
+                ? 'bg-[#141417] border-white/[0.1] text-zinc-300 hover:bg-white/[0.06]'
+                : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
             )}
           >
             <Upload className="w-3.5 h-3.5" />
@@ -521,7 +525,12 @@ export function TopBar({
               type="button"
               onClick={onResetSandbox}
               title="Reset local sandbox to curated graph"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+              className={clsx(
+                'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
+                isDark
+                  ? 'bg-[#141417] border-white/[0.12] text-zinc-200 hover:bg-white/[0.08]'
+                  : 'bg-zinc-100 border-zinc-200 text-zinc-800 hover:bg-zinc-200/70'
+              )}
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden xl:inline">Reset</span>
@@ -534,10 +543,10 @@ export function TopBar({
             onClick={onOpenSuggestModal}
             title="Suggest an argument node or source for the public GitHub map"
             className={clsx(
-              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
+              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
               isDark
-                ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300 hover:bg-emerald-500/25'
-                : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                ? 'bg-[#141417] border-white/[0.1] text-zinc-200 hover:bg-white/[0.06] hover:border-white/20'
+                : 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300'
             )}
           >
             <GitPullRequest className="w-3.5 h-3.5" />
@@ -552,11 +561,11 @@ export function TopBar({
             className={clsx(
               'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
               isDark
-                ? 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
-                : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70'
+                ? 'bg-[#141417] border-white/[0.1] text-zinc-300 hover:bg-white/[0.06]'
+                : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
             )}
           >
-            <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+            <HelpCircle className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Guide</span>
           </button>
           </>
@@ -566,15 +575,15 @@ export function TopBar({
           <button
             type="button"
             onClick={onToggleTheme}
-            title={isDark ? 'Switch to Light Paper Theme' : 'Switch to Dark Midnight Theme'}
+            title={isDark ? 'Switch to Light Paper Theme' : 'Switch to Dark Theme'}
             className={clsx(
               'p-1.5 rounded-lg border transition-colors',
               isDark
-                ? 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
-                : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70'
+                ? 'bg-[#141417] border-white/[0.1] text-zinc-300 hover:bg-white/[0.06]'
+                : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
             )}
           >
-            {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-slate-700" />}
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -584,32 +593,29 @@ export function TopBar({
         <div
           className={clsx(
             'px-4 py-1.5 border-t flex items-center gap-1.5 overflow-x-auto no-scrollbar',
-            isDark ? 'border-slate-800/70 bg-slate-900/40' : 'border-slate-100 bg-slate-50/70'
+            isDark ? 'border-white/[0.06] bg-[#0C0C0E]' : 'border-zinc-100 bg-white'
           )}
         >
-          <span
-            className={clsx(
-              'inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider mr-1 shrink-0',
-              isDark ? 'text-slate-400' : 'text-slate-500'
-            )}
-          >
-            <Compass className="w-3.5 h-3.5 text-indigo-400" />
-            Jump &amp; Zoom:
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium mr-1 shrink-0 text-zinc-500">
+            <Compass className="w-3.5 h-3.5" />
+            Jump:
           </span>
 
           <button
             type="button"
             onClick={() => onJumpToPillar(null)}
             className={clsx(
-              'px-2.5 py-1 rounded-md text-xs font-medium shrink-0 transition-colors',
+              'px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition-colors',
               activePillarId === null
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? isDark
+                  ? 'bg-white text-zinc-950'
+                  : 'bg-zinc-950 text-white'
                 : isDark
-                  ? 'text-slate-300 hover:bg-slate-800'
-                  : 'text-slate-600 hover:bg-slate-200/70'
+                  ? 'bg-white/[0.05] text-zinc-400 hover:text-zinc-200'
+                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-950'
             )}
           >
-            Full Map Overview
+            Full Map
           </button>
 
           {pillars.map((pillar) => (
@@ -618,12 +624,14 @@ export function TopBar({
               type="button"
               onClick={() => onJumpToPillar(pillar.id)}
               className={clsx(
-                'px-2.5 py-1 rounded-md text-xs font-medium shrink-0 transition-colors',
+                'px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition-colors',
                 activePillarId === pillar.id
-                  ? 'bg-sky-500/25 text-sky-300 border border-sky-400/40'
+                  ? isDark
+                    ? 'bg-white text-zinc-950'
+                    : 'bg-zinc-950 text-white'
                   : isDark
-                    ? 'text-slate-300 hover:bg-slate-800'
-                    : 'text-slate-600 hover:bg-slate-200/70'
+                    ? 'bg-white/[0.05] text-zinc-400 hover:text-zinc-200'
+                    : 'bg-zinc-100 text-zinc-600 hover:text-zinc-950'
               )}
             >
               {dataset.shortPillarLabels[pillar.id] ?? pillar.title}
