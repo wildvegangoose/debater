@@ -17,6 +17,7 @@ import {
   DebateSessionRecord,
   DebateUserStance,
   LiveVisualFeedback,
+  SessionDeepAnalysis,
   StructuredDebateResponse,
   VoiceDebateSettings,
   VoiceDebateTurn,
@@ -44,6 +45,7 @@ import {
 import {
   deletePerformanceLog,
   loadPerformanceLogs,
+  saveSessionDeepAnalysisInLog,
   updateTurnAiRewriteInLog,
   upsertPerformanceLog,
 } from '../services/voiceDebate/sessionLogStorage';
@@ -226,6 +228,14 @@ export function VoiceDebateView({
     feedback.persuasionBalance,
     totalEngagedCount,
   ]);
+
+  const currentLiveSessionWithAnalysis = useMemo<DebateSessionRecord | null>(() => {
+    if (!currentLiveSessionRecord) return null;
+    const saved = savedLogs.find((s) => s.id === currentLiveSessionRecord.id);
+    return saved?.deepAnalysis
+      ? { ...currentLiveSessionRecord, deepAnalysis: saved.deepAnalysis }
+      : currentLiveSessionRecord;
+  }, [currentLiveSessionRecord, savedLogs]);
 
   const suggestedAngleNode = useMemo<DebateNode | null>(() => {
     const usedIds = new Set([...feedback.engagedByUserIds, ...feedback.engagedByAiIds]);
@@ -590,6 +600,22 @@ export function VoiceDebateView({
     });
   };
 
+  const handleSaveDeepAnalysis = (targetSessionId: string, analysis: SessionDeepAnalysis) => {
+    const updatedLogs = saveSessionDeepAnalysisInLog(targetSessionId, analysis);
+    setSavedLogs(updatedLogs);
+
+    setReviewingSession((prev) => {
+      if (!prev || prev.session.id !== targetSessionId) return prev;
+      return {
+        ...prev,
+        session: {
+          ...prev.session,
+          deepAnalysis: analysis,
+        },
+      };
+    });
+  };
+
   const handleDeleteLog = (targetSessionId: string) => {
     setSavedLogs(deletePerformanceLog(targetSessionId));
   };
@@ -674,12 +700,12 @@ export function VoiceDebateView({
                   <Compass className="w-4 h-4" />
                 </button>
 
-                {currentLiveSessionRecord ? (
+                {currentLiveSessionWithAnalysis ? (
                   <button
                     type="button"
                     onClick={() =>
                       setReviewingSession({
-                        session: currentLiveSessionRecord,
+                        session: currentLiveSessionWithAnalysis,
                         isHistorical: false,
                       })
                     }
@@ -987,7 +1013,7 @@ export function VoiceDebateView({
                         type="button"
                         onClick={() =>
                           setReviewingSession({
-                            session: currentLiveSessionRecord,
+                            session: currentLiveSessionWithAnalysis ?? currentLiveSessionRecord,
                             isHistorical: false,
                           })
                         }
@@ -1256,11 +1282,14 @@ export function VoiceDebateView({
         isOpen={showPerformanceLog}
         onClose={() => setShowPerformanceLog(false)}
         sessions={savedLogs}
+        settings={settings}
         onSelectSession={(session) => {
           setShowPerformanceLog(false);
           setReviewingSession({ session, isHistorical: true });
         }}
         onDeleteSession={handleDeleteLog}
+        onImportSessions={(merged) => setSavedLogs(merged)}
+        onOpenSettings={() => setShowSettings(true)}
         isDark={isDark}
       />
 
@@ -1277,6 +1306,8 @@ export function VoiceDebateView({
           setShowPerformanceLog(true);
         }}
         onSaveAiRewrite={handleSaveAiRewrite}
+        onSaveDeepAnalysis={handleSaveDeepAnalysis}
+        onOpenSettings={() => setShowSettings(true)}
         onInspectNode={onInspectNode}
         onRematchSwitchSides={handleRematchSwitchSides}
         onNewRound={() => startFreshRound()}

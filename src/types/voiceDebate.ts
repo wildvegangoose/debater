@@ -110,6 +110,41 @@ export interface ArgumentTurnReview {
 
 export type DebateSessionVerdict = 'won' | 'edge' | 'split' | 'outflanked';
 
+export interface ProposedArgumentRevision {
+  turnIndex: number;
+  issue: string;
+  originalExcerpt: string;
+  proposedRevision: string;
+  rationale: string;
+}
+
+export interface SessionDeepAnalysis {
+  generatedAt: string;
+  engineLabel: string;
+  overallAssessment: string;
+  strengths: Array<{ title: string; detail: string }>;
+  weaknesses: Array<{ title: string; detail: string }>;
+  missedOpportunities: string[];
+  proposedChanges: ProposedArgumentRevision[];
+  nextRoundDrill: string;
+}
+
+export interface HistoricalPatternAnalysis {
+  generatedAt: string;
+  engineLabel: string;
+  sessionsAnalyzed: number;
+  executiveSummary: string;
+  recurringStrengths: Array<{ title: string; detail: string }>;
+  recurringWeaknesses: Array<{ title: string; detail: string }>;
+  strategicRecommendations: Array<{ title: string; action: string }>;
+  exampleUpgrade?: {
+    topicTitle: string;
+    before: string;
+    after: string;
+    why: string;
+  };
+}
+
 export interface DebateSessionRecord {
   id: string;
   startedAt: string;
@@ -130,6 +165,7 @@ export interface DebateSessionRecord {
   topStrength: string;
   primaryFocus: string;
   turnReviews: ArgumentTurnReview[];
+  deepAnalysis?: SessionDeepAnalysis;
 }
 
 export interface DebaterCareerStats {

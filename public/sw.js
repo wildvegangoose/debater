@@ -1,5 +1,5 @@
 // Steelman PWA Service Worker — enables Android Chrome WebAPK installation & offline sparring
-const CACHE_NAME = 'steelman-pwa-v8';
+const CACHE_NAME = 'steelman-pwa-v9';
 const APP_SHELL_URLS = [
   './',
   './index.html',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import {
   ArrowLeft,
@@ -9,6 +9,8 @@ import {
   Copy,
   ExternalLink,
   Loader2,
+  RefreshCw,
+  Sparkles,
   Wand2,
   X,
 } from 'lucide-react';
@@ -16,10 +18,14 @@ import { DebateNode } from '../../types/debate';
 import {
   ArgumentTurnReview,
   DebateSessionRecord,
+  SessionDeepAnalysis,
   VoiceDebateSettings,
 } from '../../types/voiceDebate';
 import {
+  canRunLiveAiCoach,
   generateAiTurnRewrite,
+  generateSessionDeepAnalysis,
+  getCoachEngineLabel,
   verdictDisplay,
 } from '../../services/voiceDebate/performanceAnalyzer';
 import { formatSessionAsMarkdown } from '../../services/voiceDebate/sessionLogStorage';
@@ -33,6 +39,8 @@ interface DebateScorecardModalProps {
   isHistoricalView?: boolean;
   onBackToLog?: () => void;
   onSaveAiRewrite?: (sessionId: string, turnIndex: number, rewrite: string) => void;
+  onSaveDeepAnalysis?: (sessionId: string, analysis: SessionDeepAnalysis) => void;
+  onOpenSettings?: () => void;
   onInspectNode?: (nodeId: string) => void;
   onRematchSwitchSides?: () => void;
   onNewRound?: () => void;
@@ -124,23 +132,33 @@ export function DebateScorecardModal({
   isHistoricalView = false,
   onBackToLog,
   onSaveAiRewrite,
+  onSaveDeepAnalysis,
+  onOpenSettings,
   onInspectNode,
   onRematchSwitchSides,
   onNewRound,
   isDark,
 }: DebateScorecardModalProps) {
-  const [activeTab, setActiveTab] = useState<'tape' | 'overview'>('tape');
+  const [activeTab, setActiveTab] = useState<'tape' | 'critique' | 'overview'>('tape');
   const [expandedOpponentTurn, setExpandedOpponentTurn] = useState<number | null>(null);
   const [rewritingTurn, setRewritingTurn] = useState<number | null>(null);
   const [rewriteErrors, setRewriteErrors] = useState<Record<number, string>>({});
+  const [analyzingRound, setAnalyzingRound] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [appliedTurnIndex, setAppliedTurnIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setAnalysisError(null);
+    setAppliedTurnIndex(null);
+  }, [isOpen, session?.id]);
 
   if (!isOpen || !session) return null;
 
   const verdict = verdictDisplay(session.verdict);
-  const canUseAiRewrite =
-    settings.backend === 'browser-webllm' ||
-    (settings.backend === 'gemini-flash' && settings.geminiApiKey.trim().length > 10);
+  const canUseAiRewrite = canRunLiveAiCoach(settings);
+  const engineLabel = getCoachEngineLabel(settings);
 
   const engagedIds = new Set(
     session.turnReviews.flatMap((r) => [...r.userEngagedNodeIds, ...r.aiEngagedNodeIds])
@@ -183,10 +201,26 @@ export function DebateScorecardModal({
     }
   };
 
+  const handleRunDeepAnalysis = async () => {
+    if (analyzingRound) return;
+    setAnalyzingRound(true);
+    setAnalysisError(null);
+    try {
+      const analysis = await generateSessionDeepAnalysis({ settings, session });
+      onSaveDeepAnalysis?.(session.id, analysis);
+    } catch (err) {
+      setAnalysisError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAnalyzingRound(false);
+    }
+  };
+
   const formattedDate = new Date(session.updatedAt).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
   });
+
+  const deepAnalysis = session.deepAnalysis;
 
   return (
     <div
@@ -273,11 +307,11 @@ export function DebateScorecardModal({
           </div>
         </div>
 
-        {/* Clean Segmented Sub-Nav */}
+        {/* Clean 3-Tab Segmented Sub-Nav */}
         <div className="px-5 pt-3 pb-2 shrink-0">
           <div
             className={clsx(
-              'grid grid-cols-2 p-1 rounded-xl',
+              'grid grid-cols-3 p-1 rounded-xl',
               isDark ? 'bg-[#0C0C0E]' : 'bg-zinc-100'
             )}
           >
@@ -294,6 +328,24 @@ export function DebateScorecardModal({
               )}
             >
               Game Tape ({session.turnReviews.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('critique')}
+              className={clsx(
+                'py-1.5 rounded-lg text-xs font-medium transition-all inline-flex items-center justify-center gap-1',
+                activeTab === 'critique'
+                  ? isDark
+                    ? 'bg-[#26262B] text-white shadow-xs'
+                    : 'bg-white text-zinc-950 shadow-xs'
+                  : 'text-zinc-500'
+              )}
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>Deep Critique</span>
+              {deepAnalysis && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              )}
             </button>
             <button
               type="button"
@@ -314,7 +366,325 @@ export function DebateScorecardModal({
 
         {/* Body */}
         <div className="px-5 py-3 overflow-y-auto space-y-5">
-          {activeTab === 'tape' ? (
+          {activeTab === 'critique' ? (
+            <div className="space-y-5 py-1">
+              {!deepAnalysis ? (
+                <div
+                  className={clsx(
+                    'p-6 rounded-2xl border text-center space-y-3',
+                    isDark ? 'bg-[#0C0C0E] border-white/[0.08]' : 'bg-zinc-50 border-zinc-200'
+                  )}
+                >
+                  <Sparkles className="w-6 h-6 mx-auto text-zinc-400" />
+                  <div className="space-y-1">
+                    <h3 className="font-editorial text-lg font-medium tracking-tight">
+                      Deep Argument Critique
+                    </h3>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto leading-relaxed">
+                      Inspect all {session.turnCount}{' '}
+                      {session.turnCount === 1 ? 'turn' : 'turns'} together to break down strengths, logical weaknesses, missed counters, and before-to-after proposed revisions.
+                    </p>
+                  </div>
+
+                  <div className="pt-1 flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={analyzingRound}
+                      onClick={() => void handleRunDeepAnalysis()}
+                      className={clsx(
+                        'inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-45',
+                        isDark
+                          ? 'bg-white text-zinc-950 hover:bg-zinc-200'
+                          : 'bg-zinc-950 text-white hover:bg-zinc-800'
+                      )}
+                    >
+                      {analyzingRound ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Analyzing arguments...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Analyze Round</span>
+                        </>
+                      )}
+                    </button>
+
+                    <div className="text-[11px] text-zinc-500 flex items-center gap-1.5">
+                      <span>Engine: {engineLabel}</span>
+                      {!canUseAiRewrite && onOpenSettings && (
+                        <>
+                          <span>·</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onClose();
+                              onOpenSettings();
+                            }}
+                            className="underline underline-offset-2 hover:text-zinc-300"
+                          >
+                            Switch to AI
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Meta Header & Re-analyze */}
+                  <div
+                    className={clsx(
+                      'pb-3 border-b flex items-center justify-between gap-2 text-xs',
+                      isDark ? 'border-white/[0.08]' : 'border-zinc-100'
+                    )}
+                  >
+                    <span className="text-zinc-500 truncate">
+                      {deepAnalysis.engineLabel} ·{' '}
+                      {new Date(deepAnalysis.generatedAt).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={analyzingRound}
+                      onClick={() => void handleRunDeepAnalysis()}
+                      className={clsx(
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium shrink-0 transition-colors disabled:opacity-45',
+                        isDark
+                          ? 'border-white/[0.1] text-zinc-300 hover:bg-white/[0.06]'
+                          : 'border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                      )}
+                    >
+                      {analyzingRound ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-3 h-3" />
+                      )}
+                      <span>{analyzingRound ? 'Analyzing...' : 'Re-analyze'}</span>
+                    </button>
+                  </div>
+
+                  {/* Overall Assessment */}
+                  <p
+                    className={clsx(
+                      'font-editorial text-[16px] leading-relaxed',
+                      isDark ? 'text-zinc-200' : 'text-zinc-800'
+                    )}
+                  >
+                    {deepAnalysis.overallAssessment}
+                  </p>
+
+                  {/* Strengths */}
+                  <div className="space-y-2">
+                    <h3 className="text-[11px] font-medium uppercase tracking-wider text-emerald-500">
+                      Strengths
+                    </h3>
+                    <div
+                      className={clsx(
+                        'divide-y rounded-xl border px-3.5',
+                        isDark
+                          ? 'bg-[#0C0C0E] border-white/[0.08] divide-white/[0.06]'
+                          : 'bg-zinc-50/70 border-zinc-200 divide-zinc-200/70'
+                      )}
+                    >
+                      {deepAnalysis.strengths.map((s, idx) => (
+                        <div key={idx} className="py-2.5 space-y-0.5">
+                          <div className="text-xs font-medium">{s.title}</div>
+                          <p className="text-xs text-zinc-500 leading-relaxed">{s.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Weaknesses & Logical Gaps */}
+                  <div className="space-y-2">
+                    <h3 className="text-[11px] font-medium uppercase tracking-wider text-rose-500">
+                      Weaknesses &amp; Gaps
+                    </h3>
+                    <div
+                      className={clsx(
+                        'divide-y rounded-xl border px-3.5',
+                        isDark
+                          ? 'bg-[#0C0C0E] border-white/[0.08] divide-white/[0.06]'
+                          : 'bg-zinc-50/70 border-zinc-200 divide-zinc-200/70'
+                      )}
+                    >
+                      {deepAnalysis.weaknesses.map((w, idx) => (
+                        <div key={idx} className="py-2.5 space-y-0.5">
+                          <div className="text-xs font-medium">{w.title}</div>
+                          <p className="text-xs text-zinc-500 leading-relaxed">{w.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Proposed Changes (Before -> After) */}
+                  {deepAnalysis.proposedChanges.length > 0 && (
+                    <div className="space-y-2.5">
+                      <h3 className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                        Proposed Changes ({deepAnalysis.proposedChanges.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {deepAnalysis.proposedChanges.map((change, idx) => {
+                          const isSaved = appliedTurnIndex === change.turnIndex;
+                          return (
+                            <div
+                              key={`${change.turnIndex}-${idx}`}
+                              className={clsx(
+                                'p-3.5 rounded-xl border space-y-2.5 text-xs',
+                                isDark
+                                  ? 'bg-[#0C0C0E] border-white/[0.08]'
+                                  : 'bg-zinc-50/70 border-zinc-200'
+                              )}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <span className="font-mono text-[11px] text-zinc-500 mr-2">
+                                    Turn {change.turnIndex}
+                                  </span>
+                                  <span className="font-medium">{change.issue}</span>
+                                </div>
+                                {onSaveAiRewrite && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onSaveAiRewrite(
+                                        session.id,
+                                        change.turnIndex,
+                                        change.proposedRevision
+                                      );
+                                      setAppliedTurnIndex(change.turnIndex);
+                                      setTimeout(() => setAppliedTurnIndex(null), 2000);
+                                    }}
+                                    className={clsx(
+                                      'inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border shrink-0 transition-colors',
+                                      isSaved
+                                        ? isDark
+                                          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                                          : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                        : isDark
+                                          ? 'bg-white/[0.04] border-white/[0.1] text-zinc-300 hover:bg-white/[0.08] hover:text-white'
+                                          : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                                    )}
+                                  >
+                                    {isSaved ? (
+                                      <>
+                                        <Check className="w-3 h-3" />
+                                        <span>Saved</span>
+                                      </>
+                                    ) : (
+                                      <span>Apply to Turn</span>
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+
+                              {change.originalExcerpt && (
+                                <div className="space-y-1">
+                                  <div className="text-[10.5px] uppercase tracking-wider text-zinc-500">
+                                    Before
+                                  </div>
+                                  <blockquote
+                                    className={clsx(
+                                      'pl-3 border-l-2 leading-relaxed',
+                                      isDark
+                                        ? 'border-zinc-700 text-zinc-400'
+                                        : 'border-zinc-300 text-zinc-600'
+                                    )}
+                                  >
+                                    {change.originalExcerpt}
+                                  </blockquote>
+                                </div>
+                              )}
+
+                              <div className="space-y-1">
+                                <div className="text-[10.5px] uppercase tracking-wider text-emerald-500">
+                                  Proposed Revision
+                                </div>
+                                <blockquote
+                                  className={clsx(
+                                    'pl-3 border-l-2 border-emerald-500/75 font-editorial text-[14.5px] leading-relaxed',
+                                    isDark ? 'text-zinc-100' : 'text-zinc-900'
+                                  )}
+                                >
+                                  {change.proposedRevision}
+                                </blockquote>
+                              </div>
+
+                              {change.rationale && (
+                                <p className="text-[11.5px] text-zinc-500 leading-relaxed">
+                                  <span
+                                    className={
+                                      isDark ? 'text-zinc-300 font-medium' : 'text-zinc-700 font-medium'
+                                    }
+                                  >
+                                    Why:{' '}
+                                  </span>
+                                  {change.rationale}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Missed Opportunities */}
+                  {deepAnalysis.missedOpportunities.length > 0 && (
+                    <div className="space-y-1.5">
+                      <h3 className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                        Missed Opportunities
+                      </h3>
+                      <ul className="space-y-1.5 text-xs">
+                        {deepAnalysis.missedOpportunities.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 leading-relaxed">
+                            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 shrink-0 mt-1.5" />
+                            <span className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
+                              {item}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Next Round Drill */}
+                  {deepAnalysis.nextRoundDrill && (
+                    <div
+                      className={clsx(
+                        'p-3.5 rounded-xl border text-xs space-y-1',
+                        isDark
+                          ? 'bg-[#0C0C0E] border-white/[0.1]'
+                          : 'bg-zinc-50 border-zinc-200'
+                      )}
+                    >
+                      <div className="text-[10.5px] font-medium uppercase tracking-wider text-zinc-500">
+                        Next Round Drill
+                      </div>
+                      <p className={clsx('font-medium leading-relaxed', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
+                        {deepAnalysis.nextRoundDrill}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {analysisError && (
+                <div
+                  className={clsx(
+                    'px-3.5 py-2.5 rounded-xl text-xs',
+                    isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-50 text-rose-700'
+                  )}
+                >
+                  {analysisError}
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'tape' ? (
             <>
               {/* Clean Verdict Header */}
               <div
