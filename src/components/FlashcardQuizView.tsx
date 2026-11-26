@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { DebateGraphDataset, DebateNode } from '../types/debate';
+import { trackEvent } from '../utils/analytics';
 
 export type FlashcardType = 'rebuttal' | 'evidence' | 'thesis';
 
@@ -214,11 +215,24 @@ export function FlashcardQuizView({
   }, [filteredCards.length]);
 
   const handleFlip = useCallback(() => {
-    setIsFlipped((prev) => !prev);
-  }, []);
+    setIsFlipped((prev) => {
+      if (!prev && currentCard) {
+        trackEvent('quiz_card_flipped', {
+          topic_id: dataset.id,
+          card_type: currentCard.type,
+        });
+      }
+      return !prev;
+    });
+  }, [currentCard, dataset.id]);
 
   const handleMarkMastered = useCallback(() => {
     if (!currentCard) return;
+    trackEvent('quiz_card_assessed', {
+      topic_id: dataset.id,
+      card_type: currentCard.type,
+      outcome: 'mastered',
+    });
     setMasteredIds((prev) => {
       const next = new Set(prev);
       next.add(currentCard.id);
@@ -230,10 +244,15 @@ export function FlashcardQuizView({
       return next;
     });
     handleNext();
-  }, [currentCard, handleNext]);
+  }, [currentCard, dataset.id, handleNext]);
 
   const handleMarkReview = useCallback(() => {
     if (!currentCard) return;
+    trackEvent('quiz_card_assessed', {
+      topic_id: dataset.id,
+      card_type: currentCard.type,
+      outcome: 'review',
+    });
     setReviewQueueIds((prev) => {
       const next = new Set(prev);
       next.add(currentCard.id);
@@ -245,7 +264,7 @@ export function FlashcardQuizView({
       return next;
     });
     handleNext();
-  }, [currentCard, handleNext]);
+  }, [currentCard, dataset.id, handleNext]);
 
   const handleShuffle = useCallback(() => {
     setIsFlipped(false);

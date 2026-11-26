@@ -37,6 +37,8 @@ import { GitPullRequest, Loader2, Mic, Sparkles, X } from 'lucide-react';
 import { NodeEditorModal } from './components/NodeEditorModal';
 import { SuggestNodeDraft, SuggestNodeModal } from './components/SuggestNodeModal';
 import { MethodologyModal } from './components/MethodologyModal';
+import { FeedbackModal } from './components/FeedbackModal';
+import { trackEvent } from './utils/analytics';
 
 const STORAGE_PREFIX = 'dialectica-debate-sandbox-';
 const THEME_KEY = 'dialectica-theme-v1';
@@ -189,6 +191,7 @@ function DebateGraphWorkspace() {
   const [direction, setDirection] = useState<LayoutDirection>('SPLIT');
   const [showCrossLinks, setShowCrossLinks] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [suggestState, setSuggestState] = useState<{
     isOpen: boolean;
     draft: SuggestNodeDraft | null;
@@ -215,16 +218,26 @@ function DebateGraphWorkspace() {
     return 'graph';
   });
 
-  const handleViewModeChange = useCallback((mode: DebateViewMode) => {
-    setViewMode(mode);
-    const url = new URL(window.location.href);
-    if (mode === 'graph') {
-      url.searchParams.delete('view');
-    } else {
-      url.searchParams.set('view', mode);
-    }
-    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
-  }, []);
+  const handleViewModeChange = useCallback(
+    (mode: DebateViewMode) => {
+      if (mode !== viewMode) {
+        trackEvent('view_mode_changed', {
+          from_view: viewMode,
+          to_view: mode,
+          topic_id: topicId,
+        });
+      }
+      setViewMode(mode);
+      const url = new URL(window.location.href);
+      if (mode === 'graph') {
+        url.searchParams.delete('view');
+      } else {
+        url.searchParams.set('view', mode);
+      }
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    },
+    [viewMode, topicId]
+  );
 
   useEffect(() => {
     document.title = `${activeDataset.title} — Steelman`;
@@ -341,9 +354,14 @@ function DebateGraphWorkspace() {
   const handleSwitchTopic = useCallback(
     (nextTopicId: DebateTopicId) => {
       if (nextTopicId === topicId) return;
+      trackEvent('topic_switched', {
+        from_topic: topicId,
+        to_topic: nextTopicId,
+        view_mode: viewMode,
+      });
       applyTopicAndTarget(nextTopicId, null, true);
     },
-    [topicId, applyTopicAndTarget]
+    [topicId, viewMode, applyTopicAndTarget]
   );
 
   // Live URL listener for `#node=...` hash changes and browser Back/Forward (`popstate`)!
@@ -577,11 +595,19 @@ function DebateGraphWorkspace() {
 
   const handleSelectNode = useCallback(
     (nodeId: string | null) => {
+      if (nodeId) {
+        const target = nodeMap.get(nodeId);
+        trackEvent('node_inspected', {
+          topic_id: topicId,
+          node_kind: target?.kind ?? 'unknown',
+          view_mode: viewMode,
+        });
+      }
       setSelectedNodeId(nodeId);
       setActivePillarId(findOwningPillarId(nodeId, nodes));
       syncUrlHash(nodeId);
     },
-    [nodes, syncUrlHash]
+    [nodeMap, nodes, syncUrlHash, topicId, viewMode]
   );
 
   const handleSelectAndZoom = useCallback(
@@ -632,6 +658,10 @@ function DebateGraphWorkspace() {
   // Apply Depth Presets (1 = Pillars, 2 = Theses, 3 = Pro/Con, 'all' = Full Depth)
   const handleApplyDepthPreset = useCallback(
     (maxDepth: number | 'all') => {
+      trackEvent('graph_depth_preset', {
+        max_depth: String(maxDepth),
+        topic_id: topicId,
+      });
       setActivePillarId(null);
       if (maxDepth === 'all') {
         setCollapsedIds(new Set());
@@ -657,7 +687,7 @@ function DebateGraphWorkspace() {
         padding: 0.16,
       });
     },
-    [nodes, nodeMap]
+    [nodes, nodeMap, topicId]
   );
 
   // Sandbox Add / Edit / Delete handlers
@@ -854,7 +884,9 @@ function DebateGraphWorkspace() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const listenerPromise = CapApp.addListener('backButton', ({ canGoBack }) => {
-      if (isGuideOpen) {
+      if (isFeedbackOpen) {
+        setIsFeedbackOpen(false);
+      } else if (isGuideOpen) {
         setIsGuideOpen(false);
       } else if (suggestState.isOpen) {
         setSuggestState((s) => ({ ...s, isOpen: false }));
@@ -871,7 +903,7 @@ function DebateGraphWorkspace() {
     return () => {
       listenerPromise.then((h) => h.remove()).catch(() => {});
     };
-  }, [isGuideOpen, suggestState.isOpen, editorState.isOpen, selectedNodeId]);
+  }, [isFeedbackOpen, isGuideOpen, suggestState.isOpen, editorState.isOpen, selectedNodeId]);
 
   return (
     <GraphActionsContext.Provider value={graphActionsValue}>
@@ -893,7 +925,12 @@ function DebateGraphWorkspace() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             activeTag={activeTag}
-            onTagChange={setActiveTag}
+            onTagChange={(tag) => {
+              setActiveTag(tag);
+              if (tag) {
+                trackEvent('lens_filtered', { topic_id: topicId, active_tag: tag });
+              }
+            }}
             activePillarId={activePillarId}
             onJumpToPillar={handleJumpToPillar}
             onSelectSearchResult={(id) => {
@@ -908,6 +945,7 @@ function DebateGraphWorkspace() {
             onToggleTheme={() => setIsDark((d) => !d)}
             onOpenGuide={() => setIsGuideOpen(true)}
             onOpenSuggestModal={() => handleOpenSuggestModal(null)}
+            onOpenFeedback={() => setIsFeedbackOpen(true)}
           />
         </div>
 
@@ -1080,9 +1118,13 @@ function DebateGraphWorkspace() {
                 <CanvasToolbar
                   direction={direction}
                   onCycleDirection={() => {
-                    setDirection((prev) =>
-                      prev === 'SPLIT' ? 'LR' : prev === 'LR' ? 'TB' : 'SPLIT'
-                    );
+                    const nextDir: LayoutDirection =
+                      direction === 'SPLIT' ? 'LR' : direction === 'LR' ? 'TB' : 'SPLIT';
+                    setDirection(nextDir);
+                    trackEvent('graph_layout_cycled', {
+                      direction: nextDir,
+                      topic_id: topicId,
+                    });
                     setPendingCamera({
                       nodeIds: computedFlowNodes.map((n) => n.id),
                       maxZoom: 0.75,
@@ -1146,6 +1188,7 @@ function DebateGraphWorkspace() {
                 if (nodeId) handleSelectAndZoom(nodeId, true);
               }}
               onToggleTheme={() => setIsDark((d) => !d)}
+              onOpenFeedback={() => setIsFeedbackOpen(true)}
               isDark={isDark}
             />
           )}
@@ -1204,6 +1247,15 @@ function DebateGraphWorkspace() {
           isOpen={isGuideOpen}
           isDark={isDark}
           onClose={() => setIsGuideOpen(false)}
+        />
+
+        <FeedbackModal
+          isOpen={isFeedbackOpen}
+          onClose={() => setIsFeedbackOpen(false)}
+          viewMode={viewMode}
+          topicId={activeDataset.id}
+          topicTitle={activeDataset.shortTitle}
+          isDark={isDark}
         />
       </div>
     </GraphActionsContext.Provider>

@@ -8,6 +8,7 @@ import {
   GitPullRequest,
   HelpCircle,
   Landmark,
+  MessageSquarePlus,
   Moon,
   RotateCcw,
   Scale,
@@ -50,6 +51,7 @@ interface TopBarProps {
   onToggleTheme: () => void;
   onOpenGuide: () => void;
   onOpenSuggestModal: () => void;
+  onOpenFeedback: () => void;
 }
 
 export function TopBar({
@@ -75,6 +77,7 @@ export function TopBar({
   onToggleTheme,
   onOpenGuide,
   onOpenSuggestModal,
+  onOpenFeedback,
 }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -168,6 +171,20 @@ export function TopBar({
               <Search className="w-4 h-4" />
             </button>
           )}
+          <button
+            type="button"
+            onClick={onOpenFeedback}
+            aria-label="Send feedback"
+            title="Send feedback"
+            className={clsx(
+              'p-2 rounded-lg transition-colors',
+              isDark
+                ? 'text-zinc-400 hover:bg-white/[0.06]'
+                : 'text-zinc-500 hover:bg-zinc-100'
+            )}
+          >
+            <MessageSquarePlus className="w-4 h-4" />
+          </button>
           <button
             type="button"
             onClick={onToggleTheme}
@@ -570,6 +587,22 @@ export function TopBar({
           </button>
           </>
           )}
+
+          {/* Feedback */}
+          <button
+            type="button"
+            onClick={onOpenFeedback}
+            title="Send feedback"
+            className={clsx(
+              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
+              isDark
+                ? 'bg-[#141417] border-white/[0.1] text-zinc-300 hover:bg-white/[0.06] hover:text-white'
+                : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950'
+            )}
+          >
+            <MessageSquarePlus className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Feedback</span>
+          </button>
 
           {/* Theme Toggle */}
           <button

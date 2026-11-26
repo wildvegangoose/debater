@@ -28,6 +28,7 @@ import {
   loadHistoricalAnalysis,
   saveHistoricalAnalysis,
 } from '../../services/voiceDebate/sessionLogStorage';
+import { trackEvent } from '../../utils/analytics';
 import { MomentumSparkline } from './DebateScorecardModal';
 
 interface PerformanceLogSheetProps {
@@ -67,7 +68,8 @@ export function PerformanceLogSheet({
     setHistoricalAnalysis(loadHistoricalAnalysis());
     setAnalysisError(null);
     setBackupNotice(null);
-  }, [isOpen]);
+    trackEvent('performance_log_opened', { total_sessions: sessions.length });
+  }, [isOpen, sessions.length]);
 
   if (!isOpen) return null;
 
@@ -91,6 +93,10 @@ export function PerformanceLogSheet({
       const result = await generateHistoricalPatternAnalysis({ settings, sessions });
       saveHistoricalAnalysis(result);
       setHistoricalAnalysis(result);
+      trackEvent('historical_insights_run', {
+        sessions_analyzed: result.sessionsAnalyzed,
+        ai_backend: settings.backend,
+      });
     } catch (err) {
       setAnalysisError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -108,6 +114,7 @@ export function PerformanceLogSheet({
     a.download = `steelman-performance-log-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    trackEvent('performance_log_exported', { session_count: sessions.length });
     setBackupNotice({
       ok: true,
       text: `Exported ${sessions.length} ${sessions.length === 1 ? 'round' : 'rounds'} to JSON.`,
@@ -120,6 +127,10 @@ export function PerformanceLogSheet({
       try {
         const { merged, importedCount } = importPerformanceLogsJson(String(reader.result));
         onImportSessions(merged);
+        trackEvent('performance_log_imported', {
+          imported_count: importedCount,
+          total_sessions: merged.length,
+        });
         setBackupNotice({
           ok: true,
           text: `Imported ${importedCount} ${importedCount === 1 ? 'round' : 'rounds'} (${merged.length} total in log).`,

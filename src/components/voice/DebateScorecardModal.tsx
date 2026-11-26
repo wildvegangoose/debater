@@ -29,6 +29,7 @@ import {
   verdictDisplay,
 } from '../../services/voiceDebate/performanceAnalyzer';
 import { formatSessionAsMarkdown } from '../../services/voiceDebate/sessionLogStorage';
+import { trackEvent } from '../../utils/analytics';
 
 interface DebateScorecardModalProps {
   isOpen: boolean;
@@ -172,6 +173,10 @@ export function DebateScorecardModal({
   const handleCopyDebrief = async () => {
     try {
       await navigator.clipboard.writeText(formatSessionAsMarkdown(session));
+      trackEvent('debrief_copied', {
+        topic_id: session.topicId,
+        has_deep_critique: Boolean(session.deepAnalysis),
+      });
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -190,6 +195,11 @@ export function DebateScorecardModal({
         stance: session.stance,
         review,
       });
+      trackEvent('ai_turn_rewrite_run', {
+        topic_id: session.topicId,
+        ai_backend: settings.backend,
+        turn_index: review.turnIndex,
+      });
       onSaveAiRewrite?.(session.id, review.turnIndex, rewrite);
     } catch (err) {
       setRewriteErrors((prev) => ({
@@ -207,6 +217,12 @@ export function DebateScorecardModal({
     setAnalysisError(null);
     try {
       const analysis = await generateSessionDeepAnalysis({ settings, session });
+      trackEvent('deep_critique_run', {
+        topic_id: session.topicId,
+        ai_backend: settings.backend,
+        turn_count: session.turnCount,
+        is_historical: isHistoricalView,
+      });
       onSaveDeepAnalysis?.(session.id, analysis);
     } catch (err) {
       setAnalysisError(err instanceof Error ? err.message : String(err));
@@ -556,6 +572,10 @@ export function DebateScorecardModal({
                                         change.turnIndex,
                                         change.proposedRevision
                                       );
+                                      trackEvent('proposed_revision_applied', {
+                                        topic_id: session.topicId,
+                                        turn_index: change.turnIndex,
+                                      });
                                       setAppliedTurnIndex(change.turnIndex);
                                       setTimeout(() => setAppliedTurnIndex(null), 2000);
                                     }}

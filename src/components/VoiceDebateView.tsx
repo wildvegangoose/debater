@@ -55,6 +55,7 @@ import { DebateScorecardModal, MomentumSparkline } from './voice/DebateScorecard
 import { PerformanceLogSheet } from './voice/PerformanceLogSheet';
 import { SparLobby } from './voice/SparLobby';
 import { TopicPickerModal } from './TopicPickerModal';
+import { trackEvent } from '../utils/analytics';
 
 interface VoiceDebateViewProps {
   dataset: DebateGraphDataset;
@@ -66,6 +67,7 @@ interface VoiceDebateViewProps {
   onInspectNode: (nodeId: string) => void;
   onSwitchToGraph: (nodeId?: string) => void;
   onToggleTheme?: () => void;
+  onOpenFeedback?: () => void;
   isDark: boolean;
 }
 
@@ -124,6 +126,7 @@ export function VoiceDebateView({
   onInspectNode,
   onSwitchToGraph,
   onToggleTheme,
+  onOpenFeedback,
   isDark,
 }: VoiceDebateViewProps) {
   const [stage, setStage] = useState<'lobby' | 'active'>('lobby');
@@ -307,6 +310,14 @@ export function VoiceDebateView({
       setDraftText('');
       setShowAngleHint(false);
       setStage('active');
+
+      trackEvent('spar_round_started', {
+        topic_id: dataset.id,
+        stance: nextStance,
+        persona: settingsRef.current.persona,
+        round_length: String(nextLength),
+        ai_backend: settingsRef.current.backend,
+      });
     },
     [dataset, nodes, activePillarId, stance]
   );
@@ -423,8 +434,29 @@ export function VoiceDebateView({
         turnReviews: nextReviews,
       });
       setSavedLogs(upsertPerformanceLog(record));
+
+      trackEvent('spar_turn_scored', {
+        topic_id: dataset.id,
+        ai_backend: settingsRef.current.backend,
+        turn_number: nextTurnIndex,
+        argument_strength: response.argumentStrength,
+        persuasion_shift: response.persuasionShift,
+        landing_rating: review.landingRating,
+      });
+
+      if (targetTurns !== null && nextTurnIndex === targetTurns) {
+        trackEvent('spar_round_completed', {
+          topic_id: dataset.id,
+          stance,
+          persona: settingsRef.current.persona,
+          ai_backend: settingsRef.current.backend,
+          turn_count: nextTurnIndex,
+          avg_strength: record.avgStrength,
+          verdict: record.verdict,
+        });
+      }
     },
-    [nodes, activePillarId, dataset, stance]
+    [nodes, activePillarId, dataset, stance, targetTurns]
   );
 
   const submitUserArgument = useCallback(
@@ -436,6 +468,18 @@ export function VoiceDebateView({
 
       const historySnapshot = turnsRef.current;
       const priorAiTurn = [...historySnapshot].reverse().find((t) => t.speaker === 'ai');
+      const nextUserCount = historySnapshot.filter((t) => t.speaker === 'user').length + 1;
+      const wordCount = clean.split(/\s+/).filter(Boolean).length;
+
+      trackEvent('spar_turn_submitted', {
+        topic_id: dataset.id,
+        stance,
+        persona: settingsRef.current.persona,
+        ai_backend: settingsRef.current.backend,
+        turn_number: nextUserCount,
+        target_turns: targetTurns ?? -1,
+        word_count: wordCount,
+      });
 
       const userTurn: VoiceDebateTurn = {
         id: `user-${Date.now()}`,
@@ -454,7 +498,6 @@ export function VoiceDebateView({
           ...feedbackRef.current.engagedByAiIds,
           ...feedbackRef.current.engagedByUserIds,
         ]);
-        const nextUserCount = historySnapshot.filter((t) => t.speaker === 'user').length + 1;
 
         if (activeSettings.backend === 'browser-webllm') {
           const { generateWebLlmDebateReply } = await import(
@@ -530,6 +573,11 @@ export function VoiceDebateView({
         if (!mountedRef.current) return;
         const msg = err instanceof Error ? err.message : String(err);
         setErrorMessage(msg);
+        trackEvent('spar_error', {
+          topic_id: dataset.id,
+          ai_backend: settingsRef.current.backend,
+          error_type: msg.slice(0, 80),
+        });
       } finally {
         if (mountedRef.current) {
           setIsThinking(false);
@@ -538,7 +586,7 @@ export function VoiceDebateView({
         }
       }
     },
-    [isThinking, dataset, nodes, activePillarId, stance, applyStructuredTurnResponse]
+    [isThinking, dataset, nodes, activePillarId, stance, targetTurns, applyStructuredTurnResponse]
   );
 
   const handleFormSubmit = (e: FormEvent) => {
@@ -567,6 +615,12 @@ export function VoiceDebateView({
       setTargetTurns(updated.roundLength === 'open' ? null : updated.roundLength);
     }
     setErrorMessage(null);
+    trackEvent('spar_settings_saved', {
+      ai_backend: updated.backend,
+      persona: updated.persona,
+      round_length: String(updated.roundLength),
+      webllm_model: updated.backend === 'browser-webllm' ? updated.webllmModel : undefined,
+    });
   };
 
   const handleRematchSwitchSides = () => {
@@ -645,6 +699,7 @@ export function VoiceDebateView({
           onOpenSettings={() => setShowSettings(true)}
           savedLogs={savedLogs}
           onOpenPerformanceLog={() => setShowPerformanceLog(true)}
+          onOpenFeedback={onOpenFeedback}
           onStartRound={() => startFreshRound()}
           isDark={isDark}
         />
@@ -660,7 +715,18 @@ export function VoiceDebateView({
             <div className="px-3 sm:px-5 h-13 flex items-center justify-between gap-2">
               <button
                 type="button"
-                onClick={() => setStage('lobby')}
+                onClick={() => {
+                  if (!isRoundComplete && userTurnCount > 0) {
+                    trackEvent('spar_round_abandoned', {
+                      topic_id: dataset.id,
+                      stance,
+                      ai_backend: settings.backend,
+                      completed_turns: userTurnCount,
+                      target_turns: targetTurns ?? -1,
+                    });
+                  }
+                  setStage('lobby');
+                }}
                 aria-label="Back to lobby"
                 className={clsx(
                   'p-2 -ml-1 rounded-lg transition-colors shrink-0',
@@ -774,6 +840,7 @@ export function VoiceDebateView({
                       return (
                         <div key={turn.id} className="flex justify-end">
                           <div
+                            data-ph-no-capture
                             className={clsx(
                               'max-w-[85%] rounded-2xl rounded-br-sm px-4 py-2.5 text-[15px] leading-relaxed',
                               isDark

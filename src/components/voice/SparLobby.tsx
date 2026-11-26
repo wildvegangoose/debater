@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Clock,
   Loader2,
+  MessageSquarePlus,
   SlidersHorizontal,
 } from 'lucide-react';
 import { DebateGraphDataset, DebateTopicId } from '../../types/debate';
@@ -27,6 +28,7 @@ interface SparLobbyProps {
   onOpenSettings: () => void;
   savedLogs: DebateSessionRecord[];
   onOpenPerformanceLog: () => void;
+  onOpenFeedback?: () => void;
   onStartRound: () => void;
   isDark: boolean;
 }
@@ -57,6 +59,7 @@ export function SparLobby({
   onOpenSettings,
   savedLogs,
   onOpenPerformanceLog,
+  onOpenFeedback,
   onStartRound,
   isDark,
 }: SparLobbyProps) {
@@ -149,6 +152,23 @@ export function SparLobby({
               </span>
             )}
           </button>
+
+          {onOpenFeedback && (
+            <button
+              type="button"
+              onClick={onOpenFeedback}
+              aria-label="Send feedback"
+              title="Send feedback"
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                isDark
+                  ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06]'
+                  : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
+              )}
+            >
+              <MessageSquarePlus className="w-4 h-4" />
+            </button>
+          )}
 
           <button
             type="button"
